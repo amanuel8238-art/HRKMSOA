@@ -1,718 +1,708 @@
 <!DOCTYPE html>
-<html lang="am">
+<html lang="om">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HRKMSO - Komishinii Manneen Sirreessaa Oromiyaa</title>
+    <title>HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Arial', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+<body class="bg-slate-100 text-slate-800">
 
-    <!-- LOGIN OVERLAY -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
-            <div class="text-center mb-8">
-                <div class="inline-flex bg-indigo-50 text-indigo-600 p-3 rounded-2xl mb-3 shadow-inner">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900">HRKMSO System</h2>
-                <p class="text-xs text-slate-500 mt-1">Komishinii Manneen Sirreessaa Oromiyaa</p>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-indigo-950 px-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6">
+            <div class="text-center space-y-2">
+                <h1 class="text-xl font-bold text-indigo-900">HRKMSO - Seensa Sirnichaa</h1>
+                <p class="text-xs text-slate-500">Maaloo Maqaa Fayyadamaa (Username) fi Jecha Darbii (Password) kee galchi</p>
             </div>
-            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-xs">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Maqaa Fayyadamaa (Username)</label>
-                    <input type="text" id="loginUsername" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm">
+                    <label class="block text-slate-700 font-medium mb-1">Maqaa Fayyadamaa (Username)</label>
+                    <input type="text" id="loginUsername" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. admin_hrkmso">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Jecha Darbiiftaa (Password)</label>
-                    <input type="password" id="loginPassword" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm">
+                    <label class="block text-slate-700 font-medium mb-1">Jecha Darbii (Password)</label>
+                    <input type="password" id="loginPassword" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="******">
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/20 text-sm">Seeni (Login)</button>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition text-sm">Seeni (Login)</button>
             </form>
-            <div class="mt-6 text-center text-[11px] text-slate-400">
-                Default Admin: <span class="font-mono text-slate-600">admin_hrkmso</span> / <span class="font-mono text-slate-600">admin123</span>
+            <div class="text-center text-[10px] text-slate-400">
+                Komishinii Manneen Sirreessaa Oromiyaa HR Management System
             </div>
         </div>
     </div>
 
     <!-- MAIN APP CONTAINER -->
-    <div id="appContainer" class="hidden min-h-screen flex flex-col">
-        <!-- HEADER -->
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-indigo-600 text-white p-2 rounded-xl font-bold text-sm tracking-wider shadow-md">HR</div>
-                    <div>
-                        <h1 class="font-bold text-slate-900 text-sm sm:text-base">Komishinii Manneen Sirreessaa Oromiyaa</h1>
-                        <p class="text-[10px] text-slate-500 font-medium">Human Resources Management System</p>
-                    </div>
+    <div id="mainApp" class="min-h-screen flex flex-col hidden">
+        <!-- Header -->
+        <header class="bg-indigo-900 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div>
+                    <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
+                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Sirreessaa (Total)</p>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right hidden sm:block">
-                        <div id="currentUserBadge" class="text-xs font-bold text-slate-800">Admin</div>
-                        <div id="currentRoleBadge" class="text-[10px] text-indigo-600 font-medium">Full Access</div>
-                    </div>
-                    <button onclick="handleLogout()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Ba'i (Logout)</button>
+                <div class="flex items-center gap-4 text-sm">
+                    <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b id="currentAdminUser">admin_hrkmso</b></span>
+                    <button id="manageUsersBtn" onclick="switchTab('users')" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded transition">Manage Users</button>
+                    <button onclick="handleLogout()" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition">Bahi (Logout)</button>
                 </div>
-            </div>
-
-            <!-- NAVIGATION TABS -->
-            <div class="max-w-7xl mx-auto px-4 flex space-x-6 border-t border-slate-100 overflow-x-auto text-xs sm:text-sm">
-                <button onclick="switchTab('dashboard')" id="tabBtnDashboard" class="py-3 font-semibold border-b-2 border-indigo-600 text-indigo-600 transition whitespace-nowrap">Dashboard</button>
-                <button onclick="switchTab('register')" id="tabBtnRegister" class="py-3 font-semibold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Galmee Miseensaa</button>
-                <button onclick="switchTab('members')" id="tabBtnMembers" class="py-3 font-semibold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Miseensota</button>
-                <button onclick="switchTab('branches')" id="tabBtnBranches" class="py-3 font-semibold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Dameewwan</button>
-                <button onclick="switchTab('users')" id="tabBtnUsers" class="py-3 font-semibold text-slate-500 hover:text-slate-800 transition whitespace-nowrap">Useroota (Users)</button>
             </div>
         </header>
 
-        <!-- CONTENT BODY -->
+        <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+            
+            <!-- Navigation Tabs -->
+            <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold">
+                <button onclick="switchTab('dashboard')" id="tabBtnDashboard" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Dashboordii</button>
+                <button onclick="switchTab('register')" id="tabBtnRegister" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmeessuu</button>
+                <button onclick="switchTab('members')" id="tabBtnMembers" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</button>
+                <button onclick="switchTab('branches')" id="tabBtnBranches" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</button>
+                <button onclick="switchTab('users')" id="tabBtnUsers" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Useroota (Users)</button>
+            </div>
 
             <!-- TAB 1: DASHBOARD -->
-            <section id="tabDashboard" class="space-y-6">
-                <!-- STATS GRID -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                        <div class="bg-indigo-50 text-indigo-600 p-3.5 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-medium">Miseensota Waliigalaa</p>
-                            <h3 id="statTotalMembers" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                        </div>
+            <div id="tabDashboard" class="space-y-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-xs text-slate-500 font-medium">Ida'ama Miseensotaa (Total)</p>
+                        <h3 id="statTotalMembers" class="text-2xl font-bold text-indigo-900 mt-1">0</h3>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                        <div class="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-medium">Hojii Irra Jiran (Active)</p>
-                            <h3 id="statActiveMembers" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                        </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-xs text-slate-500 font-medium">Miseensota Hojii Irra Jiran (Active)</p>
+                        <h3 id="statActiveMembers" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                        <div class="bg-blue-50 text-blue-600 p-3.5 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-medium">Dameewwan / Godinaalee</p>
-                            <h3 id="statBranchCountDisplay" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                        </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-xs text-slate-500 font-medium">Baay'ina Dameewwanii</p>
+                        <h3 id="statBranchCountDisplay" class="text-2xl font-bold text-slate-800 mt-1">39</h3>
                     </div>
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-                        <div class="bg-rose-50 text-rose-600 p-3.5 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-medium">Kan Banaman / Kan Biroo</p>
-                            <h3 id="statTerminatedMembers" class="text-xl font-bold text-slate-900 mt-0.5">0</h3>
-                        </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-xs text-slate-500 font-medium">Hir'atan / Seeraan Kan Ba'an</p>
+                        <h3 id="statTerminatedMembers" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
                     </div>
                 </div>
 
-                <!-- CHARTS -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-                        <h4 class="font-bold text-slate-800 text-sm">Gosa Saalaa (Gender Breakdown)</h4>
-                        <div class="space-y-3 pt-2">
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold mb-1"><span class="text-slate-600">Dhiira</span><span id="statMaleCount" class="text-indigo-600">0</span></div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden"><div id="barMale" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold mb-1"><span class="text-slate-600">Dhalaa</span><span id="statFemaleCount" class="text-indigo-600">0</span></div>
-                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden"><div id="barFemale" class="bg-pink-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
-                            </div>
+                <!-- Filters & Breakdown Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Filters Section -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 md:col-span-2 space-y-4">
+                        <div class="flex justify-between items-center border-b pb-3">
+                            <h3 id="filterTitleText" class="font-bold text-slate-800 text-sm">Filterii Daataa (Dameewwan & Gonfoo)</h3>
+                            <button onclick="resetFilters()" class="text-xs text-indigo-600 hover:underline">Qulqulleessi</button>
                         </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 lg:col-span-2">
-                        <h4 class="font-bold text-slate-800 text-sm">Dameewwan Gurguddoo (Quick List)</h4>
-                        <div id="branchPreviewList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
-                    </div>
-                </div>
-
-                <!-- FILTERED TABLE -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <h4 class="font-bold text-slate-800 text-sm">Tarree Miseensota Qacarfoo (Filter & Search)</h4>
-                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                            <select id="filterBranch" onchange="applyFilters()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 flex-1 sm:flex-none">
-                                <option value="">-- Dameewwan Hundaa --</option>
-                            </select>
-                            <select id="filterRank" onchange="applyFilters()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 flex-1 sm:flex-none">
-                                <option value="">-- Gulaataa Gonfoo Hundaa --</option>
-                            </select>
-                            <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Maqaa, ID ykn Gosa Hojii..." class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 flex-1 sm:flex-none">
-                            <button onclick="resetFilters()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Qulleessi</button>
-                        </div>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider border-b">
-                                    <th class="p-2.5 font-semibold">Maqaa & ID</th>
-                                    <th class="p-2.5 font-semibold">Damee & Hojii</th>
-                                    <th class="p-2.5 font-semibold">Gulaataa & Mindaa</th>
-                                    <th class="p-2.5 font-semibold">Guyyaa Qacari/Guddina</th>
-                                    <th class="p-2.5 font-semibold">Haala & Guddina</th>
-                                    <th class="p-2.5 font-semibold">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="filteredTableBody" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 2: REGISTRATION -->
-            <section id="tabRegister" class="hidden space-y-6">
-                <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-sm max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <h3 id="regFormTitle" class="font-bold text-slate-900 text-base">Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)</h3>
-                        <button id="cancelEditBtn" onclick="resetRegistrationForm()" class="hidden bg-rose-50 text-rose-600 px-3 py-1 rounded-lg text-xs font-semibold hover:bg-rose-100 transition">Haqi (Cancel Edit)</button>
-                    </div>
-
-                    <form id="memberForm" onsubmit="handleRegistration(event)" class="space-y-4">
-                        <input type="hidden" id="editMemberIndex" value="">
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Maqaa Guutuu</label>
-                                <input type="text" id="regName" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Lakk. Addaa (ID)</label>
-                                <input type="text" id="regId" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Damee / Godina</label>
-                                <select id="regBranch" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"></select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Gulaataa Gonfoo (Rank)</label>
-                                <select id="regRank" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"></select>
-                            </div>
-                        </div>
-
-                        <!-- ETHIOPIAN DATE PICKERS -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-indigo-700 mb-1">Guyyaa Guddina Dhumaa (D/M/Y)</label>
-                                <div class="flex space-x-1">
-                                    <input type="number" id="regRankDay" placeholder="Guyyaa" min="1" max="30" value="1" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                    <input type="number" id="regRankMonth" placeholder="Ji'a" min="1" max="13" value="1" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                    <input type="number" id="regRankYear" placeholder="Bara" min="2000" max="2030" value="2015" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-indigo-700 mb-1">Guyyaa Qacari (D/M/Y)</label>
-                                <div class="flex space-x-1">
-                                    <input type="number" id="regHireDay" placeholder="Guyyaa" min="1" max="30" value="1" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                    <input type="number" id="regHireMonth" placeholder="Ji'a" min="1" max="13" value="1" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                    <input type="number" id="regHireYearVal" placeholder="Bara" min="1980" max="2030" value="2010" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-indigo-700 mb-1">Guyyaa Dhalootaa (D/M/Y)</label>
-                                <div class="flex space-x-1">
-                                    <input type="number" id="regBirthDay" placeholder="Guyyaa" min="1" max="30" value="1" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                    <input type="number" id="regBirthMonth" placeholder="Ji'a" min="1" max="13" value="1" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                    <input type="number" id="regBirthYearVal" placeholder="Bara" min="1950" max="2010" value="1985" class="w-1/3 px-2 py-1.5 rounded-lg border text-xs bg-white">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Saala</label>
-                                <select id="regGender" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                                    <option value="Dhiira">Dhiira</option>
-                                    <option value="Dhalaa">Dhalaa</option>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div id="filterBranchContainer">
+                                <label class="block text-slate-600 mb-1 font-medium">Filannoo Damee</label>
+                                <select id="filterBranch" onchange="applyFilters()" class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">-- Dameewwan Hundaa --</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Mindaa Gulaataa (ETB)</label>
-                                <input type="number" id="regRankSalary" step="0.01" value="0" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Gamaachuu Idoo (Allowance)</label>
-                                <input type="number" id="regLocationAllowance" step="0.01" value="0" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Gamaachuu Nyaata</label>
-                                <input type="number" id="regFoodAllowance" step="0.01" value="0" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Sadarkaa Barnootaa</label>
-                                <select id="regEduLevel" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                                    <option value="Certificate">Certificate</option>
-                                    <option value="Diploma">Diploma</option>
-                                    <option value="Degree">Degree</option>
-                                    <option value="Masters">Masters</option>
-                                    <option value="PhD">PhD</option>
-                                    <option value="Other">Other</option>
+                                <label class="block text-slate-600 mb-1 font-medium">Gulaataa Gonfoo (Rank)</label>
+                                <select id="filterRank" onchange="applyFilters()" class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">-- Gulaataa Gonfoo Hundaa --</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Gosa Barnootaa (Field of Study)</label>
-                                <input type="text" id="regFieldOfStudy" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Gosa Hojii (Job Position)</label>
-                                <input type="text" id="regJobPosition" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                <label class="block text-slate-600 mb-1 font-medium">Barbaadi (Maqaa / ID / Bara)</label>
+                                <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Fkn. Maqaa, ID ykn 2015" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Haala Hojii (Status)</label>
-                            <select id="regStatus" class="w-full sm:w-1/3 px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                                <option value="Active">Active (Hojii Irra Jira)</option>
-                                <option value="Transferred">Transferred (Gara Biroo Deeme)</option>
-                                <option value="Terminated">Terminated / Dismissed</option>
-                                <option value="Retired">Retired (Soorama)</option>
-                            </select>
-                        </div>
-
-                        <div class="pt-4">
-                            <button type="submit" id="submitRegBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 rounded-xl transition text-xs shadow-lg shadow-indigo-600/20">Miseensa Galmeessi</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- TAB 3: MEMBERS FULL TABLE -->
-            <section id="tabMembers" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-slate-800 text-sm">Tarree Miseensota Hunda (Full Directory)</h4>
-                        <span id="totalBadge" class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold">0 Total</span>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider border-b">
-                                    <th class="p-3 font-semibold">Maqaa & ID</th>
-                                    <th class="p-3 font-semibold">Damee & Hojii</th>
-                                    <th class="p-3 font-semibold">Gulaataa & Mindaa</th>
-                                    <th class="p-3 font-semibold">Barnoota</th>
-                                    <th class="p-3 font-semibold">Qacari & Guddina</th>
-                                    <th class="p-3 font-semibold">Haala & Guddina</th>
-                                    <th class="p-3 font-semibold">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="fullMembersTableBody" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 4: BRANCHES -->
-            <section id="tabBranches" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
-                    <h4 class="font-bold text-slate-800 text-sm">Dameewwan fi Godinaalee Komishinii Manneen Sirreessaa Oromiyaa (Dameewwan 39)</h4>
-                    <div id="branchesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2"></div>
-                </div>
-            </section>
-
-            <!-- TAB 5: USERS -->
-            <section id="tabUsers" class="hidden space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 h-fit">
-                        <h4 id="userFormTitleHeader" class="font-bold text-slate-800 text-sm">Bulchiinsa Useroota (System Users)</h4>
-                        <form id="userForm" onsubmit="handleUserRegistration(event)" class="space-y-3">
-                            <input type="hidden" id="editUserIndex" value="">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Maqaa Fayyadamaa (Username)</label>
-                                <input type="text" id="newUsername" required class="w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Jecha Darbiiftaa (Password)</label>
-                                <input type="text" id="newPassword" required class="w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Gahee (Role)</label>
-                                <select id="newUserRole" onchange="toggleBranchSelection()" class="w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                                    <option value="Admin">Admin (Full System Access)</option>
-                                    <option value="Branch Manager">Branch Manager (Specific Branch Only)</option>
-                                </select>
-                            </div>
-                            <div id="assignedBranchContainer" class="hidden">
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Damee Ramaddii</label>
-                                <select id="newAssignedBranch" class="w-full px-3 py-2 rounded-xl border text-xs bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"></select>
-                            </div>
-                            <div class="pt-2 flex space-x-2">
-                                <button type="submit" id="submitUserBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-xl transition text-xs shadow">User Haaraa Uumi</button>
-                                <button type="button" id="cancelUserEditBtn" onclick="resetUserForm()" class="hidden bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-xs font-semibold">Haqi</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4 lg:col-span-2">
-                        <div class="flex justify-between items-center">
-                            <h4 class="font-bold text-slate-800 text-sm">Tarree Useroota Systemichaa</h4>
-                            <span id="userCountBadge" class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold">0 Users</span>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
+                        <!-- Filtered Result Summary Table -->
+                        <div class="overflow-x-auto mt-4">
+                            <table class="w-full text-left text-xs border-collapse">
                                 <thead>
-                                    <tr class="bg-slate-50 text-slate-500 uppercase tracking-wider border-b">
-                                        <th class="p-3 font-semibold">Username</th>
-                                        <th class="p-3 font-semibold">Gahee (Role)</th>
-                                        <th class="p-3 font-semibold">Guyyaa Uumame</th>
-                                        <th class="p-3 font-semibold">Action</th>
+                                    <tr class="bg-slate-100 text-slate-600 uppercase">
+                                        <th class="p-2.5">Maqaa & ID</th>
+                                        <th class="p-2.5">Damee & Gita Hojii</th>
+                                        <th class="p-2.5">Gonfoo & Mindaa</th>
+                                        <th class="p-2.5">Guyyaa Qacarichaa & Guddinaa</th>
+                                        <th class="p-2.5">Haala / Status</th>
+                                        <th class="p-2.5">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+                                <tbody id="filteredTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected via JS -->
+                                </tbody>
                             </table>
                         </div>
                     </div>
+
+                    <!-- Side Stats (Gender & Top Branches) -->
+                    <div class="space-y-4">
+                        <!-- Saalaan Qoodinsa -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 text-sm mb-3">Saalaan Qoodinsa (Active)</h3>
+                            <div class="space-y-2 text-xs">
+                                <div>
+                                    <div class="flex justify-between font-medium mb-1">
+                                        <span>Dhiira</span>
+                                        <span id="statMaleCount">0 (0%)</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div id="barMale" class="bg-indigo-600 h-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="pt-2">
+                                    <div class="flex justify-between font-medium mb-1">
+                                        <span>Dhalaa</span>
+                                        <span id="statFemaleCount">0 (0%)</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div id="barFemale" class="bg-pink-500 h-full" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dameewwan Preview -->
+                        <div id="sideBranchPreviewCard" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 text-sm mb-3">Dameewwan Manneen Sirreessaa</h3>
+                            <div id="branchPreviewList" class="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-            </section>
+            </div>
+
+            <!-- TAB 2: REGISTRATION -->
+            <div id="tabRegister" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                <h2 id="regFormTitle" class="text-base font-bold text-slate-800">Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)</h2>
+                <form id="memberForm" onsubmit="handleRegistration(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <input type="hidden" id="editMemberIndex" value="">
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Maqaa Guutuu *</label>
+                        <input type="text" id="regName" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Maqaa Guutuu">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">ID Addaa (Unique ID) *</label>
+                        <input type="text" id="regId" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. HRK-001">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Damee / Godina *</label>
+                        <select id="regBranch" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Gulaataa Gonfoo (Rank) *</label>
+                        <select id="regRank" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    
+                    <!-- Guyyaa Gulaantaa Gonfoo Argate (DD/MM/YYYY) -->
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Guyyaa Gulaantaa Gonfoo Argate (Guyyaa/Ji'a/Bara) *</label>
+                        <div class="flex gap-1">
+                            <input type="number" id="regRankDay" placeholder="Guy." min="1" max="30" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="number" id="regRankMonth" placeholder="Ji'a" min="1" max="13" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="number" id="regRankYear" placeholder="Bara" min="1900" max="2050" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Saala *</label>
+                        <select id="regGender" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Dhiira">Dhiira</option>
+                            <option value="Dhalaa">Dhalaa</option>
+                        </select>
+                    </div>
+
+                    <!-- Bara Qacarichaa (DD/MM/YYYY) -->
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Guyyaa Qacarichaa (Guyyaa/Ji'a/Bara) *</label>
+                        <div class="flex gap-1">
+                            <input type="number" id="regHireDay" placeholder="Guy." min="1" max="30" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="number" id="regHireMonth" placeholder="Ji'a" min="1" max="13" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="number" id="regHireYearVal" placeholder="Bara" min="1900" max="2050" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <!-- Bara Dhalootaa (DD/MM/YYYY) -->
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Guyyaa Dhalootaa (Guyyaa/Ji'a/Bara) *</label>
+                        <div class="flex gap-1">
+                            <input type="number" id="regBirthDay" placeholder="Guy." min="1" max="30" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="number" id="regBirthMonth" placeholder="Ji'a" min="1" max="13" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="number" id="regBirthYearVal" placeholder="Bara" min="1900" max="2050" required class="w-1/3 border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Mindaa Gulaantaa Gonfoo (Rank Salary) *</label>
+                        <input type="number" id="regRankSalary" required placeholder="Fkn. 5500" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Mindaa Kaffaltii Idoo (Location Allowance)</label>
+                        <input type="number" id="regLocationAllowance" value="0" placeholder="Fkn. 1000" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Durgoo Nyaataa (Food Allowance)</label>
+                        <input type="number" id="regFoodAllowance" value="0" placeholder="Fkn. 1200" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Sadarkaa Barumsaa (Education Level)</label>
+                        <select id="regEduLevel" class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Kutaa 8ffaa">Kutaa 8ffaa</option>
+                            <option value="High School (9-12)">High School (9-12)</option>
+                            <option value="Certificate">Certificate</option>
+                            <option value="Diploma">Diploma</option>
+                            <option value="Degree">Degree</option>
+                            <option value="Masters & Above">Masters & Above</option>
+                            <option value="Kan Biroo">Kan Biroo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Gosa Barumsaa (Field of Study)</label>
+                        <input type="text" id="regFieldOfStudy" placeholder="Fkn. Law / IT" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Gita Hojii Irratti Ramadame (Job Position) *</label>
+                        <input type="text" id="regJobPosition" required placeholder="Fkn. Hoogganaa Humna Namaa" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Haala / Status Jalqabaa</label>
+                        <select id="regStatus" class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Active">Hojii On (Active)</option>
+                            <option value="Sababa Du'aan">Sababa Du'aan</option>
+                            <option value="Sababa Fedhiitiin">Sababa Fedhiitiin</option>
+                            <option value="Sababa Dhukkubaan">Sababa Dhukkubaan</option>
+                            <option value="Badii Naamuusaan (Dismissed)">Badii Naamuusaan (Dismissed)</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-3 flex justify-end mt-2 gap-2">
+                        <button type="button" id="cancelEditBtn" onclick="resetRegistrationForm()" class="hidden bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition">Haquu (Cancel)</button>
+                        <button type="submit" id="submitRegBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition">Miseensa Galmeessi</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB 3: ALL MEMBERS TABLE -->
+            <div id="tabMembers" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden space-y-4">
+                <div class="px-6 py-4 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800 text-sm">Tarree Miseensotaa (Data)</h3>
+                    <span id="totalBadge" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">0 Total</span>
+                </div>
+                <div class="overflow-x-auto px-6 pb-6">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 uppercase">
+                                <th class="p-3">Maqaa & ID</th>
+                                <th class="p-3">Damee & Gita Hojii</th>
+                                <th class="p-3">Gonfoo & Mindaa / Durgoo</th>
+                                <th class="p-3">Barumsa</th>
+                                <th class="p-3">Guyyaa Qacarichaa & Guddinaa</th>
+                                <th class="p-3">Haala & Ga'umsa</th>
+                                <th class="p-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullMembersTableBody" class="divide-y divide-slate-200">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: BRANCHES (39 UNITS) -->
+            <div id="tabBranches" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h2 class="text-base font-bold text-slate-800">Bulchiinsa Dameewwanii (Komishinii Manneen Sirreessaa Oromiyaa)</h2>
+                    <span class="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-semibold">Head Office + Dameewwan Godinaalee</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs" id="branchesGrid">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- TAB 5: USERS MANAGEMENT -->
+            <div id="tabUsers" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h2 id="userFormTitleHeader" class="text-base font-bold text-slate-800">Bulchiinsa Useroota (System Users)</h2>
+                    <span id="userCountBadge" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">0 Users</span>
+                </div>
+
+                <!-- Add / Edit User Form -->
+                <form id="userForm" onsubmit="handleUserRegistration(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs bg-slate-50 p-4 rounded-lg border">
+                    <input type="hidden" id="editUserIndex" value="">
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Maqaa Fayyadamaa (Username) *</label>
+                        <input type="text" id="newUsername" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. dadar_manager">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Jecha Darbii (Password) *</label>
+                        <input type="text" id="newPassword" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="******">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Aangoo / Gahee (Role) *</label>
+                        <select id="newUserRole" onchange="toggleBranchSelection()" class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Admin">Admin (Head Office)</option>
+                            <option value="Branch Manager">Branch Manager</option>
+                        </select>
+                    </div>
+                    <div id="assignedBranchContainer" class="hidden">
+                        <label class="block text-slate-700 font-medium mb-1">Damee Inni Bulchu *</label>
+                        <select id="newAssignedBranch" class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="md:col-span-4 flex justify-end gap-2">
+                        <button type="button" id="cancelUserEditBtn" onclick="resetUserForm()" class="hidden bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition">Haquu (Cancel)</button>
+                        <button type="submit" id="submitUserBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-lg transition">User Haaraa Uumi</button>
+                    </div>
+                </form>
+
+                <!-- Users Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 uppercase">
+                                <th class="p-3">Username</th>
+                                <th class="p-3">Role & Assigned Branch</th>
+                                <th class="p-3">Guyyaa Itti Uumame</th>
+                                <th class="p-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-200">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- APPLICATION JAVASCRIPT -->
+    <!-- JavaScript Application Logic -->
     <script>
-        // Ranks list in exact sequence
-        const ranksList = [
-            "Konstaabili", "Gargaraa Saajin", "Saajin", "Saajin Majar", "Saajin Waraanaa", 
-            "Abuu Saajin", "Inspeektera Gargaaraa", "Inspeektera", "Inspeektera Ol'aanaa", 
-            "Komishinara Gargaaraa", "Komishinara", "Komishinara Jalqabaa", "Komishinara Ol'aanaa", 
-            "Komishinara Ittaanaa", "Komishinara Koomishinii"
-        ];
-
-        // Promotion requirements mapping in years
-        const promotionRequirements = {
-            "Konstaabili": 4, "Gargaraa Saajin": 4, "Saajin": 4, "Saajin Majar": 4, 
-            "Saajin Waraanaa": 4, "Abuu Saajin": 4, "Inspeektera Gargaaraa": 4, 
-            "Inspeektera": 4, "Inspeektera Ol'aanaa": 4, "Komishinara Gargaaraa": 4, 
-            "Komishinara": "other", "Komishinara Jalqabaa": "other", "Komishinara Ol'aanaa": "other", 
-            "Komishinara Ittaanaa": "other", "Komishinara Koomishinii": "other"
-        };
-
-        // Official Branches & Zones (Dameewwan 39 guutuu)
         const branchesList = [
-            "Komishinii Waliigalaa (Headquarters)",
-            "Mana Sirreessaa Finfinnee", "Mana Sirreessaa Adaamaa", "Mana Sirreessaa Amboo", 
-            "Mana Sirreessaa Naqamtee", "Mana Sirreessaa Jimmaa", "Mana Sirreessaa Roobee", 
-            "Mana Sirreessaa Shaashamannee", "Mana Sirreessaa Wallagga Bahaa", "Mana Sirreessaa Wallagga Lixaa", 
-            "Mana Sirreessaa Qellem Wallaggaa", "Mana Sirreessaa Horroo Guduruu Wallaggaa", "Mana Sirreessaa Illuu Abbaa Booraa", 
-            "Mana Sirreessaa Badduu Bahaa", "Mana Sirreessaa Booranaa", "Mana Sirreessaa Guji", 
-            "Mana Sirreessaa Guji Lixaa", "Mana Sirreessaa Arsii", "Mana Sirreessaa Arsii Lixaa", 
-            "Mana Sirreessaa Baale", "Mana Sirreessaa Baale Bahaa", "Mana Sirreessaa Harargee Bahaa", 
-            "Mana Sirreessaa Harargee Lixaa", "Mana Sirreessaa Shawaa Bahaa", "Mana Sirreessaa Shawaa Lixaa", 
-            "Mana Sirreessaa Shawaa Kaabaa", "Mana Sirreessaa Shawaa Kibbaa/Lixaa", "Mana Sirreessaa Finfinnarii Addaa", 
-            "Mana Sirreessaa Godina Dadar", "Mana Sirreessaa Naannoo Bishaabatuu", "Mana Sirreessaa Asaboot", 
-            "Mana Sirreessaa Sabbataa", "Mana Sirreessaa Holeta", "Mana Sirreessaa Meettaa Roobii", 
-            "Mana Sirreessaa Waliso", "Mana Sirreessaa Tulu Boolloo", "Mana Sirreessaa Adoolaa", 
-            "Mana Sirreessaa Yababoon", "Mana Sirreessaa Neeqemtee Addaa"
+            "Head Office (Finfinnee)",
+            "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", "Wallaggaa Bahaa",
+            "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+            "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+            "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+            "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+            "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+            "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+            "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+            "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
         ];
 
-        let membersData = JSON.parse(localStorage.getItem('hrkmso_members')) || [];
-        let usersData = JSON.parse(localStorage.getItem('hrkmso_users')) || [
-            { username: "admin_hrkmso", password: "admin123", role: "Admin", assignedBranch: "", createdAt: "1/1/2015" }
-        ];
-        let currentUser = JSON.parse(sessionStorage.getItem('hrkmso_current_user')) || null;
-
-        window.onload = function() {
-            populateDropdowns();
-            if (currentUser) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('appContainer').classList.remove('hidden');
-                updateUIForUser();
-            } else {
-                document.getElementById('loginOverlay').classList.remove('hidden');
-                document.getElementById('appContainer').classList.add('hidden');
-            }
+        const promotionRequirements = {
+            "Konstaabilii": 4,
+            "Gargaaraa Saajin": 3,
+            "Itti Aanaa Saajin": 3,
+            "Saajin": 3,
+            "Saajin Ol'aanaa": 3,
+            "Gargaaraa Inspeektaraa": 2,
+            "Itti Aanaa Inspeektaraa": 3,
+            "Inspeektaraa": 3,
+            "Inspeektaraa Olaanaa": 3,
+            "Itti Aanaa Komandaraa": 3,
+            "Komandaraa": "other",
+            "Gargaaraa Komishinaraa": "other",
+            "Itti Aanaa Komishinaraa": "other",
+            "Komishinaraa": "other"
         };
 
-        function populateDropdowns() {
-            const branchSelects = [document.getElementById('regBranch'), document.getElementById('filterBranch'), document.getElementById('newAssignedBranch')];
-            branchSelects.forEach(sel => {
-                if(!sel) return;
-                let currentVal = sel.value;
-                sel.innerHTML = sel.id === 'filterBranch' ? '<option value="">-- Dameewwan Hundaa --</option>' : '';
-                branchesList.forEach(b => {
-                    let opt = document.createElement('option');
-                    opt.value = b;
-                    opt.textContent = b;
-                    sel.appendChild(opt);
-                });
-                sel.value = currentVal;
-            });
+        const ranksList = Object.keys(promotionRequirements);
 
-            const rankSelects = [document.getElementById('regRank'), document.getElementById('filterRank')];
-            rankSelects.forEach(sel => {
-                if(!sel) return;
-                let currentVal = sel.value;
-                sel.innerHTML = sel.id === 'filterRank' ? '<option value="">-- Gulaataa Gonfoo Hundaa --</option>' : '';
-                ranksList.forEach(r => {
-                    let opt = document.createElement('option');
-                    opt.value = r;
-                    opt.textContent = r;
-                    sel.appendChild(opt);
-                });
-                sel.value = currentVal;
-            });
+        let membersData = JSON.parse(localStorage.getItem('hrkmso_members')) || [
+            { 
+                name: "Taddasaa Gabayyoo", id: "HRK-001", branch: "Head Office (Finfinnee)", rank: "Konstaabilii", promotionDate: "15/10/2011", gender: "Dhiira", 
+                hireYear: "15/10/2007", birthYear: "12/04/1987", rankSalary: 5500, locationAllowance: 500, foodAllowance: 1000, 
+                eduLevel: "Diploma", fieldOfStudy: "Law", jobPosition: "Poolisii Tajaajila", status: "Active" 
+            }
+        ];
+
+        let usersData = JSON.parse(localStorage.getItem('hrkmso_users')) || [
+            { username: "admin_hrkmso", password: "password123", role: "Admin", branch: "", date: "2026-07-01" },
+            { username: "dadar_manager", password: "password123", role: "Branch Manager", branch: "Dadar", date: "2026-07-05" }
+        ];
+
+        let loggedInUser = localStorage.getItem('hrkmso_logged_in') || null;
+
+        function saveData() {
+            localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
+            localStorage.setItem('hrkmso_users', JSON.stringify(usersData));
+        }
+
+        function getCurrentUserInfo() {
+            return usersData.find(u => u.username === loggedInUser) || null;
+        }
+
+        function checkLoginState() {
+            const loginScreen = document.getElementById('loginScreen');
+            const mainApp = document.getElementById('mainApp');
+
+            if(loggedInUser) {
+                loginScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                document.getElementById('currentAdminUser').innerText = loggedInUser;
+                
+                const currentUser = getCurrentUserInfo();
+                const manageUsersBtn = document.getElementById('manageUsersBtn');
+                const tabBtnUsers = document.getElementById('tabBtnUsers');
+                const tabBtnBranches = document.getElementById('tabBtnBranches');
+
+                if (currentUser && currentUser.role === 'Branch Manager') {
+                    manageUsersBtn.classList.add('hidden');
+                    tabBtnUsers.classList.add('hidden');
+                    tabBtnBranches.classList.add('hidden');
+                    document.getElementById('headerSubtitle').innerText = `Damee: ${currentUser.branch}`;
+                } else {
+                    manageUsersBtn.classList.remove('hidden');
+                    tabBtnUsers.classList.remove('hidden');
+                    tabBtnBranches.classList.remove('hidden');
+                    document.getElementById('headerSubtitle').innerText = `Head Office & Dameewwan Sirreessaa (Total ${branchesList.length})`;
+                }
+
+                initApp();
+            } else {
+                loginScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
         }
 
         function handleLogin(e) {
             e.preventDefault();
-            let u = document.getElementById('loginUsername').value.trim();
-            let p = document.getElementById('loginPassword').value.trim();
-            let found = usersData.find(usr => usr.username === u && usr.password === p);
-            if(found) {
-                currentUser = found;
-                sessionStorage.setItem('hrkmso_current_user', JSON.stringify(currentUser));
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('appContainer').classList.remove('hidden');
-                updateUIForUser();
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
+
+            const foundUser = usersData.find(item => item.username === u && (item.password === p || (!item.password && p === "password123")));
+
+            if(foundUser) {
+                loggedInUser = foundUser.username;
+                localStorage.setItem('hrkmso_logged_in', loggedInUser);
+                checkLoginState();
             } else {
-                alert('Maqaa fayyadamaa ykn jecha darbiiftaa dogoggora ✌️');
+                alert("Maqaa Fayyadamaa (Username) ykn Jecha Darbii (Password) dogoggorteetta!");
             }
         }
 
         function handleLogout() {
-            currentUser = null;
-            sessionStorage.removeItem('hrkmso_current_user');
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            document.getElementById('appContainer').classList.add('hidden');
-            document.getElementById('loginForm').reset();
+            loggedInUser = null;
+            localStorage.removeItem('hrkmso_logged_in');
+            checkLoginState();
         }
 
-        function updateUIForUser() {
-            document.getElementById('currentUserBadge').textContent = currentUser.username;
-            document.getElementById('currentRoleBadge').textContent = currentUser.role === 'Admin' ? 'Full Access' : `Manager: ${currentUser.assignedBranch}`;
-            refreshAllViews();
+        function getMemberStatusInfo(member) {
+            // Umrii bara dhalootaa irraa herreguuf (part ykn string irraa baricha fudhachuun)
+            let bYear = 1990;
+            if (member.birthYear && member.birthYear.includes('/')) {
+                bYear = parseInt(member.birthYear.split('/')[2]) || 1990;
+            } else if(member.birthYear) {
+                bYear = parseInt(member.birthYear) || 1990;
+            }
+            const currentYearEthio = 2018; // Ethio calendar year around 2026
+            const age = currentYearEthio - bYear;
+            
+            if (member.status && member.status !== "Active") {
+                let badgeClass = "bg-rose-100 text-rose-700";
+                if(member.status === "Retirement") badgeClass = "bg-amber-100 text-amber-700";
+                return { status: member.status, label: `${member.status} (Umrii: ${age})`, isActive: false, badgeClass };
+            }
+
+            if (age >= 55) {
+                return { status: "Retirement", label: `Soorama (Umrii: ${age})`, isActive: false, badgeClass: "bg-amber-100 text-amber-700" };
+            } else {
+                return { status: "Active", label: `Hojii On (Umrii: ${age})`, isActive: true, badgeClass: "bg-emerald-100 text-emerald-700" };
+            }
+        }
+
+        function initApp() {
+            populateDropdowns();
+            renderDashboard();
+            renderFullMembersTable();
+            renderBranchesGrid();
+            renderUsersTable();
+        }
+
+        function populateDropdowns() {
+            const currentUser = getCurrentUserInfo();
+            const filterBranch = document.getElementById('filterBranch');
+            const regBranch = document.getElementById('regBranch');
+            const filterRank = document.getElementById('filterRank');
+            const regRank = document.getElementById('regRank');
+            const newAssignedBranch = document.getElementById('newAssignedBranch');
+
+            filterRank.innerHTML = '<option value="">-- Gulaataa Gonfoo Hundaa --</option>';
+            regRank.innerHTML = '';
+            ranksList.forEach(r => {
+                filterRank.innerHTML += `<option value="${r}">${r}</option>`;
+                regRank.innerHTML += `<option value="${r}">${r}</option>`;
+            });
+
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                filterBranch.innerHTML = `<option value="${currentUser.branch}">${currentUser.branch}</option>`;
+                filterBranch.value = currentUser.branch;
+                filterBranch.disabled = true;
+
+                regBranch.innerHTML = `<option value="${currentUser.branch}">${currentUser.branch}</option>`;
+                regBranch.value = currentUser.branch;
+                regBranch.disabled = true;
+            } else {
+                filterBranch.innerHTML = '<option value="">-- Dameewwan Hundaa --</option>';
+                regBranch.innerHTML = '';
+                branchesList.forEach(b => {
+                    filterBranch.innerHTML += `<option value="${b}">${b}</option>`;
+                    regBranch.innerHTML += `<option value="${b}">${b}</option>`;
+                });
+
+                newAssignedBranch.innerHTML = '';
+                branchesList.forEach(b => {
+                    newAssignedBranch.innerHTML += `<option value="${b}">${b}</option>`;
+                });
+            }
         }
 
         function switchTab(tabName) {
-            ['dashboard', 'register', 'members', 'branches', 'users'].forEach(t => {
-                let el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-                let btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+            ['Dashboard', 'Register', 'Members', 'Branches', 'Users'].forEach(t => {
+                const el = document.getElementById('tab' + t);
+                const btn = document.getElementById('tabBtn' + t);
                 if(el) el.classList.add('hidden');
                 if(btn) {
                     btn.classList.remove('border-b-2', 'border-indigo-600', 'text-indigo-600');
                     btn.classList.add('text-slate-500');
                 }
             });
-            let activeEl = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
-            let activeBtn = document.getElementById('tabBtn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+
+            const activeEl = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            const activeBtn = document.getElementById('tabBtn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+            
             if(activeEl) activeEl.classList.remove('hidden');
             if(activeBtn) {
-                activeBtn.classList.remove('text-slate-500');
                 activeBtn.classList.add('border-b-2', 'border-indigo-600', 'text-indigo-600');
+                activeBtn.classList.remove('text-slate-500');
             }
-            refreshAllViews();
-        }
 
-        function refreshAllViews() {
-            renderDashboardStats();
-            renderFilteredTable();
-            renderFullMembersTable();
-            renderBranchesGrid();
-            renderUsersTable();
-        }
-
-        function getAccessibleMembers() {
-            if(currentUser.role === 'Admin') return membersData;
-            return membersData.filter(m => m.branch === currentUser.assignedBranch);
-        }
-
-        function renderDashboardStats() {
-            let data = getAccessibleMembers();
-            document.getElementById('statTotalMembers').textContent = data.length;
-            document.getElementById('statActiveMembers').textContent = data.filter(m => m.status === 'Active').length;
-            document.getElementById('statBranchCountDisplay').textContent = branchesList.length;
-            document.getElementById('statTerminatedMembers').textContent = data.filter(m => m.status !== 'Active').length;
-
-            let male = data.filter(m => m.gender === 'Dhiira').length;
-            let female = data.filter(m => m.gender === 'Dhalaa').length;
-            document.getElementById('statMaleCount').textContent = male;
-            document.getElementById('statFemaleCount').textContent = female;
-            let total = data.length === 0 ? 1 : data.length;
-            document.getElementById('barMale').style.width = ((male/total)*100) + '%';
-            document.getElementById('barFemale').style.width = ((female/total)*100) + '%';
-
-            let branchListHTML = '';
-            branchesList.slice(0, 10).forEach(b => {
-                let count = data.filter(m => m.branch === b).length;
-                branchListHTML += `<div class="flex justify-between items-center p-2 bg-slate-50 rounded-xl"><span class="font-medium text-slate-700 truncate max-w-[200px]">${b}</span><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-bold">${count}</span></div>`;
-            });
-            document.getElementById('branchPreviewList').innerHTML = branchListHTML || '<p class="text-slate-400">Hinkennamne</p>';
-        }
-
-        function renderFilteredTable() {
-            let data = getAccessibleMembers();
-            let bFilter = document.getElementById('filterBranch').value;
-            let rFilter = document.getElementById('filterRank').value;
-            let sFilter = document.getElementById('filterSearch').value.toLowerCase();
-
-            let filtered = data.filter(m => {
-                let matchB = !bFilter || m.branch === bFilter;
-                let matchR = !rFilter || m.rank === rFilter;
-                let matchS = !sFilter || m.name.toLowerCase().includes(sFilter) || m.id.toLowerCase().includes(sFilter) || m.jobPosition.toLowerCase().includes(sFilter);
-                return matchB && matchR && matchS;
-            });
-
-            let tbody = document.getElementById('filteredTableBody');
-            tbody.innerHTML = '';
-            filtered.forEach((m, idx) => {
-                let realIdx = membersData.indexOf(m);
-                tbody.innerHTML += buildTableRow(m, realIdx);
-            });
-        }
-
-        function renderFullMembersTable() {
-            let data = getAccessibleMembers();
-            let tbody = document.getElementById('fullMembersTableBody');
-            document.getElementById('totalBadge').textContent = data.length + ' Total';
-            tbody.innerHTML = '';
-            data.forEach((m, idx) => {
-                let realIdx = membersData.indexOf(m);
-                tbody.innerHTML += buildTableRow(m, realIdx, true);
-            });
-        }
-
-        function buildTableRow(m, realIdx, isFull = false) {
-            return `<tr class="hover:bg-slate-50 transition">
-                <td class="p-3">
-                    <div class="font-bold text-slate-900">${m.name}</div>
-                    <div class="text-[10px] text-slate-400">ID: ${m.id} | ${m.gender}</div>
-                </td>
-                <td class="p-3">
-                    <div class="font-medium text-slate-700">${m.branch}</div>
-                    <div class="text-[10px] text-slate-400">${m.jobPosition || '-'}</div>
-                </td>
-                <td class="p-3">
-                    <div class="font-semibold text-indigo-600">${m.rank}</div>
-                    <div class="text-[10px] text-slate-500">${m.rankSalary} ETB</div>
-                </td>
-                ${isFull ? `<td class="p-3"><span class="font-medium">${m.eduLevel}</span><br><span class="text-[10px] text-slate-400">${m.fieldOfStudy || ''}</span></td>` : ''}
-                <td class="p-3">
-                    <div>Qacari: ${m.hireDay}/${m.hireMonth}/${m.hireYear}</div>
-                    <div class="text-[10px] text-slate-400">Guddina: ${m.rankDay}/${m.rankMonth}/${m.rankYear}</div>
-                </td>
-                <td class="p-3">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${m.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">${m.status}</span>
-                </td>
-                <td class="p-3 space-x-2">
-                    <button onclick="editMember(${realIdx})" class="text-indigo-600 hover:text-indigo-800 font-semibold">Sirreessi</button>
-                    <button onclick="deleteMember(${realIdx})" class="text-rose-600 hover:text-rose-800 font-semibold">Haqi</button>
-                </td>
-            </tr>`;
+            if(tabName === 'dashboard') renderDashboard();
+            if(tabName === 'members') renderFullMembersTable();
+            if(tabName === 'branches') renderBranchesGrid();
+            if(tabName === 'users') renderUsersTable();
         }
 
         function handleRegistration(e) {
             e.preventDefault();
-            let idx = document.getElementById('editMemberIndex').value;
-            let mData = {
-                name: document.getElementById('regName').value,
-                id: document.getElementById('regId').value,
-                branch: document.getElementById('regBranch').value,
+            const editIndex = document.getElementById('editMemberIndex').value;
+            
+            // Guyyaa walitti qabuu DD/MM/YYYY
+            const rankDate = `${document.getElementById('regRankDay').value}/${document.getElementById('regRankMonth').value}/${document.getElementById('regRankYear').value}`;
+            const hireYear = `${document.getElementById('regHireDay').value}/${document.getElementById('regHireMonth').value}/${document.getElementById('regHireYearVal').value}`;
+            const birthYear = `${document.getElementById('regBirthDay').value}/${document.getElementById('regBirthMonth').value}/${document.getElementById('regBirthYearVal').value}`;
+
+            const currentUser = getCurrentUserInfo();
+            let branchVal = document.getElementById('regBranch').value;
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                branchVal = currentUser.branch;
+            }
+
+            const memberObj = {
+                name: document.getElementById('regName').value.trim(),
+                id: document.getElementById('regId').value.trim(),
+                branch: branchVal,
                 rank: document.getElementById('regRank').value,
-                rankDay: document.getElementById('regRankDay').value,
-                rankMonth: document.getElementById('regRankMonth').value,
-                rankYear: document.getElementById('regRankYear').value,
-                hireDay: document.getElementById('regHireDay').value,
-                hireMonth: document.getElementById('regHireMonth').value,
-                hireYear: document.getElementById('regHireYearVal').value,
-                birthDay: document.getElementById('regBirthDay').value,
-                birthMonth: document.getElementById('regBirthMonth').value,
-                birthYear: document.getElementById('regBirthYearVal').value,
+                promotionDate: rankDate,
                 gender: document.getElementById('regGender').value,
+                hireYear: hireYear,
+                birthYear: birthYear,
                 rankSalary: parseFloat(document.getElementById('regRankSalary').value) || 0,
                 locationAllowance: parseFloat(document.getElementById('regLocationAllowance').value) || 0,
                 foodAllowance: parseFloat(document.getElementById('regFoodAllowance').value) || 0,
                 eduLevel: document.getElementById('regEduLevel').value,
-                fieldOfStudy: document.getElementById('regFieldOfStudy').value,
-                jobPosition: document.getElementById('regJobPosition').value,
+                fieldOfStudy: document.getElementById('regFieldOfStudy').value.trim(),
+                jobPosition: document.getElementById('regJobPosition').value.trim(),
                 status: document.getElementById('regStatus').value
             };
 
-            if (idx === "") {
-                membersData.push(mData);
-                alert('Miseensni haaraa milkaa\'inaan galmeeffameera!');
+            if (editIndex !== "") {
+                membersData[parseInt(editIndex)] = memberObj;
+                alert("Odeeffannoon miseensaa milkaa'inaan fooyya'eera!");
             } else {
-                membersData[parseInt(idx)] = mData;
-                alert('Odeeffannoon miseensaa sirreeffameera!');
-                resetRegistrationForm();
+                membersData.push(memberObj);
+                alert("Miseensi haaraan milkaa'inaan galmeeffameera!");
             }
 
-            localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
-            document.getElementById('memberForm').reset();
+            saveData();
+            resetRegistrationForm();
             switchTab('dashboard');
         }
 
-        function editMember(idx) {
-            let m = membersData[idx];
-            document.getElementById('editMemberIndex').value = idx;
+        function resetRegistrationForm() {
+            document.getElementById('memberForm').reset();
+            document.getElementById('editMemberIndex').value = "";
+            document.getElementById('regFormTitle').innerText = "Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)";
+            document.getElementById('submitRegBtn').innerText = "Miseensa Galmeessi";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function editMember(index) {
+            const m = membersData[index];
+            document.getElementById('editMemberIndex').value = index;
             document.getElementById('regName').value = m.name;
             document.getElementById('regId').value = m.id;
             document.getElementById('regBranch').value = m.branch;
             document.getElementById('regRank').value = m.rank;
-            document.getElementById('regRankDay').value = m.rankDay || 1;
-            document.getElementById('regRankMonth').value = m.rankMonth || 1;
-            document.getElementById('regRankYear').value = m.rankYear || 2015;
-            document.getElementById('regHireDay').value = m.hireDay || 1;
-            document.getElementById('regHireMonth').value = m.hireMonth || 1;
-            document.getElementById('regHireYearVal').value = m.hireYear || 2010;
-            document.getElementById('regBirthDay').value = m.birthDay || 1;
-            document.getElementById('regBirthMonth').value = m.birthMonth || 1;
-            document.getElementById('regBirthYearVal').value = m.birthYear || 1985;
             document.getElementById('regGender').value = m.gender;
+            
+            // Split DD/MM/YYYY for dates
+            if (m.promotionDate && m.promotionDate.includes('/')) {
+                const parts = m.promotionDate.split('/');
+                document.getElementById('regRankDay').value = parts[0] || '';
+                document.getElementById('regRankMonth').value = parts[1] || '';
+                document.getElementById('regRankYear').value = parts[2] || '';
+            }
+            if (m.hireYear && m.hireYear.includes('/')) {
+                const parts = m.hireYear.split('/');
+                document.getElementById('regHireDay').value = parts[0] || '';
+                document.getElementById('regHireMonth').value = parts[1] || '';
+                document.getElementById('regHireYearVal').value = parts[2] || '';
+            }
+            if (m.birthYear && m.birthYear.includes('/')) {
+                const parts = m.birthYear.split('/');
+                document.getElementById('regBirthDay').value = parts[0] || '';
+                document.getElementById('regBirthMonth').value = parts[1] || '';
+                document.getElementById('regBirthYearVal').value = parts[2] || '';
+            }
+
             document.getElementById('regRankSalary').value = m.rankSalary;
             document.getElementById('regLocationAllowance').value = m.locationAllowance;
             document.getElementById('regFoodAllowance').value = m.foodAllowance;
             document.getElementById('regEduLevel').value = m.eduLevel;
             document.getElementById('regFieldOfStudy').value = m.fieldOfStudy;
             document.getElementById('regJobPosition').value = m.jobPosition;
-            document.getElementById('regStatus').value = m.status;
+            document.getElementById('regStatus').value = m.status || "Active";
 
-            document.getElementById('regFormTitle').textContent = "Sirreeffama Odeeffannoo Miseensaa";
-            document.getElementById('submitRegBtn').textContent = "Galtee Haaromsi";
+            document.getElementById('regFormTitle').innerText = "Odeeffannoo Miseensaa Fooyyessuu (Edit Member)";
+            document.getElementById('submitRegBtn').innerText = "Fooyyessi (Update)";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
+
             switchTab('register');
         }
 
-        function resetRegistrationForm() {
-            document.getElementById('editMemberIndex').value = "";
-            document.getElementById('memberForm').reset();
-            document.getElementById('regFormTitle').textContent = "Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)";
-            document.getElementById('submitRegBtn').textContent = "Miseensa Galmeessi";
-            document.getElementById('cancelEditBtn').classList.add('hidden');
-        }
-
-        function deleteMember(idx) {
-            if(confirm('Miseensa kana haquu feetaa?')) {
-                membersData.splice(idx, 1);
-                localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
-                refreshAllViews();
+        function deleteMember(index) {
+            if(confirm("Miseensa kana haquu feeta?")) {
+                membersData.splice(index, 1);
+                saveData();
+                renderDashboard();
+                renderFullMembersTable();
             }
         }
 
-        function renderBranchesGrid() {
-            let data = getAccessibleMembers();
-            let grid = document.getElementById('branchesGrid');
-            grid.innerHTML = '';
-            branchesList.forEach(b => {
-                let count = data.filter(m => m.branch === b).length;
-                grid.innerHTML += `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60 flex justify-between items-center">
-                    <div>
-                        <h5 class="font-bold text-slate-800 text-xs">${b}</h5>
-                        <p class="text-[10px] text-slate-500 mt-0.5">Miseensota: ${count}</p>
-                    </div>
-                    <span class="bg-indigo-600 text-white font-bold text-xs px-2.5 py-1 rounded-xl">${count}</span>
-                </div>`;
-            });
-        }
-
+        // --- USER MANAGEMENT & EDIT ---
         function toggleBranchSelection() {
-            let role = document.getElementById('newUserRole').value;
-            let container = document.getElementById('assignedBranchContainer');
+            const role = document.getElementById('newUserRole').value;
+            const container = document.getElementById('assignedBranchContainer');
             if(role === 'Branch Manager') {
                 container.classList.remove('hidden');
             } else {
@@ -722,95 +712,308 @@
 
         function handleUserRegistration(e) {
             e.preventDefault();
-            if(currentUser.role !== 'Admin') {
-                alert('Abbaa taayitaa (Admin) qofatu user haaraa uumuu danda\'a!');
-                return;
-            }
-            let idx = document.getElementById('editUserIndex').value;
-            let uData = {
-                username: document.getElementById('newUsername').value,
-                password: document.getElementById('newPassword').value,
-                role: document.getElementById('newUserRole').value,
-                assignedBranch: document.getElementById('newUserRole').value === 'Branch Manager' ? document.getElementById('newAssignedBranch').value : '',
-                createdAt: new Date().toLocaleDateString()
+            const editIndex = document.getElementById('editUserIndex').value;
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const role = document.getElementById('newUserRole').value;
+            const branch = role === 'Branch Manager' ? document.getElementById('newAssignedBranch').value : "";
+
+            const userObj = {
+                username,
+                password,
+                role,
+                branch,
+                date: new Date().toISOString().split('T')[0]
             };
 
-            if(idx === "") {
-                usersData.push(uData);
-                alert('User haaraa milkaa\'inaan uumameera!');
+            if (editIndex !== "") {
+                usersData[parseInt(editIndex)] = userObj;
+                alert("Odeeffannoon fayyadamaa fooyya'eera!");
             } else {
-                usersData[parseInt(idx)] = uData;
-                alert('Odeeffannoon user sirreeffameera!');
-                resetUserForm();
+                if(usersData.some(u => u.username === username)) {
+                    alert("Maqaan fayyadamaa kun kanaan dura jira!");
+                    return;
+                }
+                usersData.push(userObj);
+                alert("Fayyadamaan haaraan milkaa'inaan uumameera!");
             }
-            localStorage.setItem('hrkmso_users', JSON.stringify(usersData));
-            document.getElementById('userForm').reset();
-            toggleBranchSelection();
+
+            saveData();
+            resetUserForm();
             renderUsersTable();
         }
 
-        function renderUsersTable() {
-            let tbody = document.getElementById('usersTableBody');
-            document.getElementById('userCountBadge').textContent = usersData.length + ' Users';
-            tbody.innerHTML = '';
-            usersData.forEach((u, idx) => {
-                tbody.innerHTML += `<tr class="hover:bg-slate-50 transition">
-                    <td class="p-3 font-bold text-slate-900">${u.username}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'Admin' ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'}">${u.role}</span>
-                        ${u.assignedBranch ? `<div class="text-[10px] text-slate-400 mt-0.5">${u.assignedBranch}</div>` : ''}
-                    </td>
-                    <td class="p-3 text-slate-500">${u.createdAt}</td>
-                    <td class="p-3 space-x-2">
-                        ${currentUser.role === 'Admin' ? `<button onclick="editUser(${idx})" class="text-indigo-600 font-semibold">Sirreessi</button><button onclick="deleteUser(${idx})" class="text-rose-600 font-semibold">Haqi</button>` : '<span class="text-slate-400">-</span>'}
-                    </td>
-                </tr>`;
-            });
-        }
-
-        function editUser(idx) {
-            let u = usersData[idx];
-            document.getElementById('editUserIndex').value = idx;
-            document.getElementById('newUsername').value = u.username;
-            document.getElementById('newPassword').value = u.password;
-            document.getElementById('newUserRole').value = u.role;
-            toggleBranchSelection();
-            if(u.role === 'Branch Manager') {
-                document.getElementById('newAssignedBranch').value = u.assignedBranch;
-            }
-            document.getElementById('userFormTitleHeader').textContent = "Sirreeffama User";
-            document.getElementById('submitUserBtn').textContent = "User Haaromsi";
-            document.getElementById('cancelUserEditBtn').classList.remove('hidden');
-        }
-
         function resetUserForm() {
-            document.getElementById('editUserIndex').value = "";
             document.getElementById('userForm').reset();
-            document.getElementById('userFormTitleHeader').textContent = "Bulchiinsa Useroota (System Users)";
-            document.getElementById('submitUserBtn').textContent = "User Haaraa Uumi";
+            document.getElementById('editUserIndex').value = "";
+            document.getElementById('userFormTitleHeader').innerText = "Bulchiinsa Useroota (System Users)";
+            document.getElementById('submitUserBtn').innerText = "User Haaraa Uumi";
             document.getElementById('cancelUserEditBtn').classList.add('hidden');
             toggleBranchSelection();
         }
 
-        function deleteUser(idx) {
-            if(usersData.length <= 1) {
-                alert('User kana haquun hin danda\'amuu (Admin tokkichi hafeera).');
+        function editUser(index) {
+            const u = usersData[index];
+            document.getElementById('editUserIndex').value = index;
+            document.getElementById('newUsername').value = u.username;
+            document.getElementById('newPassword').value = u.password || "";
+            document.getElementById('newUserRole').value = u.role;
+            toggleBranchSelection();
+            if(u.role === 'Branch Manager') {
+                document.getElementById('newAssignedBranch').value = u.branch;
+            }
+
+            document.getElementById('userFormTitleHeader').innerText = "Fayyadamaa Fooyyessuu (Edit User)";
+            document.getElementById('submitUserBtn').innerText = "Fooyyessi (Update)";
+            document.getElementById('cancelUserEditBtn').classList.remove('hidden');
+        }
+
+        function deleteUser(index) {
+            if(usersData[index].username === loggedInUser) {
+                alert("Fayyadamaa amma itti fayyadamaa jirtu haquu hin dandeessu!");
                 return;
             }
-            if(confirm('User kana haquu feetaa?')) {
-                usersData.splice(idx, 1);
-                localStorage.setItem('hrkmso_users', JSON.stringify(usersData));
+            if(confirm("Fayyadamaa kana haquu feeta?")) {
+                usersData.splice(index, 1);
+                saveData();
                 renderUsersTable();
             }
         }
 
-        function applyFilters() { renderFilteredTable(); }
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            usersData.forEach((u, index) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-semibold text-indigo-900">${u.username}</td>
+                        <td class="p-3">
+                            <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">${u.role}</span>
+                            ${u.branch ? `<span class="text-slate-500 ml-1">(${u.branch})</span>` : ''}
+                        </td>
+                        <td class="p-3 text-slate-500">${u.date || '-'}</td>
+                        <td class="p-3 space-x-2">
+                            <button onclick="editUser(${index})" class="text-indigo-600 hover:underline">Edit</button>
+                            <button onclick="deleteUser(${index})" class="text-rose-600 hover:underline">Haquu</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('userCountBadge').innerText = `${usersData.length} Users`;
+        }
+
+        // --- DASHBOARD & FILTER ---
+        function applyFilters() {
+            renderDashboardTables();
+        }
+
         function resetFilters() {
-            document.getElementById('filterBranch').value = "";
+            const currentUser = getCurrentUserInfo();
+            if (!currentUser || currentUser.role !== 'Branch Manager') {
+                document.getElementById('filterBranch').value = "";
+            }
             document.getElementById('filterRank').value = "";
             document.getElementById('filterSearch').value = "";
-            renderFilteredTable();
+            renderDashboardTables();
         }
+
+        function renderDashboard() {
+            const currentUser = getCurrentUserInfo();
+            let activeList = membersData;
+
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                activeList = membersData.filter(m => m.branch === currentUser.branch);
+            }
+
+            const total = activeList.length;
+            let activeCount = 0;
+            let terminatedCount = 0;
+            let maleCount = 0;
+            let femaleCount = 0;
+
+            activeList.forEach(m => {
+                const info = getMemberStatusInfo(m);
+                if(info.isActive) {
+                    activeCount++;
+                    if(m.gender === 'Dhiira') maleCount++;
+                    if(m.gender === 'Dhalaa') femaleCount++;
+                } else {
+                    terminatedCount++;
+                }
+            });
+
+            document.getElementById('statTotalMembers').innerText = total;
+            document.getElementById('statActiveMembers').innerText = activeCount;
+            document.getElementById('statTerminatedMembers').innerText = terminatedCount;
+            document.getElementById('statBranchCountDisplay').innerText = branchesList.length;
+
+            document.getElementById('statMaleCount').innerText = `${maleCount} (${activeCount > 0 ? Math.round((maleCount/activeCount)*100) : 0}%)`;
+            document.getElementById('barMale.style.width') // handled below
+            document.getElementById('barMale').style.width = `${activeCount > 0 ? (maleCount/activeCount)*100 : 0}%`;
+
+            document.getElementById('statFemaleCount').innerText = `${femaleCount} (${activeCount > 0 ? Math.round((femaleCount/activeCount)*100) : 0}%)`;
+            document.getElementById('barFemale').style.width = `${activeCount > 0 ? (femaleCount/activeCount)*100 : 0}%`;
+
+            renderSideBranchPreview(activeList);
+            renderDashboardTables();
+        }
+
+        function getFilteredMembers() {
+            const currentUser = getCurrentUserInfo();
+            let branchVal = document.getElementById('filterBranch').value;
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                branchVal = currentUser.branch;
+            }
+
+            const rankVal = document.getElementById('filterRank').value;
+            const searchVal = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+            return membersData.filter(m => {
+                if (currentUser && currentUser.role === 'Branch Manager' && m.branch !== currentUser.branch) return false;
+                if (branchVal && m.branch !== branchVal) return false;
+                if (rankVal && m.rank !== rankVal) return false;
+                if (searchVal) {
+                    const matchName = m.name.toLowerCase().includes(searchVal);
+                    const matchId = m.id.toLowerCase().includes(searchVal);
+                    const matchHire = m.hireYear && m.hireYear.toLowerCase().includes(searchVal);
+                    if (!matchName && !matchId && !matchHire) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderDashboardTables() {
+            const filtered = getFilteredMembers();
+            const tbody = document.getElementById('filteredTableBody');
+            tbody.innerHTML = '';
+
+            filtered.forEach((m) => {
+                // Find actual index in membersData for editing
+                const originalIndex = membersData.findIndex(item => item === m);
+                const statusInfo = getMemberStatusInfo(m);
+                const totalSalary = (m.rankSalary || 0) + (m.locationAllowance || 0) + (m.foodAllowance || 0);
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5">
+                            <div class="font-bold text-slate-900">${m.name}</div>
+                            <div class="text-[10px] text-slate-500">${m.id}</div>
+                        </td>
+                        <td class="p-2.5">
+                            <div>${m.branch}</div>
+                            <div class="text-[10px] text-indigo-600">${m.jobPosition}</div>
+                        </td>
+                        <td class="p-2.5">
+                            <div class="font-medium">${m.rank}</div>
+                            <div class="text-[10px] text-slate-500">Mindaa: ${totalSalary} ETB</div>
+                        </td>
+                        <td class="p-2.5 text-[10px]">
+                            <div>Qac.: ${m.hireYear || '-'}</div>
+                            <div>Gudd.: ${m.promotionDate || '-'}</div>
+                        </td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] ${statusInfo.badgeClass}">${statusInfo.label}</span>
+                        </td>
+                        <td class="p-2.5 space-x-1">
+                            <button onclick="editMember(${originalIndex})" class="text-indigo-600 hover:underline">Edit</button>
+                            <button onclick="deleteMember(${originalIndex})" class="text-rose-600 hover:underline">Haquu</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderFullMembersTable() {
+            const filtered = getFilteredMembers();
+            const tbody = document.getElementById('fullMembersTableBody');
+            tbody.innerHTML = '';
+
+            membersData.forEach((m, index) => {
+                const statusInfo = getMemberStatusInfo(m);
+                const totalSalary = (m.rankSalary || 0) + (m.locationAllowance || 0) + (m.foodAllowance || 0);
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900">${m.name}</div>
+                            <div class="text-[10px] text-slate-500">ID: ${m.id} | Saala: ${m.gender}</div>
+                        </td>
+                        <td class="p-3">
+                            <div><b>${m.branch}</b></div>
+                            <div class="text-[10px] text-indigo-600">${m.jobPosition}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="font-medium">${m.rank}</div>
+                            <div class="text-[10px] text-slate-500">Waliigala: ${totalSalary} ETB</div>
+                        </td>
+                        <td class="p-3 text-[10px]">
+                            <div>${m.eduLevel || '-'}</div>
+                            <div class="text-slate-500">${m.fieldOfStudy || ''}</div>
+                        </td>
+                        <td class="p-3 text-[10px]">
+                            <div>Qacarichaa: ${m.hireYear || '-'}</div>
+                            <div>Guddinaa: ${m.promotionDate || '-'}</div>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded text-[10px] ${statusInfo.badgeClass}">${statusInfo.label}</span>
+                        </td>
+                        <td class="p-3 space-x-2">
+                            <button onclick="editMember(${index})" class="text-indigo-600 hover:underline">Edit</button>
+                            <button onclick="deleteMember(${index})" class="text-rose-600 hover:underline">Haquu</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('totalBadge').innerText = `${membersData.length} Total`;
+        }
+
+        function renderSideBranchPreview(list) {
+            const container = document.getElementById('branchPreviewList');
+            container.innerHTML = '';
+
+            const counts = {};
+            branchesList.forEach(b => counts[b] = 0);
+            list.forEach(m => {
+                if(counts[m.branch] !== undefined) counts[m.branch]++;
+                else counts[m.branch] = (counts[m.branch] || 0) + 1;
+            });
+
+            branchesList.forEach(b => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-100">
+                        <span class="font-medium text-slate-700">${b}</span>
+                        <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-bold">${counts[b] || 0}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function renderBranchesGrid() {
+            const grid = document.getElementById('branchesGrid');
+            grid.innerHTML = '';
+
+            const counts = {};
+            membersData.forEach(m => {
+                counts[m.branch] = (counts[m.branch] || 0) + 1;
+            });
+
+            branchesList.forEach(b => {
+                grid.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between space-y-2">
+                        <div class="font-bold text-slate-800 text-sm">${b}</div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-500">Miseensota:</span>
+                            <span class="bg-indigo-600 text-white px-2.5 py-0.5 rounded-full font-bold">${counts[b] || 0}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            checkLoginState();
+        };
     </script>
 </body>
 </html>
