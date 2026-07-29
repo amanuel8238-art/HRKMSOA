@@ -5,12 +5,11 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = 'hrkmso_secret_key'
 
-# --- ASIRRATTI JIJJIIRI ---
 # Render irratti DATABASE_URL jedhamee waan galfameef, inni achi jiru qabachuuf:
 db_url = os.environ.get('DATABASE_URL')
 
 if db_url:
-    # PostgreSQL URL yeroo Render irratti hojjetu (Render 'postgres://' deebisa, SQLAlchemy garuu 'postgresql://' gaafata)
+    # Render 'postgres://' deebisa, SQLAlchemy garuu 'postgresql://' gaafata
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
