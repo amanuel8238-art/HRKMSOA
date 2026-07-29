@@ -5,16 +5,18 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = 'hrkmso_secret_key'
 
-# Render irratti DATABASE_URL jedhamee waan galfameef, inni achi jiru qabachuuf:
 db_url = os.environ.get('DATABASE_URL')
 
 if db_url:
-    # Render 'postgres://' deebisa, SQLAlchemy garuu 'postgresql://' gaafata
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    # KUN AFAAN SUPABASE WAJJIIN WAL QUUNNAMUUF BARBAACHISA:
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {"sslmode": "require"}
+    }
 else:
-    # Kompiitara kee (Local) irratti yeroo yaaltu SQLite fayyadamuuf
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
