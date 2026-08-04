@@ -51,7 +51,7 @@ with app.app_context():
     except Exception as e:
         print(f"DB Init Error: {e}")
 
-# ==================== LOGIN ROUTE (HTML ofiisaa qaba) ====================
+# ==================== LOGIN ROUTE ====================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error_msg = ""
@@ -70,7 +70,6 @@ def login():
         except Exception as e:
             error_msg = f"Login Error: {str(e)}"
             
-    # Fuula Login (External html hin barbaachisu, asuma keessa jira)
     return render_template_string('''
     <!DOCTYPE html>
     <html lang="om">
@@ -115,6 +114,7 @@ def index():
     try:
         current_branch = session.get('branch_name')
         selected_education = request.args.get('education')
+        selected_rank = request.args.get('rank')
         
         query = Employee.query
         if current_branch and current_branch != 'Head Office':
@@ -126,11 +126,13 @@ def index():
             
         if selected_education:
             query = query.filter_by(education_level=selected_education)
+
+        if selected_rank:
+            query = query.filter_by(rank=selected_rank)
             
         employees = query.all()
         branches = Branch.query.all()
         
-        # Dashboard HTML ofiisaa (Index)
         return render_template_string('''
         <!DOCTYPE html>
         <html lang="om">
@@ -145,6 +147,7 @@ def index():
                 th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
                 th { background: #f2f2f2; }
                 .form-box { background: white; padding: 20px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                .filter-box { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
                 input, select { padding: 8px; margin: 5px; width: 200px; }
                 button { padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
                 a.logout { color: white; background: #dc3545; padding: 8px 12px; text-decoration: none; border-radius: 4px; }
@@ -160,6 +163,29 @@ def index():
             </div>
 
             <div class="container">
+                <!-- Filter Section -->
+                <div class="filter-box">
+                    <h3>Gabaasa / Filter Gochuu</h3>
+                    <form method="GET" action="/">
+                        {% if current_branch == 'Head Office' %}
+                        <select name="branch">
+                            <option value="">Damee Hundaa (All Branches)</option>
+                            <option value="Dadar">Dadar</option>
+                            {% for b in branches %}
+                                {% if b.name != 'Dadar' and b.name != 'Head Office' %}
+                                <option value="{{ b.name }}">{{ b.name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                        <input type="text" name="education_level" placeholder="Sadarkaa Barnootaa" value="{{ request.args.get('education_level', '') }}">
+                        <input type="text" name="rank" placeholder="Gonfoo (Rank)" value="{{ request.args.get('rank', '') }}">
+                        <button type="submit" style="background: #17a2b8;">Filter</button>
+                        <a href="/" style="padding: 8px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Reset</a>
+                    </form>
+                </div>
+
+                <!-- Add Employee Form -->
                 <div class="form-box">
                     <h3>Hojjetaa Haaraa Galchuuf</h3>
                     <form method="POST" action="/add">
