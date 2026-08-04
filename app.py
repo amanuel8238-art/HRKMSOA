@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template_string, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -51,8 +51,10 @@ with app.app_context():
     except Exception as e:
         print(f"DB Init Error: {e}")
 
+# ==================== LOGIN ROUTE (HTML ofiisaa qaba) ====================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error_msg = ""
     if request.method == 'POST':
         try:
             username = request.form.get('username')
@@ -64,10 +66,41 @@ def login():
                 session['branch_name'] = user.branch_name
                 return redirect(url_for('index'))
             else:
-                return "Maqaa fayyadamaa ykn jecha darbii dogoggoraati! <a href='/login'>Irra deebi'ii yaali</a>"
+                error_msg = "Maqaa fayyadamaa ykn jecha darbii dogoggoraati!"
         except Exception as e:
-            return f"Login Error: {str(e)}"
-    return render_template('login.html')
+            error_msg = f"Login Error: {str(e)}"
+            
+    # Fuula Login (External html hin barbaachisu, asuma keessa jira)
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html lang="om">
+    <head>
+        <meta charset="UTF-8">
+        <title>HRKMSO - Seensa (Login)</title>
+        <style>
+            body { font-family: Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+            .login-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
+            h2 { text-align: center; color: #333; }
+            input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+            button:hover { background: #0056b3; }
+            .error { color: red; font-size: 14px; text-align: center; }
+        </style>
+    </head>
+    <body>
+        <div class="login-box">
+            <h2>HRKMSO Login</h2>
+            {% if error_msg %}<div class="error">{{ error_msg }}</div>{% endif %}
+            <form method="POST">
+                <input type="text" name="username" placeholder="Maqaa Fayyadamaa (Username)" required>
+                <input type="password" name="password" placeholder="Jecha Darbii (Password)" required>
+                <button type="submit">Seeni</button>
+            </form>
+            <p style="font-size: 12px; color: #666; text-align: center; margin-top: 15px;">Default Admin: admin / password123</p>
+        </div>
+    </body>
+    </html>
+    ''', error_msg=error_msg)
 
 @app.route('/logout')
 def logout():
@@ -97,7 +130,80 @@ def index():
         employees = query.all()
         branches = Branch.query.all()
         
-        return render_template('index.html', employees=employees, branches=branches, current_branch=current_branch)
+        # Dashboard HTML ofiisaa (Index)
+        return render_template_string('''
+        <!DOCTYPE html>
+        <html lang="om">
+        <head>
+            <meta charset="UTF-8">
+            <title>HRKMSO - Dashboard</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f6f9; }
+                .header { background: #007bff; color: white; padding: 15px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+                .container { margin-top: 20px; }
+                table { width: 100%; border-collapse: collapse; background: white; margin-top: 15px; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                th { background: #f2f2f2; }
+                .form-box { background: white; padding: 20px; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+                input, select { padding: 8px; margin: 5px; width: 200px; }
+                button { padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+                a.logout { color: white; background: #dc3545; padding: 8px 12px; text-decoration: none; border-radius: 4px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>Komishinii Manneen Sirreessaa (HRKMSO)</h2>
+                <div>
+                    <span>Damee: <b>{{ current_branch }}</b></span> | 
+                    <a href="/logout" class="logout">Baahi (Logout)</a>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="form-box">
+                    <h3>Hojjetaa Haaraa Galchuuf</h3>
+                    <form method="POST" action="/add">
+                        <input type="text" name="full_name" placeholder="Maqaa Guutuu" required>
+                        <input type="text" name="position" placeholder="Qacaroo / Hojii" required>
+                        <input type="text" name="rank" placeholder="Gonfoo (Rank)" required>
+                        <input type="text" name="education_level" placeholder="Sadarkaa Barnootaa" required>
+                        <input type="number" name="age" placeholder="Umrii" required>
+                        
+                        {% if current_branch == 'Head Office' %}
+                        <input type="text" name="branch_name" placeholder="Maqaa Damee (Fkn: Dadar)" required>
+                        {% endif %}
+                        
+                        <button type="submit">Galchi (Save)</button>
+                    </form>
+                </div>
+
+                <h3>Tarreeffama Hojjettootaa</h3>
+                <table>
+                    <tr>
+                        <th>Maqaa Guutuu</th>
+                        <th>Qacaroo</th>
+                        <th>Gonfoo</th>
+                        <th>Sadarkaa Barnootaa</th>
+                        <th>Umrii</th>
+                        <th>Damee</th>
+                    </tr>
+                    {% for emp in employees %}
+                    <tr>
+                        <td>{{ emp.full_name }}</td>
+                        <td>{{ emp.position }}</td>
+                        <td>{{ emp.rank }}</td>
+                        <td>{{ emp.education_level }}</td>
+                        <td>{{ emp.age }}</td>
+                        <td>{{ emp.branch_name }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="text-align: center;">Daataan galmaa'e hin jiru.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </body>
+        </html>
+        ''', employees=employees, branches=branches, current_branch=current_branch)
     except Exception as e:
         return f"TEMPLATE/DB ERROR: {str(e)}"
 
