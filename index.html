@@ -65,7 +65,7 @@
                 <button onclick="switchTab('users')" id="tabBtnUsers" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Useroota (Users)</button>
             </div>
 
-            <!-- TAB 1: DASHBOARD -->
+            <!-- TAB 1: DASHBOARD (DEFAULT) -->
             <div id="tabDashboard" class="space-y-6">
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -175,7 +175,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: REGISTRATION -->
+            <!-- TAB 2: REGISTRATION (HIDDEN BY DEFAULT) -->
             <div id="tabRegister" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
                 <h2 id="regFormTitle" class="text-base font-bold text-slate-800">Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)</h2>
                 <form id="memberForm" onsubmit="handleRegistration(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
@@ -201,7 +201,6 @@
                         </select>
                     </div>
                     
-                    <!-- Guyyaa Gulaantaa Gonfoo Argate -->
                     <div>
                         <label class="block text-slate-700 font-medium mb-1">Guyyaa Gulaantaa Gonfoo Argate (Guyyaa/Ji'a/Bara) *</label>
                         <div class="flex gap-1">
@@ -219,7 +218,6 @@
                         </select>
                     </div>
 
-                    <!-- Bara Qacarichaa -->
                     <div>
                         <label class="block text-slate-700 font-medium mb-1">Guyyaa Qacarichaa (Guyyaa/Ji'a/Bara) *</label>
                         <div class="flex gap-1">
@@ -229,7 +227,6 @@
                         </div>
                     </div>
 
-                    <!-- Bara Dhalootaa -->
                     <div>
                         <label class="block text-slate-700 font-medium mb-1">Guyyaa Dhalootaa (Guyyaa/Ji'a/Bara) *</label>
                         <div class="flex gap-1">
@@ -486,7 +483,7 @@
                 localStorage.setItem('hrkmso_logged_in', loggedInUser);
                 checkLoginState();
             } else {
-                alert("Maqaa Fayyadamaa ykn Jecha Darbii sirrii miti!");
+                alert("Maqaa Fayyadamaa (Username) ykn Jecha Darbii (Password) sirrii miti!");
             }
         }
 
@@ -496,21 +493,18 @@
             checkLoginState();
         }
 
-        function switchTab(tabId) {
-            const tabs = ['dashboard', 'register', 'members', 'branches', 'users'];
-            tabs.forEach(t => {
-                const el = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-                const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
-                if(el) el.classList.add('hidden');
+        function switchTab(tabName) {
+            ['dashboard', 'register', 'members', 'branches', 'users'].forEach(t => {
+                document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
+                const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
                 if(btn) {
                     btn.classList.remove('border-b-2', 'border-indigo-600', 'text-indigo-600');
                     btn.classList.add('text-slate-500');
                 }
             });
 
-            const activeEl = document.getElementById(`tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
-            const activeBtn = document.getElementById(`tabBtn${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
-            if(activeEl) activeEl.classList.remove('hidden');
+            document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
+            const activeBtn = document.getElementById('tabBtn' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
             if(activeBtn) {
                 activeBtn.classList.add('border-b-2', 'border-indigo-600', 'text-indigo-600');
                 activeBtn.classList.remove('text-slate-500');
@@ -518,135 +512,144 @@
         }
 
         function populateSelectOptions() {
-            const branchSelects = [document.getElementById('regBranch'), document.getElementById('filterBranch'), document.getElementById('newAssignedBranch')];
-            branchSelects.forEach((sel, idx) => {
-                if(!sel) return;
-                const currentVal = sel.value;
-                sel.innerHTML = idx === 1 ? '<option value="">-- Dameewwan Hundaa --</option>' : '';
-                branchesList.forEach(b => {
-                    sel.innerHTML += `<option value="${b}">${b}</option>`;
-                });
-                sel.value = currentVal;
+            const currentUser = getCurrentUserInfo();
+            const regBranch = document.getElementById('regBranch');
+            const filterBranch = document.getElementById('filterBranch');
+            const newAssignedBranch = document.getElementById('newAssignedBranch');
+
+            regBranch.innerHTML = '';
+            filterBranch.innerHTML = '<option value="">-- Dameewwan Hundaa --</option>';
+            newAssignedBranch.innerHTML = '';
+
+            let availableBranches = branchesList;
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                availableBranches = [currentUser.branch];
+            }
+
+            availableBranches.forEach(b => {
+                regBranch.innerHTML += `<option value="${b}">${b}</option>`;
+                filterBranch.innerHTML += `<option value="${b}">${b}</option>`;
+                newAssignedBranch.innerHTML += `<option value="${b}">${b}</option>`;
             });
 
-            const rankSelect = document.getElementById('regRank');
-            const filterRankSelect = document.getElementById('filterRank');
-            if(rankSelect && filterRankSelect) {
-                const currentRank = rankSelect.value;
-                const currentFilterRank = filterRankSelect.value;
+            const regRank = document.getElementById('regRank');
+            const filterRank = document.getElementById('filterRank');
+            regRank.innerHTML = '';
+            filterRank.innerHTML = '<option value="">-- Gulaataa Gonfoo Hundaa --</option>';
 
-                rankSelect.innerHTML = '';
-                filterRankSelect.innerHTML = '<option value="">-- Gulaataa Gonfoo Hundaa --</option>';
-
-                ranksList.forEach(r => {
-                    rankSelect.innerHTML += `<option value="${r}">${r}</option>`;
-                    filterRankSelect.innerHTML += `<option value="${r}">${r}</option>`;
-                });
-
-                rankSelect.value = currentRank;
-                filterRankSelect.value = currentFilterRank;
-            }
+            ranksList.forEach(r => {
+                regRank.innerHTML += `<option value="${r}">${r}</option>`;
+                filterRank.innerHTML += `<option value="${r}">${r}</option>`;
+            });
         }
 
         function initApp() {
             populateSelectOptions();
-            renderDashboardStats();
+            renderDashboard();
             renderMembersTable();
-            renderBranchesGrid();
+            renderBranches();
             renderUsersTable();
-            applyFilters();
         }
 
-        function renderDashboardStats() {
+        function getVisibleMembers() {
             const currentUser = getCurrentUserInfo();
-            let visibleMembers = membersData;
-
             if (currentUser && currentUser.role === 'Branch Manager') {
-                visibleMembers = membersData.filter(m => m.branch === currentUser.branch);
+                return membersData.filter(m => m.branch === currentUser.branch);
             }
+            return membersData;
+        }
 
-            const total = visibleMembers.length;
-            const active = visibleMembers.filter(m => m.status === 'Active').length;
+        function renderDashboard() {
+            const visible = getVisibleMembers();
+            const total = visible.length;
+            const active = visible.filter(m => m.status === 'Active').length;
             const terminated = total - active;
 
             document.getElementById('statTotalMembers').innerText = total;
             document.getElementById('statActiveMembers').innerText = active;
             document.getElementById('statTerminatedMembers').innerText = terminated;
-            document.getElementById('statBranchCountDisplay').innerText = branchesList.length;
 
-            // Gender breakdown
-            const males = visibleMembers.filter(m => m.status === 'Active' && m.gender === 'Dhiira').length;
-            const females = visibleMembers.filter(m => m.status === 'Active' && m.gender === 'Dhalaa').length;
-            const activeTotal = males + females;
+            const currentUser = getCurrentUserInfo();
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                document.getElementById('statBranchCountDisplay').innerText = "1";
+            } else {
+                document.getElementById('statBranchCountDisplay').innerText = branchesList.length;
+            }
 
-            const malePct = activeTotal > 0 ? Math.round((males / activeTotal) * 100) : 0;
-            const femalePct = activeTotal > 0 ? Math.round((females / activeTotal) * 100) : 0;
+            const males = visible.filter(m => m.status === 'Active' && m.gender === 'Dhiira').length;
+            const females = visible.filter(m => m.status === 'Active' && m.gender === 'Dhalaa').length;
+
+            const malePct = active > 0 ? Math.round((males / active) * 100) : 0;
+            const femalePct = active > 0 ? Math.round((females / active) * 100) : 0;
 
             document.getElementById('statMaleCount').innerText = `${males} (${malePct}%)`;
-            document.getElementById('statFemaleCount').innerText = `${females} (${femalePct}%)`;
             document.getElementById('barMale').style.width = `${malePct}%`;
+
+            document.getElementById('statFemaleCount').innerText = `${females} (${femalePct}%)`;
             document.getElementById('barFemale').style.width = `${femalePct}%`;
 
-            // Side branch preview
-            const previewList = document.getElementById('branchPreviewList');
-            previewList.innerHTML = '';
-            branchesList.forEach(b => {
+            renderSideBranchPreview();
+            applyFilters();
+        }
+
+        function renderSideBranchPreview() {
+            const container = document.getElementById('branchPreviewList');
+            container.innerHTML = '';
+
+            const currentUser = getCurrentUserInfo();
+            let listToDisplay = branchesList;
+            if (currentUser && currentUser.role === 'Branch Manager') {
+                listToDisplay = [currentUser.branch];
+                document.getElementById('sideBranchPreviewCard').style.display = 'none';
+                return;
+            }
+
+            listToDisplay.forEach(b => {
                 const count = membersData.filter(m => m.branch === b && m.status === 'Active').length;
-                previewList.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-100">
-                        <span class="font-medium text-slate-700">${b}</span>
-                        <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">${count} Active</span>
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded border">
+                        <span class="font-medium text-slate-700 truncate max-w-[180px]">${b}</span>
+                        <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold text-[10px]">${count} Active</span>
                     </div>
                 `;
             });
         }
 
         function applyFilters() {
-            const currentUser = getCurrentUserInfo();
-            const branchFilter = document.getElementById('filterBranch').value;
-            const rankFilter = document.getElementById('filterRank').value;
+            const visible = getVisibleMembers();
+            const branchVal = document.getElementById('filterBranch').value;
+            const rankVal = document.getElementById('filterRank').value;
             const searchVal = document.getElementById('filterSearch').value.toLowerCase().trim();
 
-            let data = membersData;
-
-            if (currentUser && currentUser.role === 'Branch Manager') {
-                data = data.filter(m => m.branch === currentUser.branch);
-                document.getElementById('filterBranchContainer').classList.add('hidden');
-            } else {
-                document.getElementById('filterBranchContainer').classList.remove('hidden');
-                if(branchFilter) {
-                    data = data.filter(m => m.branch === branchFilter);
-                }
-            }
-
-            if(rankFilter) {
-                data = data.filter(m => m.rank === rankFilter);
-            }
-
-            if(searchVal) {
-                data = data.filter(m => 
+            const filtered = visible.filter(m => {
+                const matchBranch = !branchVal || m.branch === branchVal;
+                const matchRank = !rankVal || m.rank === rankVal;
+                const matchSearch = !searchVal || 
                     m.name.toLowerCase().includes(searchVal) || 
                     m.id.toLowerCase().includes(searchVal) || 
-                    (m.hireYear && m.hireYear.includes(searchVal)) ||
-                    (m.promotionDate && m.promotionDate.includes(searchVal))
-                );
-            }
+                    (m.hireYear && m.hireYear.toLowerCase().includes(searchVal));
+                return matchBranch && matchRank && matchSearch;
+            });
 
             const tbody = document.getElementById('filteredTableBody');
             tbody.innerHTML = '';
 
-            if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-400">Daataan argame hin jiru.</td></tr>`;
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Daataan argame hin jiru.</td></tr>`;
                 return;
             }
 
-            data.forEach((m, idx) => {
-                const totalSalary = (Number(m.rankSalary) || 0) + (Number(m.locationAllowance) || 0) + (Number(m.foodAllowance) || 0);
+            filtered.forEach((m, idx) => {
+                const realIndex = membersData.indexOf(m);
+                const statusBadge = m.status === 'Active' 
+                    ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">Active</span>`
+                    : `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-semibold">${m.status}</span>`;
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
                         <td class="p-2.5">
                             <div class="font-bold text-slate-900">${m.name}</div>
-                            <div class="text-[10px] text-slate-500">ID: ${m.id}</div>
+                            <div class="text-[10px] text-slate-500">${m.id}</div>
                         </td>
                         <td class="p-2.5">
                             <div class="font-medium text-slate-800">${m.branch}</div>
@@ -654,18 +657,16 @@
                         </td>
                         <td class="p-2.5">
                             <div class="font-medium text-indigo-900">${m.rank}</div>
-                            <div class="text-[10px] text-slate-500">Mindaa: ${totalSalary} ETB</div>
-                        </td>
-                        <td class="p-2.5 text-[10px]">
-                            <div>Qacar: ${m.hireYear || '-'}</div>
-                            <div>Guddina: ${m.promotionDate || '-'}</div>
+                            <div class="text-[10px] text-slate-500">Mindaa: ${m.rankSalary} ETB</div>
                         </td>
                         <td class="p-2.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${m.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${m.status}</span>
+                            <div class="text-[10px]">Qac.: ${m.hireYear}</div>
+                            <div class="text-[10px] text-indigo-600">Gudd.: ${m.promotionDate || '-'}</div>
                         </td>
+                        <td class="p-2.5">${statusBadge}</td>
                         <td class="p-2.5 space-x-1">
-                            <button onclick="editMember(${membersData.indexOf(m)})" class="text-indigo-600 hover:underline">Gulaali</button>
-                            <button onclick="deleteMember(${membersData.indexOf(m)})" class="text-rose-600 hover:underline">Haqi</button>
+                            <button onclick="editMember(${realIndex})" class="bg-blue-500 text-white px-2 py-1 rounded text-[10px] hover:bg-blue-600">Gulaali</button>
+                            <button onclick="deleteMember(${realIndex})" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] hover:bg-red-600">Haqi</button>
                         </td>
                     </tr>
                 `;
@@ -681,34 +682,32 @@
 
         function handleRegistration(e) {
             e.preventDefault();
-            const editIdx = document.getElementById('editMemberIndex').value;
+            const editIndex = document.getElementById('editMemberIndex').value;
 
             const name = document.getElementById('regName').value.trim();
             const id = document.getElementById('regId').value.trim();
             const branch = document.getElementById('regBranch').value;
             const rank = document.getElementById('regRank').value;
-            
-            const rDay = document.getElementById('regRankDay').value;
-            const rMon = document.getElementById('regRankMonth').value;
-            const rYear = document.getElementById('regRankYear').value;
-            const promotionDate = `${rDay}/${rMon}/${rYear}`;
-
             const gender = document.getElementById('regGender').value;
 
-            const hDay = document.getElementById('regHireDay').value;
-            const hMon = document.getElementById('regHireMonth').value;
-            const hYear = document.getElementById('regHireYearVal').value;
-            const hireYear = `${hDay}/${hMon}/${hYear}`;
+            const rankDay = document.getElementById('regRankDay').value;
+            const rankMonth = document.getElementById('regRankMonth').value;
+            const rankYear = document.getElementById('regRankYear').value;
+            const promotionDate = `${rankDay}/${rankMonth}/${rankYear}`;
 
-            const bDay = document.getElementById('regBirthDay').value;
-            const bMon = document.getElementById('regBirthMonth').value;
-            const bYear = document.getElementById('regBirthYearVal').value;
-            const birthYear = `${bDay}/${bMon}/${bYear}`;
+            const hireDay = document.getElementById('regHireDay').value;
+            const hireMonth = document.getElementById('regHireMonth').value;
+            const hireYearVal = document.getElementById('regHireYearVal').value;
+            const hireYear = `${hireDay}/${hireMonth}/${hireYearVal}`;
+
+            const birthDay = document.getElementById('regBirthDay').value;
+            const birthMonth = document.getElementById('regBirthMonth').value;
+            const birthYearVal = document.getElementById('regBirthYearVal').value;
+            const birthYear = `${birthDay}/${birthMonth}/${birthYearVal}`;
 
             const rankSalary = parseFloat(document.getElementById('regRankSalary').value) || 0;
             const locationAllowance = parseFloat(document.getElementById('regLocationAllowance').value) || 0;
             const foodAllowance = parseFloat(document.getElementById('regFoodAllowance').value) || 0;
-            
             const eduLevel = document.getElementById('regEduLevel').value;
             const fieldOfStudy = document.getElementById('regFieldOfStudy').value.trim();
             const jobPosition = document.getElementById('regJobPosition').value.trim();
@@ -719,12 +718,12 @@
                 rankSalary, locationAllowance, foodAllowance, eduLevel, fieldOfStudy, jobPosition, status
             };
 
-            if(editIdx !== "") {
-                membersData[parseInt(editIdx)] = memberObj;
-                alert("Daataan miseensichaa milkaa'inaan haaromfameera!");
+            if (editIndex !== "") {
+                membersData[parseInt(editIndex)] = memberObj;
+                alert("Miseensichi sirriitti haaromfameera!");
             } else {
                 membersData.push(memberObj);
-                alert("Miseensi haaraan milkaa'inaan galmeeffameera!");
+                alert("Miseensi haaraan sirriitti galmeeffameera!");
             }
 
             saveData();
@@ -741,45 +740,39 @@
             document.getElementById('regBranch').value = m.branch;
             document.getElementById('regRank').value = m.rank;
 
-            if(m.promotionDate) {
+            if(m.promotionDate && m.promotionDate.includes('/')) {
                 const parts = m.promotionDate.split('/');
-                if(parts.length === 3) {
-                    document.getElementById('regRankDay').value = parts[0];
-                    document.getElementById('regRankMonth').value = parts[1];
-                    document.getElementById('regRankYear').value = parts[2];
-                }
+                document.getElementById('regRankDay').value = parts[0] || '';
+                document.getElementById('regRankMonth').value = parts[1] || '';
+                document.getElementById('regRankYear').value = parts[2] || '';
             }
 
             document.getElementById('regGender').value = m.gender;
 
-            if(m.hireYear) {
+            if(m.hireYear && m.hireYear.includes('/')) {
                 const parts = m.hireYear.split('/');
-                if(parts.length === 3) {
-                    document.getElementById('regHireDay').value = parts[0];
-                    document.getElementById('regHireMonth').value = parts[1];
-                    document.getElementById('regHireYearVal').value = parts[2];
-                }
+                document.getElementById('regHireDay').value = parts[0] || '';
+                document.getElementById('regHireMonth').value = parts[1] || '';
+                document.getElementById('regHireYearVal').value = parts[2] || '';
             }
 
-            if(m.birthYear) {
+            if(m.birthYear && m.birthYear.includes('/')) {
                 const parts = m.birthYear.split('/');
-                if(parts.length === 3) {
-                    document.getElementById('regBirthDay').value = parts[0];
-                    document.getElementById('regBirthMonth').value = parts[1];
-                    document.getElementById('regBirthYearVal').value = parts[2];
-                }
+                document.getElementById('regBirthDay').value = parts[0] || '';
+                document.getElementById('regBirthMonth').value = parts[1] || '';
+                document.getElementById('regBirthYearVal').value = parts[2] || '';
             }
 
             document.getElementById('regRankSalary').value = m.rankSalary;
             document.getElementById('regLocationAllowance').value = m.locationAllowance;
             document.getElementById('regFoodAllowance').value = m.foodAllowance;
-            document.getElementById('regEduLevel').value = m.eduLevel;
+            document.getElementById('regEduLevel').value = m.eduLevel || 'Diploma';
             document.getElementById('regFieldOfStudy').value = m.fieldOfStudy || '';
             document.getElementById('regJobPosition').value = m.jobPosition || '';
-            document.getElementById('regStatus').value = m.status;
+            document.getElementById('regStatus').value = m.status || 'Active';
 
-            document.getElementById('regFormTitle').innerText = "Gulaaluu Daataa Miseensa";
-            document.getElementById('submitRegBtn').innerText = "Haaromsi";
+            document.getElementById('regFormTitle').innerText = "Gulaaluu Daataa Miseensaa";
+            document.getElementById('submitRegBtn').innerText = "Daataa Haaromsi";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
 
             switchTab('register');
@@ -794,7 +787,7 @@
         }
 
         function deleteMember(index) {
-            if(confirm("Miseensa kana haquudhaaf mirkaneessaa?")) {
+            if(confirm("Miseensa kana haquu keetti mirkanaaftaa?")) {
                 membersData.splice(index, 1);
                 saveData();
                 initApp();
@@ -802,24 +795,28 @@
         }
 
         function renderMembersTable() {
-            const currentUser = getCurrentUserInfo();
-            let data = membersData;
-
-            if (currentUser && currentUser.role === 'Branch Manager') {
-                data = data.filter(m => m.branch === currentUser.branch);
-            }
-
+            const visible = getVisibleMembers();
             const tbody = document.getElementById('fullMembersTableBody');
             tbody.innerHTML = '';
-            document.getElementById('totalBadge').innerText = `${data.length} Total`;
+            document.getElementById('totalBadge').innerText = `${visible.length} Total`;
 
-            data.forEach((m, idx) => {
-                const totalSalary = (Number(m.rankSalary) || 0) + (Number(m.locationAllowance) || 0) + (Number(m.foodAllowance) || 0);
+            if(visible.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Miseensonni galmaa'an hin jiran.</td></tr>`;
+                return;
+            }
+
+            visible.forEach((m, idx) => {
+                const realIndex = membersData.indexOf(m);
+                const totalSalary = (m.rankSalary || 0) + (m.locationAllowance || 0) + (m.foodAllowance || 0);
+                const statusBadge = m.status === 'Active' 
+                    ? `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">Active</span>`
+                    : `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-semibold">${m.status}</span>`;
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3">
                             <div class="font-bold text-slate-900">${m.name}</div>
-                            <div class="text-[10px] text-slate-500">ID: ${m.id}</div>
+                            <div class="text-[10px] text-slate-500">${m.id} (${m.gender})</div>
                         </td>
                         <td class="p-3">
                             <div class="font-medium text-slate-800">${m.branch}</div>
@@ -827,53 +824,47 @@
                         </td>
                         <td class="p-3">
                             <div class="font-medium text-indigo-900">${m.rank}</div>
-                            <div class="text-[10px] text-slate-500">Mindaa: ${totalSalary} ETB</div>
-                        </td>
-                        <td class="p-3 text-[10px]">
-                            <div>${m.eduLevel || '-'}</div>
-                            <div class="text-slate-500">${m.fieldOfStudy || ''}</div>
-                        </td>
-                        <td class="p-3 text-[10px]">
-                            <div>Qacar: ${m.hireYear || '-'}</div>
-                            <div>Guddina: ${m.promotionDate || '-'}</div>
+                            <div class="text-[10px] text-slate-500">Ida'ama Mindaa: ${totalSalary} ETB</div>
                         </td>
                         <td class="p-3">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${m.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${m.status}</span>
+                            <div class="font-medium text-slate-700">${m.eduLevel || '-'}</div>
+                            <div class="text-[10px] text-slate-500">${m.fieldOfStudy || ''}</div>
+                        </td>
+                        <td class="p-3">
+                            <div class="text-[10px]">Qac.: ${m.hireYear}</div>
+                            <div class="text-[10px] text-indigo-600">Gudd.: ${m.promotionDate || '-'}</div>
+                        </td>
+                        <td class="p-3">
+                            <div>${statusBadge}</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5">Dhal.: ${m.birthYear || '-'}</div>
                         </td>
                         <td class="p-3 space-x-1">
-                            <button onclick="editMember(${membersData.indexOf(m)})" class="text-indigo-600 hover:underline">Gulaali</button>
-                            <button onclick="deleteMember(${membersData.indexOf(m)})" class="text-rose-600 hover:underline">Haqi</button>
+                            <button onclick="editMember(${realIndex})" class="bg-blue-500 text-white px-2 py-1 rounded text-[10px] hover:bg-blue-600">Gulaali</button>
+                            <button onclick="deleteMember(${realIndex})" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] hover:bg-red-600">Haqi</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        function renderBranchesGrid() {
+        function renderBranches() {
             const grid = document.getElementById('branchesGrid');
             grid.innerHTML = '';
 
             branchesList.forEach(b => {
                 const count = membersData.filter(m => m.branch === b && m.status === 'Active').length;
                 grid.innerHTML += `
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-2">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col justify-between">
                         <div>
-                            <h4 class="font-bold text-slate-800">${b}</h4>
-                            <p class="text-[10px] text-slate-500">Komishinii Manneen Sirreessaa</p>
+                            <h4 class="font-bold text-slate-800 text-xs">${b}</h4>
                         </div>
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-200">
-                            <span class="text-xs text-indigo-600 font-semibold">${count} Active Staff</span>
-                            <button onclick="filterByBranchQuick('${b}')" class="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">Daataa Ilaali</button>
+                        <div class="mt-3 flex justify-between items-center pt-2 border-t border-slate-200">
+                            <span class="text-[10px] text-slate-500">Active Staff</span>
+                            <span class="bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold text-[10px]">${count}</span>
                         </div>
                     </div>
                 `;
             });
-        }
-
-        function filterByBranchQuick(branchName) {
-            switchTab('dashboard');
-            document.getElementById('filterBranch').value = branchName;
-            applyFilters();
         }
 
         function toggleBranchSelection() {
@@ -881,32 +872,35 @@
             const container = document.getElementById('assignedBranchContainer');
             if(role === 'Branch Manager') {
                 container.classList.remove('hidden');
+                document.getElementById('newAssignedBranch').setAttribute('required', 'true');
             } else {
                 container.classList.add('hidden');
+                document.getElementById('newAssignedBranch').removeAttribute('required');
             }
         }
 
         function handleUserRegistration(e) {
             e.preventDefault();
-            const editIdx = document.getElementById('editUserIndex').value;
+            const editIndex = document.getElementById('editUserIndex').value;
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value.trim();
             const role = document.getElementById('newUserRole').value;
             const branch = role === 'Branch Manager' ? document.getElementById('newAssignedBranch').value : '';
-            const date = new Date().toISOString().split('T')[0];
 
-            const userObj = { username, password, role, branch, date };
+            const userObj = {
+                username, password, role, branch, date: new Date().toISOString().split('T')[0]
+            };
 
-            if(editIdx !== "") {
-                usersData[parseInt(editIdx)] = userObj;
-                alert("User-ichi milkaa'inaan haaromfameera!");
+            if (editIndex !== "") {
+                usersData[parseInt(editIndex)] = userObj;
+                alert("Userichi sirriitti haaromfameera!");
             } else {
                 if(usersData.some(u => u.username === username)) {
-                    alert("Maqaa fayyadamaa kanaan dura jira, maalo kan biraa filadhu!");
+                    alert("Maqaan fayyadamaa (Username) kun kanaan dura jira! Maaloo kan biroo fayyadami.");
                     return;
                 }
                 usersData.push(userObj);
-                alert("User-ichi milkaa'inaan uumameera!");
+                alert("Userichi sirriitti uumameera!");
             }
 
             saveData();
@@ -925,8 +919,8 @@
                 document.getElementById('newAssignedBranch').value = u.branch;
             }
 
-            document.getElementById('userFormTitleHeader').innerText = "Gulaaluu User-ichaa";
-            document.getElementById('submitUserBtn').innerText = "Haaromsi User";
+            document.getElementById('userFormTitleHeader').innerText = "Gulaaluu User Systemichaa";
+            document.getElementById('submitUserBtn').innerText = "User Haaromsi";
             document.getElementById('cancelUserEditBtn').classList.remove('hidden');
         }
 
@@ -941,10 +935,10 @@
 
         function deleteUser(index) {
             if(usersData[index].username === loggedInUser) {
-                alert("User amma hojiirra jiru haquu hin dandeessu!");
+                alert("User amma itti fayyadamaa jirtu haquu hin dandeessu!");
                 return;
             }
-            if(confirm("User kana haquudhaaf mirkaneessaa?")) {
+            if(confirm("User kana haquu keetti mirkanaaftaa?")) {
                 usersData.splice(index, 1);
                 saveData();
                 renderUsersTable();
@@ -957,24 +951,24 @@
             document.getElementById('userCountBadge').innerText = `${usersData.length} Users`;
 
             usersData.forEach((u, idx) => {
+                const roleBadge = u.role === 'Admin'
+                    ? `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">Admin (Head Office)</span>`
+                    : `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Branch Manager: ${u.branch}</span>`;
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-bold text-slate-900">${u.username}</td>
-                        <td class="p-3">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${u.role === 'Admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}">${u.role}</span>
-                            <span class="text-slate-500 text-[10px] ml-1">${u.branch ? `(${u.branch})` : ''}</span>
-                        </td>
-                        <td class="p-3 text-[10px] text-slate-500">${u.date || '-'}</td>
+                        <td class="p-3">${roleBadge}</td>
+                        <td class="p-3 text-slate-500">${u.date || '-'}</td>
                         <td class="p-3 space-x-1">
-                            <button onclick="editUser(${idx})" class="text-indigo-600 hover:underline">Gulaali</button>
-                            ${u.username !== 'admin_hrkmso' ? `<button onclick="deleteUser(${idx})" class="text-rose-600 hover:underline">Haqi</button>` : ''}
+                            <button onclick="editUser(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded text-[10px] hover:bg-blue-600">Gulaali</button>
+                            <button onclick="deleteUser(${idx})" class="bg-red-500 text-white px-2 py-1 rounded text-[10px] hover:bg-red-600">Haqi</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // Run on load
         window.onload = function() {
             checkLoginState();
         };
