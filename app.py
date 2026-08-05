@@ -113,7 +113,7 @@ def index():
         
     try:
         current_branch = session.get('branch_name')
-        selected_education = request.args.get('education')
+        selected_education = request.args.get('education_level')
         selected_rank = request.args.get('rank')
         
         query = Employee.query
@@ -125,10 +125,10 @@ def index():
                 query = query.filter_by(branch_name=selected_branch)
             
         if selected_education:
-            query = query.filter_by(education_level=selected_education)
+            query = query.filter(Employee.education_level.ilike(f"%{selected_education}%"))
 
         if selected_rank:
-            query = query.filter_by(rank=selected_rank)
+            query = query.filter(Employee.rank.ilike(f"%{selected_rank}%"))
             
         employees = query.all()
         branches = Branch.query.all()
@@ -173,7 +173,7 @@ def index():
                             <option value="Dadar">Dadar</option>
                             {% for b in branches %}
                                 {% if b.name != 'Dadar' and b.name != 'Head Office' %}
-                                <option value="{{ b.name }}">{{ b.name }}</option>
+                                <option value="{{ b.name }}" {% if request.args.get('branch') == b.name %}selected{% endif %}>{{ b.name }}</option>
                                 {% endif %}
                             {% endfor %}
                         </select>
