@@ -184,10 +184,13 @@
 
     <!-- Supabase Setup & JavaScript Logic -->
     <script>
+        // Supabase Client-in tokko qofa akka uumamu godhameera
         const SUPABASE_URL = 'https://jspbjzjutnwidvsoayna.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzcGJqemp1dG53aWR2c29heW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzMDgzNDcsImV4cCI6MjEwMDg4NDM0N30.Rbz9lKlQr0SAgWg5fwkvYPKHEhjc53r8Zf6K3mAAIEU';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: false }
+        });
 
         let allMembersCache = [];
 
