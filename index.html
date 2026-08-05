@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRKMSO - Komishinii Manneen Sirreessaa</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -19,7 +18,7 @@
                 <form onsubmit="handleLogin(event)">
                     <div class="mb-3">
                         <label class="form-label">Maqaa Fayyadamaa (Username)</label>
-                        <input type="text" id="loginUsername" class="form-control" required placeholder="Fkn: admin ykn Dadar">
+                        <input type="text" id="loginUsername" class="form-control" required placeholder="Fkn: admin_hrkmso ykn Dadar">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Jecha Darbii (Password)</label>
@@ -31,13 +30,13 @@
         </div>
     </div>
 
-    <!-- Branch & Admin Dashboard Section -->
+    <!-- Main Dashboard Section -->
     <div id="branchSection" class="container mt-4" style="display:none;">
         <div class="row mb-4">
             <div class="col-md-12 d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 id="branchTitle">To'annoo Damee</h2>
-                    <p class="text-muted" id="branchSubtitle">Galmee miseensotaa fi gabaasa gosa addaddaa hordofaa.</p>
+                    <h2 id="branchTitle">To'annoo Sirnichaa</h2>
+                    <p class="text-muted" id="branchSubtitle">Galmee miseensotaa fi gabaasa hordofaa.</p>
                 </div>
                 <button class="btn btn-outline-danger" onclick="handleLogout()">Ba'i (Logout)</button>
             </div>
@@ -71,7 +70,34 @@
             </div>
         </div>
 
-        <!-- Registration Form (Only for Branches, Hidden for Admin Head Office) -->
+        <!-- User Management Card (Only for admin_hrkmso) -->
+        <div class="card shadow mb-4" id="userManagementCard" style="display:none;">
+            <div class="card-header bg-dark text-white">
+                <h4>User / Damee Haaraa Uumuu</h4>
+            </div>
+            <div class="card-body">
+                <form onsubmit="createNewUser(event)">
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">Maqaa Damee / User</label>
+                            <input type="text" id="newUsername" class="form-control" required placeholder="Fkn: Dadar">
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label">Jecha Darbii (Password)</label>
+                            <input type="text" id="newUserPassword" class="form-control" required placeholder="Password kenniif">
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success w-100">Uumi</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <h6>Userootni / Dameewwan Amma Jiran:</h6>
+                <ul id="usersList" class="list-group"></ul>
+            </div>
+        </div>
+
+        <!-- Registration Form (Only for Branches) -->
         <div class="card shadow mb-4" id="registrationCard">
             <div class="card-header bg-dark text-white">
                 <h4>Galmee Miseensaa Haaraa (Damee)</h4>
@@ -117,7 +143,7 @@
         <!-- Reporting & Filtering Section -->
         <div class="card shadow mb-5">
             <div class="card-header bg-secondary text-white">
-                <h4 class="mb-0" id="tableHeaderTitle">Gabaasa Miseensota Damee (Filtering)</h4>
+                <h4 class="mb-0" id="tableHeaderTitle">Gabaasa Miseensota</h4>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -145,9 +171,7 @@
                                 <th>Damee</th>
                             </tr>
                         </thead>
-                        <tbody id="memberTableBody">
-                            <!-- Data dynamic-riin keessa guutama -->
-                        </tbody>
+                        <tbody id="memberTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -156,6 +180,20 @@
 
     <!-- JavaScript Logic -->
     <script>
+        // Default admin user yoo hin jiraatin uuma
+        if (!localStorage.getItem('hrkmso_users')) {
+            const defaultUsers = [{ username: 'admin_hrkmso', password: '123' }];
+            localStorage.setItem('hrkmso_users', JSON.stringify(defaultUsers));
+        }
+
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('hrkmso_users')) || [];
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('hrkmso_users', JSON.stringify(users));
+        }
+
         function getMembers() {
             return JSON.parse(localStorage.getItem('hrkmso_members')) || [];
         }
@@ -178,45 +216,78 @@
             const u = document.getElementById('loginUsername').value.trim();
             const p = document.getElementById('loginPassword').value.trim();
             
-            if(u !== "" && p !== "") {
+            const users = getUsers();
+            const validUser = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+
+            if (u.toLowerCase() === 'admin_hrkmso' && p === '123' || validUser) {
                 localStorage.setItem('hrkmso_logged_in', u);
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('branchSection').style.display = 'block';
                 initDashboard(u);
-                
                 document.getElementById('loginUsername').value = "";
                 document.getElementById('loginPassword').value = "";
             } else {
-                alert("Maqaa Fayyadamaa fi Jecha Darbii guutuu qabda!");
+                alert("Maqaa Fayyadamaa ykn Jecha Darbii dogoggoraadha!");
             }
         }
 
         function handleLogout() {
             localStorage.removeItem('hrkmso_logged_in');
-            document.getElementById('branchSection').style.display = 'none';
-            document.getElementById('loginSection').style.display = 'block';
             location.reload();
         }
 
         function initDashboard(user) {
-            const isAdmin = (user.toLowerCase() === 'admin' || user.toLowerCase() === 'headoffice');
+            const isAdmin = (user.toLowerCase() === 'admin_hrkmso');
 
             if (isAdmin) {
                 document.getElementById('branchTitle').innerText = "Head Office - To'annoo Waliigalaa";
-                document.getElementById('branchSubtitle').innerText = "Dameewwan hunda irraa ragaa fi gabaasa waliigalaa hordofaa.";
-                document.getElementById('cardTitleTotal').innerText = "Miseensota Waliigalaa (Biyya Osoo Hin Taane Waliigala)";
+                document.getElementById('branchSubtitle').innerText = "Dameewwan hunda uumuu, ragaa fi gabaasa hordofaa.";
+                document.getElementById('cardTitleTotal').innerText = "Miseensota Waliigalaa Dameewwan Hunda";
                 document.getElementById('registrationCard').style.display = 'none';
+                document.getElementById('userManagementCard').style.display = 'block';
                 document.getElementById('tableHeaderTitle').innerText = "Gabaasa Waliigalaa Dameewwan Hunda";
+                loadUsersList();
                 loadHeadOfficeData();
             } else {
                 document.getElementById('branchTitle').innerText = `To'annoo Damee: ${user}`;
-                document.getElementById('branchSubtitle').innerText = "Galmee miseensotaa fi gabaasa gosa addaddaa damee keessanii hordofaa.";
+                document.getElementById('branchSubtitle').innerText = "Galmee miseensotaa fi gabaasa damee keessanii hordofaa.";
                 document.getElementById('cardTitleTotal').innerText = "Miseensota Waliigalaa Damee";
                 document.getElementById('registrationCard').style.display = 'block';
-                document.getElementById('tableHeaderTitle').innerText = "Gabaasa Miseensota Damee (Filtering)";
+                document.getElementById('userManagementCard').style.display = 'none';
+                document.getElementById('tableHeaderTitle').innerText = "Gabaasa Miseensota Damee";
                 document.getElementById('mBranch').value = user;
                 loadBranchData(user);
             }
+        }
+
+        function createNewUser(e) {
+            e.preventDefault();
+            const newU = document.getElementById('newUsername').value.trim();
+            const newP = document.getElementById('newUserPassword').value.trim();
+
+            let users = getUsers();
+            if (users.some(x => x.username.toLowerCase() === newU.toLowerCase())) {
+                alert("Dameen/User-ni kun kanaan dura jira!");
+                return;
+            }
+
+            users.push({ username: newU, password: newP });
+            saveUsers(users);
+            alert("User/Dameen haaraan milkaa'inaan uumameera!");
+            document.getElementById('newUsername').value = "";
+            document.getElementById('newUserPassword').value = "";
+            loadUsersList();
+        }
+
+        function loadUsersList() {
+            const users = getUsers();
+            const list = document.getElementById('usersList');
+            list.innerHTML = "";
+            users.forEach(u => {
+                if(u.username.toLowerCase() !== 'admin_hrkmso') {
+                    list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${u.username} <span class="badge bg-primary rounded-pill">Damee</span></li>`;
+                }
+            });
         }
 
         function registerBranchMember(e) {
@@ -260,7 +331,7 @@
             tbody.innerHTML = "";
 
             if (members.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Miseensonni galmaa'an hin jiran.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Miseensonni galmaa'ان hin jiran.</td></tr>`;
                 return;
             }
 
@@ -279,7 +350,7 @@
 
         function filterMembers() {
             const loggedInUser = localStorage.getItem('hrkmso_logged_in');
-            const isAdmin = (loggedInUser.toLowerCase() === 'admin' || loggedInUser.toLowerCase() === 'headoffice');
+            const isAdmin = (loggedInUser.toLowerCase() === 'admin_hrkmso');
             
             const keyword = document.getElementById('filterKeyword').value.toLowerCase();
             const eduFilter = document.getElementById('filterEducation').value;
