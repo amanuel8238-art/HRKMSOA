@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRKMSO - Komishinii Manneen Sirreessaa</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-light">
 
@@ -169,6 +172,7 @@
                                 <th>Sadarkaa Barumsaa</th>
                                 <th>Gonfoo</th>
                                 <th>Damee</th>
+                                <th>Guyyaa Galmee</th>
                             </tr>
                         </thead>
                         <tbody id="memberTableBody"></tbody>
@@ -178,52 +182,53 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- Supabase Setup & JavaScript Logic -->
     <script>
-        // Default admin user yoo hin jiraatin uuma
-        if (!localStorage.getItem('hrkmso_users')) {
-            const defaultUsers = [{ username: 'admin_hrkmso', password: '123' }];
-            localStorage.setItem('hrkmso_users', JSON.stringify(defaultUsers));
-        }
+        const SUPABASE_URL = 'https://jspbjzjutnwidvsoayna.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzcGJqemp1dG53aWR2c29heW5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzMDgzNDcsImV4cCI6MjEwMDg4NDM0N30.Rbz9lKlQr0SAgWg5fwkvYPKHEhjc53r8Zf6K3mAAIEU';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function getUsers() {
-            return JSON.parse(localStorage.getItem('hrkmso_users')) || [];
-        }
+        let allMembersCache = [];
 
-        function saveUsers(users) {
-            localStorage.setItem('hrkmso_users', JSON.stringify(users));
-        }
-
-        function getMembers() {
-            return JSON.parse(localStorage.getItem('hrkmso_members')) || [];
-        }
-
-        function saveMembers(members) {
-            localStorage.setItem('hrkmso_members', JSON.stringify(members));
-        }
-
-        window.onload = function() {
+        window.onload = async function() {
             const loggedInUser = localStorage.getItem('hrkmso_logged_in');
             if (loggedInUser) {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('branchSection').style.display = 'block';
-                initDashboard(loggedInUser);
+                await initDashboard(loggedInUser);
             }
         }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('loginUsername').value.trim();
             const p = document.getElementById('loginPassword').value.trim();
             
-            const users = getUsers();
-            const validUser = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
-
-            if (u.toLowerCase() === 'admin_hrkmso' && p === '123' || validUser) {
+            if (u.toLowerCase() === 'admin_hrkmso' && p === '123') {
                 localStorage.setItem('hrkmso_logged_in', u);
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('branchSection').style.display = 'block';
-                initDashboard(u);
+                await initDashboard(u);
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .ilike('username', u)
+                .eq('password', p);
+
+            if (error) {
+                alert("Rakkoo network: " + error.message);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                localStorage.setItem('hrkmso_logged_in', u);
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('branchSection').style.display = 'block';
+                await initDashboard(u);
                 document.getElementById('loginUsername').value = "";
                 document.getElementById('loginPassword').value = "";
             } else {
@@ -236,7 +241,7 @@
             location.reload();
         }
 
-        function initDashboard(user) {
+        async function initDashboard(user) {
             const isAdmin = (user.toLowerCase() === 'admin_hrkmso');
 
             if (isAdmin) {
@@ -246,8 +251,8 @@
                 document.getElementById('registrationCard').style.display = 'none';
                 document.getElementById('userManagementCard').style.display = 'block';
                 document.getElementById('tableHeaderTitle').innerText = "Gabaasa Waliigalaa Dameewwan Hunda";
-                loadUsersList();
-                loadHeadOfficeData();
+                await loadUsersList();
+                await loadHeadOfficeData();
             } else {
                 document.getElementById('branchTitle').innerText = `To'annoo Damee: ${user}`;
                 document.getElementById('branchSubtitle').innerText = "Galmee miseensotaa fi gabaasa damee keessanii hordofaa.";
@@ -256,82 +261,104 @@
                 document.getElementById('userManagementCard').style.display = 'none';
                 document.getElementById('tableHeaderTitle').innerText = "Gabaasa Miseensota Damee";
                 document.getElementById('mBranch').value = user;
-                loadBranchData(user);
+                await loadBranchData(user);
             }
         }
 
-        function createNewUser(e) {
+        async function createNewUser(e) {
             e.preventDefault();
             const newU = document.getElementById('newUsername').value.trim();
             const newP = document.getElementById('newUserPassword').value.trim();
 
-            let users = getUsers();
-            if (users.some(x => x.username.toLowerCase() === newU.toLowerCase())) {
-                alert("Dameen/User-ni kun kanaan dura jira!");
+            const { error } = await supabase
+                .from('profiles')
+                .insert([{ username: newU, password: newP }]);
+
+            if (error) {
+                alert("Rakkoon uumameera: " + error.message);
                 return;
             }
 
-            users.push({ username: newU, password: newP });
-            saveUsers(users);
             alert("User/Dameen haaraan milkaa'inaan uumameera!");
             document.getElementById('newUsername').value = "";
             document.getElementById('newUserPassword').value = "";
-            loadUsersList();
+            await loadUsersList();
         }
 
-        function loadUsersList() {
-            const users = getUsers();
+        async function loadUsersList() {
+            const { data, error } = await supabase.from('profiles').select('*');
+            if (error) return;
+
             const list = document.getElementById('usersList');
             list.innerHTML = "";
-            users.forEach(u => {
-                if(u.username.toLowerCase() !== 'admin_hrkmso') {
-                    list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${u.username} <span class="badge bg-primary rounded-pill">Damee</span></li>`;
-                }
-            });
+            if (data) {
+                data.forEach(u => {
+                    if(u.username.toLowerCase() !== 'admin_hrkmso') {
+                        list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${u.username} <span class="badge bg-primary rounded-pill">Damee</span></li>`;
+                    }
+                });
+            }
         }
 
-        function registerBranchMember(e) {
+        async function registerBranchMember(e) {
             e.preventDefault();
             const name = document.getElementById('mName').value.trim();
-            const age = document.getElementById('mAge').value.trim();
+            const age = parseInt(document.getElementById('mAge').value.trim());
             const education = document.getElementById('mEducation').value.trim();
             const rank = document.getElementById('mRank').value.trim();
             const branch = document.getElementById('mBranch').value.trim();
+            const date = new Date().toLocaleDateString();
 
-            const members = getMembers();
-            members.push({ name, age, education, rank, branch, date: new Date().toISOString() });
-            saveMembers(members);
+            const { error } = await supabase
+                .from('members')
+                .insert([{ name, age, education, rank, branch, date }]);
+
+            if (error) {
+                alert("Galmeessuu irratti rakkoo uumame: " + error.message);
+                return;
+            }
 
             alert("Miseensi haaraan milkaa'inaan galmeeffameera!");
             document.getElementById('branchMemberForm').reset();
             document.getElementById('mBranch').value = branch; 
-            loadBranchData(branch);
+            await loadBranchData(branch);
         }
 
-        function loadBranchData(branchName) {
-            const members = getMembers();
-            const branchMembers = members.filter(m => m.branch.toLowerCase() === branchName.toLowerCase());
+        async function loadBranchData(branchName) {
+            const { data, error } = await supabase
+                .from('members')
+                .select('*')
+                .ilike('branch', branchName);
 
-            document.getElementById('totalBranchMembers').innerText = branchMembers.length;
-            document.getElementById('newBranchMembers').innerText = branchMembers.filter(m => new Date(m.date).toDateString() === new Date().toDateString()).length;
+            if (error) return;
 
-            displayTable(branchMembers);
+            allMembersCache = data || [];
+            document.getElementById('totalBranchMembers').innerText = allMembersCache.length;
+            document.getElementById('newBranchMembers').innerText = allMembersCache.filter(m => m.date === new Date().toLocaleDateString()).length;
+
+            displayTable(allMembersCache);
         }
 
-        function loadHeadOfficeData() {
-            const members = getMembers();
-            document.getElementById('totalBranchMembers').innerText = members.length;
-            document.getElementById('newBranchMembers').innerText = members.filter(m => new Date(m.date).toDateString() === new Date().toDateString()).length;
+        async function loadHeadOfficeData() {
+            const { data, error } = await supabase
+                .from('members')
+                .select('*');
 
-            displayTable(members);
+            if (error) return;
+
+            allMembersCache = data || [];
+            document.getElementById('totalBranchMembers').innerText = allMembersCache.length;
+            document.getElementById('newBranchMembers').innerText = allMembersCache.filter(m => m.date === new Date().toLocaleDateString()).length;
+
+            displayTable(allMembersCache);
         }
 
         function displayTable(members) {
             const tbody = document.getElementById('memberTableBody');
             tbody.innerHTML = "";
 
-            if (members.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Miseensonni galmaa'ان hin jiran.</td></tr>`;
+            if (!members || members.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Miseensonni galmaa'an hin jiran.</td></tr>`;
                 return;
             }
 
@@ -343,20 +370,17 @@
                         <td>${m.education}</td>
                         <td>${m.rank}</td>
                         <td><strong>${m.branch}</strong></td>
+                        <td>${m.date || '-'}</td>
                     </tr>
                 `;
             });
         }
 
         function filterMembers() {
-            const loggedInUser = localStorage.getItem('hrkmso_logged_in');
-            const isAdmin = (loggedInUser.toLowerCase() === 'admin_hrkmso');
-            
             const keyword = document.getElementById('filterKeyword').value.toLowerCase();
             const eduFilter = document.getElementById('filterEducation').value;
 
-            const members = getMembers();
-            let filtered = isAdmin ? members : members.filter(m => m.branch.toLowerCase() === loggedInUser.toLowerCase());
+            let filtered = allMembersCache;
 
             if (keyword) {
                 filtered = filtered.filter(m => m.name.toLowerCase().includes(keyword) || m.rank.toLowerCase().includes(keyword) || m.branch.toLowerCase().includes(keyword));
