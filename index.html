@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <!-- Branch Dashboard & Registration Section -->
+    <!-- Branch & Admin Dashboard Section -->
     <div id="branchSection" class="container mt-4" style="display:none;">
         <div class="row mb-4">
             <div class="col-md-12 d-flex justify-content-between align-items-center">
@@ -183,6 +183,9 @@
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('branchSection').style.display = 'block';
                 initDashboard(u);
+                
+                document.getElementById('loginUsername').value = "";
+                document.getElementById('loginPassword').value = "";
             } else {
                 alert("Maqaa Fayyadamaa fi Jecha Darbii guutuu qabda!");
             }
@@ -190,6 +193,8 @@
 
         function handleLogout() {
             localStorage.removeItem('hrkmso_logged_in');
+            document.getElementById('branchSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
             location.reload();
         }
 
@@ -199,8 +204,8 @@
             if (isAdmin) {
                 document.getElementById('branchTitle').innerText = "Head Office - To'annoo Waliigalaa";
                 document.getElementById('branchSubtitle').innerText = "Dameewwan hunda irraa ragaa fi gabaasa waliigalaa hordofaa.";
-                document.getElementById('cardTitleTotal').innerText = "Miseensota Waliigalaa (Biyya Lolaa)";
-                document.getElementById('registrationCard').style.display = 'none'; // Head office fuula galmee hin qabu
+                document.getElementById('cardTitleTotal').innerText = "Miseensota Waliigalaa (Biyya Osoo Hin Taane Waliigala)";
+                document.getElementById('registrationCard').style.display = 'none';
                 document.getElementById('tableHeaderTitle').innerText = "Gabaasa Waliigalaa Dameewwan Hunda";
                 loadHeadOfficeData();
             } else {
