@@ -22,7 +22,7 @@
             <form onsubmit="handleLogin(event)" class="space-y-4 text-xs">
                 <div>
                     <label class="block text-slate-700 font-medium mb-1">Maqaa Fayyadamaa (Username)</label>
-                    <input type="text" id="loginUsername" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. admin_hrkmso">
+                    <input type="text" id="loginUsername" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. admin">
                 </div>
                 <div>
                     <label class="block text-slate-700 font-medium mb-1">Jecha Darbii (Password)</label>
@@ -43,10 +43,10 @@
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
-                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Sirreessaa (Total)</p>
+                    <p id="headerSubtitle" class="text-xs text-indigo-200">Komishinii Manneen Sirreessaa Oromiyaa</p>
                 </div>
                 <div class="flex items-center gap-4 text-sm">
-                    <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b id="currentAdminUser">admin_hrkmso</b></span>
+                    <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b id="currentAdminUser">admin</b></span>
                     <button onclick="handleLogout()" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition">Bahi (Logout)</button>
                 </div>
             </div>
@@ -106,8 +106,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-slate-600 mb-1 font-medium">Barbaadi (Maqaa / ID / Bara)</label>
-                                <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Fkn. Maqaa, ID ykn 2015" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                                <label class="block text-slate-600 mb-1 font-medium">Barbaadi (Maqaa / ID)</label>
+                                <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Fkn. Maqaa ykn ID" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
@@ -118,7 +118,7 @@
                                         <th class="p-2.5">Maqaa & ID</th>
                                         <th class="p-2.5">Damee & Gita Hojii</th>
                                         <th class="p-2.5">Gonfoo & Mindaa</th>
-                                        <th class="p-2.5">Guyyaa Qacarichaa & Guddinaa</th>
+                                        <th class="p-2.5">Barumsa</th>
                                         <th class="p-2.5">Haala / Status</th>
                                         <th class="p-2.5">Action</th>
                                     </tr>
@@ -152,11 +152,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div id="sideBranchPreviewCard" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="font-bold text-slate-800 text-sm mb-3">Dameewwan Manneen Sirreessaa</h3>
-                            <div id="branchPreviewList" class="space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -165,7 +160,6 @@
             <div id="tabRegister" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
                 <h2 id="regFormTitle" class="text-base font-bold text-slate-800">Galmee Miseensa Haaraa</h2>
                 <form id="memberForm" onsubmit="handleRegistration(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                    <input type="hidden" id="editMemberIndex" value="">
                     <div>
                         <label class="block text-slate-700 font-medium mb-1">Maqaa Guutuu *</label>
                         <input type="text" id="regName" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Maqaa Guutuu">
@@ -213,8 +207,8 @@
                             <option value="Sababa Fedhiitiin">Sababa Fedhiitiin</option>
                         </select>
                     </div>
-                    <div class="md:col-span-3 flex justify-end mt-2 gap-2">
-                        <button type="submit" id="submitRegBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition">Miseensa Galmeessi</button>
+                    <div class="md:col-span-3 flex justify-end mt-2">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition">Miseensa Galmeessi</button>
                     </div>
                 </form>
             </div>
@@ -244,8 +238,8 @@
 
             <!-- TAB 4: BRANCHES -->
             <div id="tabBranches" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
-                <h2 class="text-base font-bold text-slate-800">Bulchiinsa Dameewwanii</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs" id="branchesGrid"></div>
+                <h2 class="text-base font-bold text-slate-800">Bulchiinsa Dameewwanii (39)</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 text-xs" id="branchesGrid"></div>
             </div>
 
             <!-- TAB 5: USERS -->
@@ -256,11 +250,13 @@
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 uppercase">
                                 <th class="p-3">Username</th>
-                                <th class="p-3">Role & Assigned Branch</th>
+                                <th class="p-3">Role</th>
                                 <th class="p-3">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody" class="divide-y divide-slate-200"></tbody>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-200">
+                            <tr><td class="p-3">admin</td><td class="p-3">Admin</td><td class="p-3">-</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -282,9 +278,6 @@
         const ranksList = ["Konstaabilii", "Saajin", "Inspeektaraa", "Komandaraa"];
 
         let membersData = JSON.parse(localStorage.getItem('hrkmso_members')) || [];
-        let usersData = JSON.parse(localStorage.getItem('hrkmso_users')) || [
-            { username: "admin", password: "password123", role: "Admin", branch: "" }
-        ];
         let loggedInUser = localStorage.getItem('hrkmso_logged_in') || null;
 
         function checkLoginState() {
@@ -303,13 +296,12 @@
             e.preventDefault();
             const u = document.getElementById('loginUsername').value.trim();
             const p = document.getElementById('loginPassword').value.trim();
-            const found = usersData.find(x => x.username === u && x.password === p);
-            if(found) {
-                loggedInUser = found.username;
+            if(u && p) {
+                loggedInUser = u;
                 localStorage.setItem('hrkmso_logged_in', loggedInUser);
                 checkLoginState();
             } else {
-                alert("Maqaa ykn Jecha darbii dogoggoraati!");
+                alert("Maqaa ykn Jecha darbii galchi!");
             }
         }
 
@@ -321,23 +313,44 @@
 
         function switchTab(tab) {
             ['dashboard', 'register', 'members', 'branches', 'users'].forEach(t => {
-                document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
+                const el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+                if(el) el.classList.add('hidden');
+                
+                const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                if(btn) {
+                    btn.classList.remove('border-b-2', 'border-indigo-600', 'text-indigo-600');
+                    btn.classList.add('text-slate-500');
+                }
             });
-            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+            
+            const activeTab = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if(activeTab) activeTab.classList.remove('hidden');
+
+            const activeBtn = document.getElementById('tabBtn' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if(activeBtn) {
+                activeBtn.classList.add('border-b-2', 'border-indigo-600', 'text-indigo-600');
+                activeBtn.classList.remove('text-slate-500');
+            }
         }
 
         function initApp() {
             const regBranch = document.getElementById('regBranch');
-            regBranch.innerHTML = branchesList.map(b => `<option value="${b}">${b}</option>`).join('');
+            if(regBranch) regBranch.innerHTML = branchesList.map(b => `<option value="${b}">${b}</option>`).join('');
 
             const regRank = document.getElementById('regRank');
-            regRank.innerHTML = ranksList.map(r => `<option value="${r}">${r}</option>`).join('');
+            if(regRank) regRank.innerHTML = ranksList.map(r => `<option value="${r}">${r}</option>`).join('');
 
             const filterBranch = document.getElementById('filterBranch');
-            filterBranch.innerHTML = '<option value="">-- Dameewwan Hundaa --</option>' + branchesList.map(b => `<option value="${b}">${b}</option>`).join('');
+            if(filterBranch) filterBranch.innerHTML = '<option value="">-- Dameewwan Hundaa --</option>' + branchesList.map(b => `<option value="${b}">${b}</option>`).join('');
 
             const filterRank = document.getElementById('filterRank');
-            filterRank.innerHTML = '<option value="">-- Gulaataa Hundaa --</option>' + ranksList.map(r => `<option value="${r}">${r}</option>`).join('');
+            if(filterRank) filterRank.innerHTML = '<option value="">-- Gulaataa Hundaa --</option>' + ranksList.map(r => `<option value="${r}">${r}</option>`).join('');
+
+            // Populate branches grid tab
+            const bGrid = document.getElementById('branchesGrid');
+            if(bGrid) {
+                bGrid.innerHTML = branchesList.map(b => `<div class="bg-slate-50 p-3 rounded border text-slate-700 font-medium">${b}</div>`).join('');
+            }
 
             renderTables();
         }
@@ -357,7 +370,7 @@
             };
             membersData.push(newMem);
             localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
-            alert("Galmeeffameera!");
+            alert("Miseensi haaraan milkaa'inaan galmeeffameera!");
             document.getElementById('memberForm').reset();
             switchTab('members');
             renderTables();
@@ -367,27 +380,63 @@
             const tbody = document.getElementById('filteredTableBody');
             const fullTbody = document.getElementById('fullMembersTableBody');
             
+            const fBranch = document.getElementById('filterBranch')?.value || "";
+            const fRank = document.getElementById('filterRank')?.value || "";
+            const fSearch = document.getElementById('filterSearch')?.value.toLowerCase() || "";
+
+            const filtered = membersData.filter(m => {
+                const matchB = fBranch === "" || m.branch === fBranch;
+                const matchR = fRank === "" || m.rank === fRank;
+                const matchS = fSearch === "" || m.name.toLowerCase().includes(fSearch) || m.id.toLowerCase().includes(fSearch);
+                return matchB && matchR && matchS;
+            });
+
             let html = "";
-            membersData.forEach((m, idx) => {
+            filtered.forEach((m, idx) => {
+                // Find actual global index for deletion
+                const realIdx = membersData.indexOf(m);
                 html += `<tr>
-                    <td class="p-2.5">${m.name}<br><span class="text-gray-400">${m.id}</span></td>
-                    <td class="p-2.5">${m.branch}<br>${m.jobPosition}</td>
+                    <td class="p-2.5 font-medium">${m.name}<br><span class="text-slate-400">${m.id}</span></td>
+                    <td class="p-2.5">${m.branch}<br><span class="text-slate-500">${m.jobPosition}</span></td>
                     <td class="p-2.5">${m.rank}<br>${m.rankSalary} ETB</td>
                     <td class="p-2.5">${m.eduLevel}</td>
-                    <td class="p-2.5">${m.status}</td>
-                    <td class="p-2.5"><button onclick="deleteMember(${idx})" class="text-red-600">Haqi</button></td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] ${m.status==='Active'?'bg-emerald-100 text-emerald-800':'bg-rose-100 text-rose-800'}">${m.status}</span></td>
+                    <td class="p-2.5"><button onclick="deleteMember(${realIdx})" class="text-red-600 hover:underline">Haqi</button></td>
                 </tr>`;
             });
-            tbody.innerHTML = html || '<tr><td colspan="6" class="p-4 text-center">Daataan galmaa'e hin jiru.</td></tr>';
-            fullTbody.innerHTML = html;
-            document.getElementById('statTotalMembers').innerText = membersData.length;
-            document.getElementById('statActiveMembers').innerText = membersData.filter(m => m.status === 'Active').length;
+
+            const emptyRow = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Daataan galmaa'e hin jiru.</td></tr>`;
+            if(tbody) tbody.innerHTML = html || emptyRow;
+            if(fullTbody) fullTbody.innerHTML = html || emptyRow;
+
+            // Stats update
+            const total = membersData.length;
+            const active = membersData.filter(m => m.status === 'Active').length;
+            const term = total - active;
+
+            if(document.getElementById('statTotalMembers')) document.getElementById('statTotalMembers').innerText = total;
+            if(document.getElementById('statActiveMembers')) document.getElementById('statActiveMembers').innerText = active;
+            if(document.getElementById('statTerminatedMembers')) document.getElementById('statTerminatedMembers').innerText = term;
+            if(document.getElementById('totalBadge')) document.getElementById('totalBadge').innerText = total + " Total";
+
+            // Gender stats
+            const males = membersData.filter(m => m.gender === 'Dhiira' && m.status === 'Active').length;
+            const females = membersData.filter(m => m.gender === 'Dhalaa' && m.status === 'Active').length;
+            const activeTotal = active || 1; // avoid division by zero
+            
+            if(document.getElementById('statMaleCount')) document.getElementById('statMaleCount').innerText = `${males} (${Math.round((males/activeTotal)*100)}%)`;
+            if(document.getElementById('statFemaleCount')) document.getElementById('statFemaleCount').innerText = `${females} (${Math.round((females/activeTotal)*100)}%)`;
+            
+            if(document.getElementById('barMale')) document.getElementById('barMale').style.width = `${(males/activeTotal)*100}%`;
+            if(document.getElementById('barFemale')) document.getElementById('barFemale').style.width = `${(females/activeTotal)*100}%`;
         }
 
         function deleteMember(idx) {
-            membersData.splice(idx, 1);
-            localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
-            renderTables();
+            if(confirm("Miseensa kana haquu feeta?")) {
+                membersData.splice(idx, 1);
+                localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
+                renderTables();
+            }
         }
 
         function applyFilters() {
@@ -395,6 +444,9 @@
         }
 
         function resetFilters() {
+            if(document.getElementById('filterBranch')) document.getElementById('filterBranch').value = "";
+            if(document.getElementById('filterRank')) document.getElementById('filterRank').value = "";
+            if(document.getElementById('filterSearch')) document.getElementById('filterSearch').value = "";
             renderTables();
         }
 
