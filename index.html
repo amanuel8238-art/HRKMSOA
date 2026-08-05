@@ -305,10 +305,19 @@
             }
         }
 
-        function handleLogout() {
-            loggedInUser = null;
-            localStorage.removeItem('hrkmso_logged_in');
-            checkLoginState();
+       function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
+            
+            if(u !== "" && p !== "") {
+                loggedInUser = u;
+                localStorage.setItem('hrkmso_logged_in', loggedInUser);
+                checkLoginState();
+            } else {
+                alert("Maqaa Fayyadamaa fi Jecha Darbii guutuu qabda!");
+            }
+        }
         }
 
         function switchTab(tab) {
