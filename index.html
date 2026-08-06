@@ -1,4 +1,422 @@
-} else {
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRKMSO - Oromia Correctional Services Commission</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 font-sans antialiased text-slate-800">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+        <div class="bg-white/95 backdrop-blur p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="bg-indigo-600 text-white w-12 h-12 rounded-xl mx-auto flex items-center justify-center text-xl font-bold mb-3 shadow-lg shadow-indigo-500/30">H</div>
+                <h2 class="text-2xl font-black text-slate-900">HRKMSO System</h2>
+                <p class="text-xs text-slate-500 mt-1">Oromia Correctional Services Commission</p>
+            </div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Maqaa Fayyadamaa (Username)</label>
+                    <input type="text" id="loginUser" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Jecha Darbii (Password)</label>
+                    <input type="password" id="loginPass" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 transition">
+                </div>
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition duration-200 text-sm">Seeni (Login)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="appScreen" class="hidden min-h-screen flex flex-col">
+        <!-- Navbar -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 text-white w-9 h-9 rounded-lg flex items-center justify-center font-bold">H</div>
+                    <div>
+                        <h1 class="font-black text-sm text-slate-900">HRKMSO Dashboard</h1>
+                        <p class="text-[10px] text-slate-500">Oromia Correctional Services Commission</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="currentUserDisplay" class="text-xs font-bold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100"></span>
+                    <button onclick="handleLogout()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Ba'i (Logout)</button>
+                </div>
+            </div>
+            <!-- Navigation Tabs -->
+            <div class="max-w-7xl mx-auto px-4 flex space-x-6 border-t border-slate-100 text-xs font-semibold">
+                <button onclick="switchTab('dashboard')" id="tabBtnDashboard" class="py-2.5 border-b-2 border-indigo-600 text-indigo-600 transition">Dashboard</button>
+                <button onclick="switchTab('register')" id="tabBtnRegister" class="py-2.5 text-slate-500 hover:text-slate-800 transition">Galmee Miseensaa</button>
+                <button onclick="switchTab('members')" id="tabBtnMembers" class="py-2.5 text-slate-500 hover:text-slate-800 transition">Miseensota Hundaa</button>
+                <button onclick="switchTab('branches')" id="tabBtnBranches" class="py-2.5 text-slate-500 hover:text-slate-800 transition">Dameewwan</button>
+                <button onclick="switchTab('users')" id="tabBtnUsers" class="py-2.5 text-slate-500 hover:text-slate-800 transition">Useroota</button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
+
+            <!-- DASHBOARD TAB -->
+            <div id="tabDashboard" class="space-y-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Miseensota Waliigalaa</p>
+                        <h3 id="statTotalMembers" class="text-3xl font-black text-slate-800 mt-1">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-[11px] font-bold text-emerald-500 uppercase tracking-wider">Active</p>
+                        <h3 id="statActiveMembers" class="text-3xl font-black text-emerald-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-[11px] font-bold text-rose-500 uppercase tracking-wider">Terminated / Kan Biro</p>
+                        <h3 id="statTerminatedMembers" class="text-3xl font-black text-rose-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-[11px] font-bold text-indigo-500 uppercase tracking-wider">Dameewwan (Branches)</p>
+                        <h3 id="statBranchCountDisplay" class="text-3xl font-black text-indigo-600 mt-1">0</h3>
+                    </div>
+                </div>
+
+                <!-- Gender Ratio & Filters Container -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs lg:col-span-1">
+                        <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-4">Gosa Saalaa (Gender Ratio)</h4>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1"><span class="text-slate-600">Dhiira</span><span id="statMaleCount" class="text-indigo-600">0 (0%)</span></div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden"><div id="barMale" class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1"><span class="text-slate-600">Dhalaa</span><span id="statFemaleCount" class="text-purple-600">0 (0%)</span></div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden"><div id="barFemale" class="bg-purple-600 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100">
+                            <h5 class="font-bold text-slate-700 text-xs mb-2">Dameewwan Gurguddoo</h5>
+                            <div id="branchPreviewList" class="space-y-2 max-h-40 overflow-y-auto text-xs"></div>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Quick Search Table Preview -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2 space-y-4">
+                        <div class="flex flex-wrap gap-2 items-center justify-between">
+                            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Barbaacha Saffisaa</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <div id="filterBranchContainer">
+                                    <select id="filterBranch" onchange="applyFilters()" class="bg-slate-50 border border-slate-300 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                        <option value="">-- Dameewwan Hundaa --</option>
+                                    </select>
+                                </div>
+                                <select id="filterRank" onchange="applyFilters()" class="bg-slate-50 border border-slate-300 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                    <option value="">-- Gulaataa Gonfoo Hundaa --</option>
+                                </select>
+                                <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Maqaa, ID ykn Hojii..." class="bg-slate-50 border border-slate-300 text-xs rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                <button onclick="resetFilters()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition">Qulleessi</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-2.5 font-bold">Maqaa & ID</th>
+                                        <th class="p-2.5 font-bold">Damee & Iddoo</th>
+                                        <th class="p-2.5 font-bold">Gonfoo & Mindaa</th>
+                                        <th class="p-2.5 font-bold">Bara Qac./Gonfoo</th>
+                                        <th class="p-2.5 font-bold">Status</th>
+                                        <th class="p-2.5 font-bold">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="filteredTableBody" class="divide-y divide-slate-100">
+                                    <tr><td colspan="6" class="p-4 text-center text-slate-400">Daataan argame hin jiru.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTRATION TAB -->
+            <div id="tabRegister" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-xs max-w-4xl mx-auto space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 id="regFormTitle" class="text-base font-black text-slate-800">Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)</h3>
+                        <p class="text-xs text-slate-500">Oromia Correctional Services Commission Personnel Data</p>
+                    </div>
+                    <button id="cancelEditBtn" onclick="resetRegistrationForm()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Haquu (Cancel)</button>
+                </div>
+
+                <form id="memberForm" onsubmit="handleRegistration(event)" class="space-y-4">
+                    <input type="hidden" id="editMemberIndex" value="">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Maqaa Guutuu</label>
+                            <input type="text" id="regName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Lakkoofsa Addaa (ID)</label>
+                            <input type="text" id="regId" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Damee (Branch)</label>
+                            <select id="regBranch" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"></select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Gulaataa Gonfoo (Rank)</label>
+                            <select id="regRank" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Guyyaa Gonfoo Itti Fudhate (DD/MM/YYYY)</label>
+                            <div class="grid grid-cols-3 gap-1">
+                                <input type="number" id="regRankDay" placeholder="Guyyaa" min="1" max="30" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                                <input type="number" id="regRankMonth" placeholder="Ji'a" min="1" max="13" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                                <input type="number" id="regRankYear" placeholder="Bara" min="1900" max="2100" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Saalaa (Gender)</label>
+                            <select id="regGender" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                <option value="Dhiira">Dhiira</option>
+                                <option value="Dhalaa">Dhalaa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Bara Qacaramee (DD/MM/YYYY)</label>
+                            <div class="grid grid-cols-3 gap-1">
+                                <input type="number" id="regHireDay" placeholder="Guyyaa" min="1" max="30" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                                <input type="number" id="regHireMonth" placeholder="Ji'a" min="1" max="13" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                                <input type="number" id="regHireYearVal" placeholder="Bara" min="1900" max="2100" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Bara Dhalootaa (DD/MM/YYYY)</label>
+                            <div class="grid grid-cols-3 gap-1">
+                                <input type="number" id="regBirthDay" placeholder="Guyyaa" min="1" max="30" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                                <input type="number" id="regBirthMonth" placeholder="Ji'a" min="1" max="13" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                                <input type="number" id="regBirthYearVal" placeholder="Bara" min="1900" max="2100" required class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs text-center">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Mindaa Gonfoo (Rank Salary)</label>
+                            <input type="number" id="regRankSalary" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Mindaa Iddoo (Location Allowance)</label>
+                            <input type="number" id="regLocationAllowance" value="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Mindaa Nyaataa (Food Allowance)</label>
+                            <input type="number" id="regFoodAllowance" value="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Sadarkaa Barnootaa</label>
+                            <select id="regEduLevel" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                <option value="Certificate">Certificate</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Degree">Degree</option>
+                                <option value="Masters">Masters</option>
+                                <option value="PhD">PhD</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Gosa Barnootaa (Field)</label>
+                            <input type="text" id="regFieldOfStudy" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Iddoo Hojii (Job Position)</label>
+                            <input type="text" id="regJobPosition" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Haala Hojii (Status)</label>
+                            <select id="regStatus" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                                <option value="Active">Active</option>
+                                <option value="Transferred">Transferred</option>
+                                <option value="Terminated">Terminated</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitRegBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition text-sm">Miseensa Galmeessi</button>
+                </form>
+            </div>
+
+            <!-- MEMBERS LIST TAB -->
+            <div id="tabMembers" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-black text-slate-800">Tarree Miseensota Waliigalaa</h3>
+                    <span id="totalBadge" class="bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full text-xs">0 Total</span>
+                </div>
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 font-bold">Maqaa & ID</th>
+                                <th class="p-3 font-bold">Damee & Iddoo</th>
+                                <th class="p-3 font-bold">Gonfoo & Mindaa</th>
+                                <th class="p-3 font-bold">Barnoota</th>
+                                <th class="p-3 font-bold">Guyyoota Barbaachisoo</th>
+                                <th class="p-3 font-bold">Status</th>
+                                <th class="p-3 font-bold">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullMembersTableBody" class="divide-y divide-slate-100">
+                            <tr><td colspan="7" class="p-4 text-center text-slate-400">Daataan hin jiru.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- BRANCHES TAB -->
+            <div id="tabBranches" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <h3 class="text-base font-black text-slate-800">Dameewwan Oromia Correctional Services Commission (Hojjettoota Active)</h3>
+                <div id="branchesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+            </div>
+
+            <!-- USERS TAB -->
+            <div id="tabUsers" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs max-w-xl mx-auto space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 id="userFormTitleHeader" class="text-base font-black text-slate-800">Bulchiinsa Useroota (System Users)</h3>
+                        <button id="cancelUserEditBtn" onclick="resetUserForm()" class="hidden bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-bold">Haquu</button>
+                    </div>
+                    <form id="userForm" onsubmit="handleUserRegistration(event)" class="space-y-4">
+                        <input type="hidden" id="editUserIndex" value="">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Maqaa Fayyadamaa (Username)</label>
+                            <input type="text" id="newUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Jecha Darbii (Password)</label>
+                            <input type="password" id="newPassword" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Gahee (Role)</label>
+                            <select id="newUserRole" onchange="toggleBranchSelection()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                <option value="Admin">Admin (Head Office)</option>
+                                <option value="Branch Manager">Branch Manager</option>
+                            </select>
+                        </div>
+                        <div id="assignedBranchContainer" class="hidden">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Damee Ramadame</label>
+                            <select id="newAssignedBranch" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs"></select>
+                        </div>
+                        <button type="submit" id="submitUserBtn" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl text-xs">User Haaraa Uumi</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-slate-800 text-sm">Useroota Galmeeffaman</h4>
+                        <span id="userCountBadge" class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded font-bold text-xs">0 Users</span>
+                    </div>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3 font-bold">Username</th>
+                                    <th class="p-3 font-bold">Role & Branch</th>
+                                    <th class="p-3 font-bold">Bara Uumame</th>
+                                    <th class="p-3 font-bold">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const branchesList = [
+            "Finfinne Head Office", "Adama Branch", "Jimma Branch", "Bishoftu Branch",
+            "Nekemte Branch", "Shashemene Branch", "Dadar Branch", "Harar Branch",
+            "Chiro Branch", "Robe Branch", "Dire Dawa Branch", "Ambo Branch"
+        ];
+
+        const ranksList = [
+            "Komishinaara Jeneraalaa", "Komishinaara Ittaanaa", "Komishinaara",
+            "Komaandara Ol-Aanaa", "Komaandara", "Inspeektera Olaanaa",
+            "Inspeektera", "Sajjaa'oo Olaanaa", "Sajja'oo", "Hojjetaa Idilee"
+        ];
+
+        let membersData = [
+            { name: "Abebe Kebede", id: "OCS-001", branch: "Finfinne Head Office", rank: "Komaandara", promotionDate: "10/04/2015", gender: "Dhiira", hireYear: "12/03/2010", birthYear: "05/01/1985", rankSalary: 8500, locationAllowance: 0, foodAllowance: 1200, eduLevel: "Degree", fieldOfStudy: "Management", jobPosition: "Director", status: "Active" },
+            { name: "Ayantu Tadesse", id: "OCS-002", branch: "Adama Branch", rank: "Inspeektera Olaanaa", promotionDate: "15/08/2014", gender: "Dhalaa", hireYear: "20/09/2012", birthYear: "14/06/1990", rankSalary: 7200, locationAllowance: 500, foodAllowance: 1200, eduLevel: "Degree", fieldOfStudy: "Accounting", jobPosition: "Finance Head", status: "Active" }
+        ];
+
+        let usersData = [
+            { username: "admin", password: "123", role: "Admin", branch: "", date: "2026-08-01" },
+            { username: "adama_mgr", password: "123", role: "Branch Manager", branch: "Adama Branch", date: "2026-08-01" }
+        ];
+
+        let loggedInUser = null;
+
+        function saveData() {
+            localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
+            localStorage.setItem('hrkmso_users', JSON.stringify(usersData));
+        }
+
+        function loadData() {
+            const m = localStorage.getItem('hrkmso_members');
+            const u = localStorage.getItem('hrkmso_users');
+            if(m) membersData = JSON.parse(m);
+            if(u) usersData = JSON.parse(u);
+        }
+
+        function checkLoginState() {
+            loadData();
+            const session = localStorage.getItem('hrkmso_logged_in');
+            if(session) {
+                loggedInUser = JSON.parse(session);
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                document.getElementById('currentUserDisplay').innerText = `${loggedInUser.username} (${loggedInUser.role}${loggedInUser.branch ? ' - ' + loggedInUser.branch : ''})`;
+                initApp();
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('appScreen').classList.add('hidden');
+            }
+        }
+
+        function getCurrentUserInfo() {
+            return loggedInUser;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+
+            const found = usersData.find(item => item.username === u && item.password === p);
+            if(found) {
+                localStorage.setItem('hrkmso_logged_in', JSON.stringify(found));
+                checkLoginState();
+            } else {
                 alert("Maqaa Fayyadamaa (Username) ykn Jecha Darbii (Password) dogoggoraadha!");
             }
         }
@@ -110,7 +528,6 @@
             document.getElementById('barMale').style.width = malePct + '%';
             document.getElementById('barFemale').style.width = femalePct + '%';
 
-            // Branch preview list
             const branchPreviewList = document.getElementById('branchPreviewList');
             if(branchPreviewList) {
                 let html = '';
@@ -156,8 +573,7 @@
             }
 
             let html = '';
-            filtered.forEach((m, idx) => {
-                const totalSalary = Number(m.rankSalary || 0) + Number(m.locationAllowance || 0) + Number(m.foodAllowance || 0);
+            filtered.forEach(m => {
                 const statusBadge = m.status === 'Active' ? 
                     `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Active</span>` : 
                     `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium">${m.status}</span>`;
@@ -335,7 +751,6 @@
 
             let html = '';
             scopedMembers.forEach(m => {
-                const totalSalary = Number(m.rankSalary || 0) + Number(m.locationAllowance || 0) + Number(m.foodAllowance || 0);
                 const statusBadge = m.status === 'Active' ? 
                     `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Active</span>` : 
                     `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-medium">${m.status}</span>`;
@@ -352,7 +767,6 @@
                     <td class="p-3">
                         <div class="font-medium text-indigo-900">${m.rank}</div>
                         <div class="text-[10px] text-slate-500">Mindaa: ${Number(m.rankSalary).toLocaleString()} ETB</div>
-                        <div class="text-[10px] text-slate-400">Idoo/Ny.: ${Number(m.locationAllowance)} / ${Number(m.foodAllowance)}</div>
                     </td>
                     <td class="p-3">
                         <div class="font-medium text-slate-700">${m.eduLevel}</div>
