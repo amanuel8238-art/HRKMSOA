@@ -44,7 +44,6 @@ with app.app_context():
             db.session.add(default_admin)
             db.session.commit()
         
-        # 'Dadar' akka branch deeggaramutti akka jiru mirkaneessuu
         dadar_branch = Branch.query.filter_by(name='Dadar').first()
         if not dadar_branch:
             db.session.add(Branch(name='Dadar'))
@@ -186,7 +185,7 @@ def index():
                     </form>
                 </div>
 
-                <!-- Add Employee Form -->
+                <!-- Add Employee Form (Always Visible) -->
                 <div class="form-box">
                     <h3>Hojjetaa Haaraa Galchuuf</h3>
                     <form method="POST" action="/add">
@@ -206,6 +205,10 @@ def index():
                                 {% endif %}
                             {% endfor %}
                         </select>
+                        {% else %}
+                        <!-- Branch yoo ta'e koodiin kun branch isaa automatic qabata -->
+                        <input type="hidden" name="branch_name" value="{{ current_branch }}">
+                        <span style="padding: 8px; display:inline-block;">Damee: <b>{{ current_branch }}</b></span>
                         {% endif %}
                         
                         <button type="submit">Galchi (Save)</button>
