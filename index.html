@@ -63,10 +63,10 @@
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 uppercase">
                                 <th class="p-3">ID</th>
-                                <th class="p-3">Maqaa (Name)</th>
-                                <th class="p-3">Damee (Branch)</th>
-                                <th class="p-3">Gonfoo (Rank)</th>
-                                <th class="p-3">Saala & Guyyaa</th>
+                                <th class="p-3">Gita Hojii & Ogummaa</th>
+                                <th class="p-3">Sadarkaa Barumsaa</th>
+                                <th class="p-3">Mindaa Gonfoo & Buusii</th>
+                                <th class="p-3">Haala (Status)</th>
                             </tr>
                         </thead>
                         <tbody id="membersTableBody" class="divide-y divide-slate-200">
@@ -81,28 +81,32 @@
                 <h2 class="text-base font-bold text-slate-800">Galmee Miseensa Haaraa</h2>
                 <form onsubmit="handleRegistration(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1">Maqaa Guutuu (name) *</label>
-                        <input type="text" id="regName" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Amanuel Makuriyaa">
+                        <label class="block text-slate-700 font-medium mb-1">Gita Hojii (jobPosition) *</label>
+                        <input type="text" id="regJobPosition" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Ogeessa ICT">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1">Maqaa Damee (branch) *</label>
-                        <input type="text" id="regBranch" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Dadar">
+                        <label class="block text-slate-700 font-medium mb-1">Damee Ogummaa (fieldOfStudy) *</label>
+                        <input type="text" id="regFieldOfStudy" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Computer Science">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1">Gonfoo (rank) *</label>
-                        <input type="text" id="regRank" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Komishiner">
+                        <label class="block text-slate-700 font-medium mb-1">Sadarkaa Barumsaa (eduLevel) *</label>
+                        <input type="text" id="regEduLevel" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Degree">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1">Saala (gender) *</label>
-                        <input type="text" id="regGender" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Dhiira / Dhaala">
+                        <label class="block text-slate-700 font-medium mb-1">Mindaa Gonfoo (rankSalary) *</label>
+                        <input type="number" step="0.01" id="regRankSalary" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. 5000">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1">Guyyaa Gudinaa (promotionDate) *</label>
-                        <input type="date" id="regPromoDate" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                        <label class="block text-slate-700 font-medium mb-1">Buusii Iddoo (locationAllowance) *</label>
+                        <input type="number" step="0.01" id="regLocationAllowance" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. 1000">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-medium mb-1">Bara Hojjetti Seene (hireYear) *</label>
-                        <input type="number" id="regHireYear" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. 2015">
+                        <label class="block text-slate-700 font-medium mb-1">Buusii Nyaataa (foodAllowance) *</label>
+                        <input type="number" step="0.01" id="regFoodAllowance" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. 800">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Haala Hojii (status) *</label>
+                        <input type="text" id="regStatus" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Fkn. Hojjetaa Jiru">
                     </div>
                     <div class="md:col-span-3 flex justify-end">
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition">Galmeessi</button>
@@ -173,10 +177,10 @@
                 data.forEach(m => {
                     html += `<tr class="hover:bg-slate-50">
                         <td class="p-3">ID: ${m.id}</td>
-                        <td class="p-3 font-bold">${m.name || '-'}</td>
-                        <td class="p-3 font-medium text-indigo-700">${m.branch || '-'}</td>
-                        <td class="p-3">${m.rank || '-'}</td>
-                        <td class="p-3">Saala: ${m.gender || '-'} | Bara Hojii: ${m.hireYear || '-'}</td>
+                        <td class="p-3 font-bold">${m.jobPosition || '-'} <br><span class="text-slate-500 font-normal">(${m.fieldOfStudy || '-'})</span></td>
+                        <td class="p-3 font-medium text-indigo-700">${m.eduLevel || '-'}</td>
+                        <td class="p-3">Mindaa: ${m.rankSalary || 0} | Iddoo: ${m.locationAllowance || 0} | Nyaata: ${m.foodAllowance || 0}</td>
+                        <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-semibold">${m.status || '-'}</span></td>
                     </tr>`;
                 });
             } else {
@@ -187,24 +191,26 @@
 
         async function handleRegistration(e) {
             e.preventDefault();
-            const name = document.getElementById('regName').value.trim();
-            const branch = document.getElementById('regBranch').value.trim();
-            const rank = document.getElementById('regRank').value.trim();
-            const gender = document.getElementById('regGender').value.trim();
-            const promotionDate = document.getElementById('regPromoDate').value;
-            const hireYear = parseInt(document.getElementById('regHireYear').value);
+            const jobPosition = document.getElementById('regJobPosition').value.trim();
+            const fieldOfStudy = document.getElementById('regFieldOfStudy').value.trim();
+            const eduLevel = document.getElementById('regEduLevel').value.trim();
+            const rankSalary = parseFloat(document.getElementById('regRankSalary').value);
+            const locationAllowance = parseFloat(document.getElementById('regLocationAllowance').value);
+            const foodAllowance = parseFloat(document.getElementById('regFoodAllowance').value);
+            const status = document.getElementById('regStatus').value.trim();
 
-            const { error } = await supabaseClient.from('members').insert([{ name, branch, rank, gender, promotionDate, hireYear }]);
+            const { error } = await supabaseClient.from('members').insert([{ jobPosition, fieldOfStudy, eduLevel, rankSalary, locationAllowance, foodAllowance, status }]);
             if(error) {
                 alert('Rakkoo: ' + error.message);
             } else {
                 alert('Milkaa’inaan galmaa’eera!');
-                document.getElementById('regName').value = '';
-                document.getElementById('regBranch').value = '';
-                document.getElementById('regRank').value = '';
-                document.getElementById('regGender').value = '';
-                document.getElementById('regPromoDate').value = '';
-                document.getElementById('regHireYear').value = '';
+                document.getElementById('regJobPosition').value = '';
+                document.getElementById('regFieldOfStudy').value = '';
+                document.getElementById('regEduLevel').value = '';
+                document.getElementById('regRankSalary').value = '';
+                document.getElementById('regLocationAllowance').value = '';
+                document.getElementById('regFoodAllowance').value = '';
+                document.getElementById('regStatus').value = '';
                 switchTab('members');
                 loadMembers();
             }
