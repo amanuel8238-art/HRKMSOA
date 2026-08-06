@@ -5,15 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = 'hrkmso_secret_key_secure'
 
-db_url = os.environ.get('DATABASE_URL')
-if db_url:
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
-
+# Database URL kallattiin Supabase (Port 5432 - Session Mode)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 class User(db.Model):
