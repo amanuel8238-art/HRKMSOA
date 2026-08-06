@@ -276,8 +276,10 @@ def add_employee():
             )
             db.session.add(new_emp)
             db.session.commit()
+        else:
+            return "Odeeffannoon guutuun hin galfamne! Maaloo deebi'ii ilaali."
     except Exception as e:
-        print(f"Error: {e}")
+        return f"SAVE ERROR: {str(e)}"
         
     return redirect(url_for('index'))
 
