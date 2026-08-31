@@ -1,4 +1,5 @@
 Flask
-supabase
+Flask-SQLAlchemy
+psycopg2-binary
 werkzeug
 gunicorn
