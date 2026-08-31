@@ -1,268 +1,38 @@
-<!DOCTYPE html>
-<html lang="af">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HRKMSO - Sirna Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <i class="fa-solid fa-shield-halved logo-icon"></i>
-                <h2>HRKMSO</h2>
-                <p>Komishinii Manneen Sirreessaa Oromiyaa</p>
-            </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="active" data-target="dashboard"><i class="fa-solid fa-chart-pie"></i> Daashboordii</li>
-                    <li data-target="employees"><i class="fa-solid fa-users"></i> Hojjetoota</li>
-                    <li data-target="branches"><i class="fa-solid fa-building"></i> Dameewwan (39)</li>
-                    <li data-target="transfers"><i class="fa-solid fa-exchange-alt"></i> Jijjiirraa</li>
-                    <li data-target="ranks"><i class="fa-solid fa-layer-group"></i> Sadarkaa / Raankii</li>
-                    <li data-target="reports"><i class="fa-solid fa-file-lines"></i> Gabaasa</li>
-                    <li data-target="settings"><i class="fa-solid fa-gear"></i> Qindaa'ina</li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <span class="branch-badge"><i class="fa-solid fa-location-dot"></i> Aanaa Dadar & 38+</span>
-            </div>
-        </aside>
-
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Top Navbar -->
-            <header class="top-navbar">
-                <div class="nav-left">
-                    <button id="sidebar-toggle"><i class="fa-solid fa-bars"></i></button>
-                    <h1 id="page-title">Daashboordii Waliigalaa</h1>
-                </div>
-                <div class="nav-right">
-                    <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=Admin+HR&background=1e293b&color=fff" alt="Admin">
-                        <span>Bulchaa Sirnaa (Admin)</span>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Content Dynamic Views -->
-            <div class="content-body">
-                <!-- Dashboard View -->
-                <section id="dashboard" class="view-section active">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
-                            <div class="stat-info">
-                                <h3>Hojjetoota Waliigalaa</h3>
-                                <p id="total-employees">--</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon green"><i class="fa-solid fa-building"></i></div>
-                            <div class="stat-info">
-                                <h3>Dameewwan & Aanaalee</h3>
-                                <p>39</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon orange"><i class="fa-solid fa-exchange-alt"></i></div>
-                            <div class="stat-info">
-                                <h3>Gaaffii Jijjiirraa</h3>
-                                <p id="total-transfers">--</p>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon purple"><i class="fa-solid fa-user-shield"></i></div>
-                            <div class="stat-info">
-                                <h3>Hoggansa Olaanoo</h3>
-                                <p id="total-leaders">--</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-grid">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Hojjetoota Haaraa Dabalamani</h3>
-                                <button class="btn-sm" onclick="switchView('employees')">Hunda Ilaali</button>
-                            </div>
-                            <div class="table-responsive">
-                                <table id="recent-employees-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Maqaa Guutuu</th>
-                                            <th>Damee / Aanaa</th>
-                                            <th>Gahee Hojii</th>
-                                            <th>Raankii</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Dynamic rows -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Gabaasa Dameewwan Gurguddoo</h3>
-                            </div>
-                            <div class="branch-summary-list" id="branch-summary-list">
-                                <!-- Dynamic branch summaries including Aanaa Dadar -->
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Employees View -->
-                <section id="employees" class="view-section">
-                    <div class="action-bar">
-                        <div class="search-box">
-                            <i class="fa-solid fa-search"></i>
-                            <input type="text" id="employee-search" placeholder="Maqaa, ID ykn Dameen barbaadi...">
-                        </div>
-                        <button class="btn-primary" id="btn-add-employee"><i class="fa-solid fa-user-plus"></i> Hojjetaa Dabaluuf</button>
-                    </div>
-                    <div class="card">
-                        <div class="table-responsive">
-                            <table id="employees-table">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Maqaa Guutuu</th>
-                                        <th>Saala</th>
-                                        <th>Damee / Aanaa</th>
-                                        <th>Gahee Hojii</th>
-                                        <th>Raankii</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dynamic rows -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Branches View -->
-                <section id="branches" class="view-section">
-                    <div class="card-header">
-                        <h2>Dameewwan Komishinii Manneen Sirreessaa Oromiyaa (Waliigala 39)</h2>
-                    </div>
-                    <div class="branches-grid" id="branches-grid">
-                        <!-- Dynamic branches including Aanaa Dadar -->
-                    </div>
-                </section>
-
-                <!-- Transfers View -->
-                <section id="transfers" class="view-section">
-                    <div class="action-bar">
-                        <h2>Qajeelcha Jijjiirraa Hojjetootaa</h2>
-                        <button class="btn-primary" id="btn-new-transfer"><i class="fa-solid fa-plus"></i> Gaaffii Jijjiirraa Haaraa</button>
-                    </div>
-                    <div class="card">
-                        <div class="table-responsive">
-                            <table id="transfers-table">
-                                <thead>
-                                    <tr>
-                                        <th>Maqaa Hojjetaa</th>
-                                        <th>Damee Ka'umsaa</th>
-                                        <th>Damee Galmaa</th>
-                                        <th>Sababii</th>
-                                        <th>Haala (Status)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dynamic rows -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Ranks View -->
-                <section id="ranks" class="view-section">
-                    <div class="card">
-                        <h2>Caasaa Raankii fi Sadarkaa Hooggansa Sirreessaa</h2>
-                        <div class="ranks-list" id="ranks-list">
-                            <!-- Dynamic ranks -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Reports View -->
-                <section id="reports" class="view-section">
-                    <div class="card">
-                        <h2>Gabaasa Waliigalaa fi Kuufama Daataa</h2>
-                        <p>Gabaasa hojjetootaa, jijjiirraa fi ramaddii dameewwan 39 irratti hundaa'ee qopheessi.</p>
-                        <div class="report-actions" style="margin-top: 20px;">
-                            <button class="btn-primary" onclick="alert('Gabaasni PDF/Excel qophaa'aa jira...')"><i class="fa-solid fa-download"></i> Gabaasa Buufachuuf (Export)</button>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Settings View -->
-                <section id="settings" class="view-section">
-                    <div class="card">
-                        <h2>Qindaa'ina Sirnaa (System Settings)</h2>
-                        <p>Sun is a configuration panel for Komishinii Manneen Sirreessaa Oromiyaa HR System.</p>
-                    </div>
-                </section>
-            </div>
-        </main>
+<form id="employee-form">
+    <div class="form-group">
+        <label>Maqaa Guutuu <span style="color:red">*</span></label>
+        <input type="text" id="emp-name" required placeholder="Maqaa guutuu galchaa">
     </div>
 
-    <!-- Modal for Adding Employee -->
-    <div class="modal" id="employee-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Hojjetaa Haaraa Galchuuf</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="employee-form">
-                <div class="form-group">
-                    <label>Maqaa Guutuu</label>
-                    <input type="text" id="emp-name" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Saala</label>
-                        <select id="emp-gender">
-                            <option value="Dhiira">Dhiira</option>
-                            <option value="Dubartii">Dubartii</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Raankii / Sadarkaa</label>
-                        <select id="emp-rank">
-                            <option value="Komishinara">Komishinara</option>
-                            <option value="Kommanderii">Kommanderii</option>
-                            <option value="Inspeekterii Olaanoo">Inspeekterii Olaanoo</option>
-                            <option value="Inspeekterii">Inspeekterii</option>
-                            <option value="Sajjootti">Sajjootti</option>
-                            <option value="Hojjetaa Idilee">Hojjetaa Idilee</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Damee / Aanaa (Kessaa Aanaa Dadar)</label>
-                    <select id="emp-branch">
-                        <!-- Populated by JS -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Gahee Hojii (Position)</label>
-                    <input type="text" id="emp-position" required>
-                </div>
-                <button type="submit" class="btn-primary full-width">Galchuuf</button>
-            </form>
+    <div class="form-row" style="display: flex; gap: 16px;">
+        <div class="form-group" style="flex: 1;">
+            <label>Saala <span style="color:red">*</span></label>
+            <select id="emp-gender" required>
+                <option value="">-- Saala Filadhu --</option>
+                <option value="Dhiira">Dhiira</option>
+                <option value="Dhalaa">Dhalaa</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="flex: 1;">
+            <label>Raankii / Sadarkaa <span style="color:red">*</span></label>
+            <select id="emp-rank" required>
+                <!-- JavaScript tiin guutama -->
+            </select>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-</body>
-</html>
+    <div class="form-group">
+        <label>Damee / Aanaa (Aanaa Dadar dabalatee) <span style="color:red">*</span></label>
+        <select id="emp-branch" required>
+            <!-- JavaScript tiin guutama -->
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Gahee Hojii (Position) <span style="color:red">*</span></label>
+        <input type="text" id="emp-position" required placeholder="Gahee hojii galchaa">
+    </div>
+
+    <button type="submit" class="btn-primary full-width" style="width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Miseensa Galmeessi</button>
+</form>
