@@ -1,6 +1,6 @@
 // --- OFFICIAL BRANCHES LIST ---
 const branchesList = [
-    "Head Office (Addis Ababa)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+    "Head Office (Addis Ababa)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee",  
     "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
     "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
     "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
@@ -44,6 +44,7 @@ async function fetchMembers() {
     try {
         const response = await fetch('/api/members');
         membersData = await response.json();
+        if (!Array.isArray(membersData)) membersData = [];
     } catch (error) {
         console.error("Dogoggora miseensota fiduu:", error);
         membersData = [];
@@ -55,6 +56,7 @@ async function fetchUsers() {
     try {
         const response = await fetch('/api/users');
         usersData = await response.json();
+        if (!Array.isArray(usersData)) usersData = [];
     } catch (error) {
         console.error("Dogoggora useroota fiduu:", error);
         usersData = [];
@@ -103,6 +105,42 @@ function switchTab(tabName) {
     if(tabName === 'members') renderFullMembersTable();
     if(tabName === 'branches') renderBranchesGrid();
     if(tabName === 'users') renderUsersTable();
+}
+
+// Funksiinii Login (Seensa Sirnichaa)
+async function handleLogin(event) {
+    if (event) event.preventDefault();
+    
+    const usernameInput = document.getElementById('username')?.value.trim();
+    const passwordInput = document.getElementById('password')?.value.trim();
+
+    if (!usernameInput || !passwordInput) {
+        alert("Maaloo Maqaa Fayyadamaa fi Jecha Darbii guuti!");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            localStorage.setItem('user', data.user);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('branch', data.branch);
+            
+            window.location.reload();
+        } else {
+            alert(data.message || "Maqaa fayyadamaa ykn jecha darbii dogoggoraati!");
+        }
+    } catch (err) {
+        console.error("Login Error:", err);
+        alert("Rakkoo network ykn serveriti jira!");
+    }
 }
 
 async function handleRegistration(e) {
@@ -177,6 +215,7 @@ async function handleUserRegistration(e) {
 }
 
 function renderDashboard() {
+    if (!Array.isArray(membersData)) membersData = [];
     const total = membersData.length;
     const active = membersData.filter(m => m.status === "Active" || m.status === "active").length;
     const terminated = total - active;
@@ -226,6 +265,8 @@ function renderFilteredTable() {
     const tbody = document.getElementById('filteredTableBody');
     if(!tbody) return;
     tbody.innerHTML = "";
+
+    if (!Array.isArray(membersData)) membersData = [];
 
     const bFilter = document.getElementById('filterBranch')?.value || "";
     const rFilter = document.getElementById('filterRank')?.value || "";
@@ -279,6 +320,8 @@ function renderFullMembersTable() {
     if(!tbody) return;
     tbody.innerHTML = "";
     
+    if (!Array.isArray(membersData)) membersData = [];
+
     const totalBadge = document.getElementById('totalBadge');
     if(totalBadge) totalBadge.textContent = `${membersData.length} Total`;
 
@@ -311,6 +354,8 @@ function renderBranchesGrid() {
     const grid = document.getElementById('branchesGrid');
     const previewList = document.getElementById('branchPreviewList');
     if(!grid) return;
+
+    if (!Array.isArray(membersData)) membersData = [];
 
     grid.innerHTML = "";
     if(previewList) previewList.innerHTML = "";
@@ -347,10 +392,11 @@ function renderUsersTable() {
     if(!tbody) return;
     tbody.innerHTML = "";
     
+    if (!Array.isArray(usersData)) usersData = [];
+
     const userCountBadge = document.getElementById('userCountBadge');
     if(userCountBadge) userCountBadge.textContent = `${usersData.length} Users`;
 
-    usersData.usersData = usersData || [];
     usersData.forEach(u => {
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50">
