@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import os
 from supabase import create_client, Client
-from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 
@@ -38,8 +37,8 @@ def login():
 
         user = users[0]
         
-        # Password mirkaneessuu
-        if check_password_hash(user['password'], password):
+        # Password kallattiitti wal bira qabuu (Plain text comparison)
+        if user['password'] == password:
             return jsonify({"success": True, "message": "Seensa milkaa'e!", "user": user['username']}), 200
         else:
             return jsonify({"success": False, "message": "Jecha darbii dogoggoraati!"}), 401
