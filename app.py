@@ -81,6 +81,48 @@ def get_members():
         print("Dogoggora Fiduu:", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
 
+# API Route: Dameewwan hunda fiduuf (GET)
+@app.route('/api/branches', methods=['GET'])
+def get_branches():
+    try:
+        if not supabase:
+            return jsonify([]), 200
+
+        response = supabase.table('branches').select("*").execute()
+        branches_list = response.data if response.data else []
+        return jsonify(branches_list), 200
+    except Exception as e:
+        print("Dogoggora Dameewwan Fiduu:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# API Route: Useroota hunda fiduuf (GET)
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    try:
+        if not supabase:
+            return jsonify([]), 200
+
+        response = supabase.table('users').select("*").execute()
+        users_list = response.data if response.data else []
+        return jsonify(users_list), 200
+    except Exception as e:
+        print("Dogoggora Useroota Fiduu:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# API Route: User haaraa galmeessuuf (POST)
+@app.route('/api/users', methods=['POST'])
+def register_user():
+    try:
+        data = request.get_json()
+        if not supabase:
+            return jsonify({"status": "error", "message": "Supabase walquunnamtiin hin qindaa'in!"}), 500
+
+        response = supabase.table('users').insert(data).execute()
+        return jsonify({"status": "success", "message": "User milkaa'inaan galmaa'e!", "data": response.data}), 201
+    except Exception as e:
+        print("Dogoggora User Galchuu:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

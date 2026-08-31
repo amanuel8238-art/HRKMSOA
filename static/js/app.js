@@ -1,93 +1,64 @@
 // --- OFFICIAL BRANCHES LIST ---
 const branchesList = [
-    "Head Office (Addis Ababa)",
-    "Iluu Abaabor", 
-    "Jimmaa", 
-    "Bunoo Beddellee", 
-    "Wallaggaa Bahaa",
-    "Wallaggaa Lixaa", 
-    "Horo Guduruu Wallaggaa", 
-    "Qellem Wallaggaa",
-    "Shawaa Bahaa", 
-    "Shawaa Lixaa", 
-    "Shawaa Kibba Lixaa", 
-    "Shawaa Kaabaa",
-    "Baalee", 
-    "Baalee Bahaa", 
-    "Harargee Bahaa", 
-    "Harargee Lixaa",
-    "Gujii Bahaa", 
-    "Gujii Lixaa", 
-    "Booranaa", 
-    "Booranaa Bahaa",
-    "Arsii", 
-    "Arsii Lixaa", 
-    "GGLTO", 
-    "Dadar", 
-    "Magaalaa Shagar",
-    "Baatuu", 
-    "Aggaroo", 
-    "Mayyaa", 
-    "Dodolaa", 
-    "Shanoo",
-    "Aanaa Aallee", 
-    "Jimmaa Arjoo", 
-    "Eejeree", 
-    "Gursum", 
-    "Girawaa",
-    "Habroo", 
-    "Dalloo Mannaa", 
-    "Martii", 
-    "Roobee"
+    "Head Office (Addis Ababa)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+    "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+    "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+    "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+    "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+    "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+    "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+    "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+    "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
 ];
 
 // --- OFFICIAL RANKS & PROMOTION REQUIREMENTS ---
 const promotionRequirements = {
-    "Konstaabilii": 4,
-    "Gargaaraa Saajin": 3,
-    "Itti Aanaa Saajin": 3,
-    "Saajin": 3,
-    "Saajin Ol'aanaa": 3,
-    "Gargaaraa Inspeektaraa": 2,
-    "Itti Aanaa Inspeektaraa": 3,
-    "Inspeektaraa": 3,
-    "Inspeektaraa Olaanaa": 3,
-    "Itti Aanaa Komandaraa": 3,
-    "Komandaraa": "other",
-    "Gargaaraa Komishinaraa": "other",
-    "Itti Aanaa Komishinaraa": "other"
+    "Konstaabilii": 4, "Gargaaraa Saajin": 3, "Itti Aanaa Saajin": 3,
+    "Saajin": 3, "Saajin Ol'aanaa": 3, "Gargaaraa Inspeektaraa": 2,
+    "Itti Aanaa Inspeektaraa": 3, "Inspeektaraa": 3, "Inspeektaraa Olaanaa": 3,
+    "Itti Aanaa Komandaraa": 3, "Komandaraa": "other",
+    "Gargaaraa Komishinaraa": "other", "Itti Aanaa Komishinaraa": "other"
 };
 
 const ranksList = Object.keys(promotionRequirements);
 
-let membersData = JSON.parse(localStorage.getItem('hrkmso_members')) || [
-    { 
-        name: "Amsaaluu Tasfaa", id: "HRK-001", branch: "Head Office (Addis Ababa)", rank: "Konstaabilii", promotionDate: "2019-06-15", gender: "Dhiira", 
-        hireYear: 2015, birthYear: 1995, rankSalary: 5500, locationAllowance: 500, foodAllowance: 1000, 
-        eduLevel: "Diploma", fieldOfStudy: "Law", jobPosition: "Poolisii Tajaajila", status: "Active", disciplinary: false 
-    }
-];
-
-let usersData = JSON.parse(localStorage.getItem('hrkmso_users')) || [
-    { username: "admin_hrkmso", role: "Admin", date: "2026-07-01" },
-    { username: "manager_dadar", role: "Branch Manager", date: "2026-07-05" }
-];
-
-function saveData() {
-    localStorage.setItem('hrkmso_members', JSON.stringify(membersData));
-    localStorage.setItem('hrkmso_users', JSON.stringify(usersData));
-}
+let membersData = [];
+let usersData = [];
 
 window.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
 
-function initApp() {
+async function initApp() {
+    await fetchMembers();
+    await fetchUsers();
     populateDropdowns();
     renderDashboard();
     renderFullMembersTable();
     renderBranchesGrid();
     renderUsersTable();
+}
+
+// Backend irraa Miseensota fiduuf (GET)
+async function fetchMembers() {
+    try {
+        const response = await fetch('/api/members');
+        membersData = await response.json();
+    } catch (error) {
+        console.error("Dogoggora miseensota fiduu:", error);
+        membersData = [];
+    }
+}
+
+// Backend irraa Useroota fiduuf (GET)
+async function fetchUsers() {
+    try {
+        const response = await fetch('/api/users');
+        usersData = await response.json();
+    } catch (error) {
+        console.error("Dogoggora useroota fiduu:", error);
+        usersData = [];
+    }
 }
 
 function populateDropdowns() {
@@ -134,59 +105,80 @@ function switchTab(tabName) {
     if(tabName === 'users') renderUsersTable();
 }
 
-function handleRegistration(e) {
+async function handleRegistration(e) {
     e.preventDefault();
-    const name = document.getElementById('regName').value;
-    const id = document.getElementById('regId').value;
-    const branch = document.getElementById('regBranch').value;
-    const rank = document.getElementById('regRank').value;
-    const promotionDate = document.getElementById('regPromotionDate').value;
-    const gender = document.getElementById('regGender').value;
-    const hireYear = document.getElementById('regHireYear').value;
-    const birthYear = document.getElementById('regBirthYear').value;
-    
-    const rankSalary = parseFloat(document.getElementById('regRankSalary').value) || 0;
-    const locationAllowance = parseFloat(document.getElementById('regLocationAllowance').value) || 0;
-    const foodAllowance = parseFloat(document.getElementById('regFoodAllowance').value) || 0;
-    const eduLevel = document.getElementById('regEduLevel').value;
-    const fieldOfStudy = document.getElementById('regFieldOfStudy').value;
-    const jobPosition = document.getElementById('regJobPosition').value;
+    const newMember = {
+        name: document.getElementById('regName').value,
+        id: document.getElementById('regId').value,
+        branch: document.getElementById('regBranch').value,
+        rank: document.getElementById('regRank').value,
+        promotionDate: document.getElementById('regPromotionDate').value,
+        gender: document.getElementById('regGender').value,
+        hireYear: document.getElementById('regHireYear').value,
+        birthYear: document.getElementById('regBirthYear').value,
+        rankSalary: parseFloat(document.getElementById('regRankSalary').value) || 0,
+        locationAllowance: parseFloat(document.getElementById('regLocationAllowance').value) || 0,
+        foodAllowance: parseFloat(document.getElementById('regFoodAllowance').value) || 0,
+        eduLevel: document.getElementById('regEduLevel').value,
+        fieldOfStudy: document.getElementById('regFieldOfStudy').value,
+        jobPosition: document.getElementById('regJobPosition').value,
+        status: document.getElementById('regStatus').value,
+        disciplinary: document.getElementById('regDisciplinary').value === "true"
+    };
 
-    const status = document.getElementById('regStatus').value;
-    const disciplinary = document.getElementById('regDisciplinary').value === "true";
-
-    if(membersData.some(m => m.id === id)) {
-        alert("ID kana qabu duraanuu galmeeffameera!");
-        return;
+    try {
+        const response = await fetch('/api/members', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMember)
+        });
+        const result = await response.json();
+        
+        if(response.ok) {
+            alert("Miseensi guyyaa guddinaa fi odeeffannoo guutuu waliin Supabase keessatti milkaa'inaan galmaa'e!");
+            document.getElementById('memberForm').reset();
+            await fetchMembers();
+            switchTab('dashboard');
+        } else {
+            alert("Dogoggora: " + result.message);
+        }
+    } catch (err) {
+        console.error("Dogoggora galchuu:", err);
+        alert("Galmeessuu irratti dogoggora uumame.");
     }
-
-    membersData.push({ 
-        name, id, branch, rank, promotionDate, gender, hireYear, birthYear, 
-        rankSalary, locationAllowance, foodAllowance, eduLevel, fieldOfStudy, jobPosition, 
-        status, disciplinary 
-    });
-    saveData();
-    alert("Miseensi guyyaa guddinaa fi odeeffannoo guutuu waliin milkaa'inaan galmeeffame!");
-    document.getElementById('memberForm').reset();
-    switchTab('dashboard');
 }
 
-function handleUserRegistration(e) {
+async function handleUserRegistration(e) {
     e.preventDefault();
-    const username = document.getElementById('newUsername').value;
-    const role = document.getElementById('newUserRole').value;
-    const date = new Date().toISOString().split('T')[0];
+    const newUser = {
+        username: document.getElementById('newUsername').value,
+        role: document.getElementById('newUserRole').value,
+        date: new Date().toISOString().split('T')[0]
+    };
 
-    usersData.push({ username, role, date });
-    saveData();
-    alert("User haaraan milkaa'inaan uumameera!");
-    document.getElementById('userForm').reset();
-    renderUsersTable();
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newUser)
+        });
+        
+        if(response.ok) {
+            alert("User haaraan milkaa'inaan uumameera!");
+            document.getElementById('userForm').reset();
+            await fetchUsers();
+            renderUsersTable();
+        } else {
+            alert("Dogoggora uumuuf yaalame irratti argame.");
+        }
+    } catch(err) {
+        console.error("Dogoggora user:", err);
+    }
 }
 
 function renderDashboard() {
     const total = membersData.length;
-    const active = membersData.filter(m => m.status === "Active").length;
+    const active = membersData.filter(m => m.status === "Active" || m.status === "active").length;
     const terminated = total - active;
 
     const statTotalMembers = document.getElementById('statTotalMembers');
@@ -197,9 +189,9 @@ function renderDashboard() {
     if(statActiveMembers) statActiveMembers.textContent = active;
     if(statTerminatedMembers) statTerminatedMembers.textContent = terminated;
 
-    const activeList = membersData.filter(m => m.status === "Active");
-    const male = activeList.filter(m => m.gender === "Dhiira").length;
-    const female = activeList.filter(m => m.gender === "Dhalaa").length;
+    const activeList = membersData.filter(m => m.status === "Active" || m.status === "active");
+    const male = activeList.filter(m => m.gender === "Dhiira" || m.gender === "dhira").length;
+    const female = activeList.filter(m => m.gender === "Dhalaa" || m.gender === "dhalaa").length;
 
     const malePct = active > 0 ? ((male / active) * 100).toFixed(1) : 0;
     const femalePct = active > 0 ? ((female / active) * 100).toFixed(1) : 0;
@@ -217,9 +209,7 @@ function renderDashboard() {
     renderFilteredTable();
 }
 
-function applyFilters() {
-    renderFilteredTable();
-}
+function applyFilters() { renderFilteredTable(); }
 
 function resetFilters() {
     const filterBranch = document.getElementById('filterBranch');
@@ -237,13 +227,9 @@ function renderFilteredTable() {
     if(!tbody) return;
     tbody.innerHTML = "";
 
-    const bFilterEl = document.getElementById('filterBranch');
-    const rFilterEl = document.getElementById('filterRank');
-    const sFilterEl = document.getElementById('filterSearch');
-
-    const bFilter = bFilterEl ? bFilterEl.value : "";
-    const rFilter = rFilterEl ? rFilterEl.value : "";
-    const sFilter = sFilterEl ? sFilterEl.value.toLowerCase() : "";
+    const bFilter = document.getElementById('filterBranch')?.value || "";
+    const rFilter = document.getElementById('filterRank')?.value || "";
+    const sFilter = document.getElementById('filterSearch')?.value.toLowerCase() || "";
 
     const filtered = membersData.filter(m => {
         let matchB = !bFilter || m.branch === bFilter;
@@ -259,7 +245,6 @@ function renderFilteredTable() {
 
     filtered.forEach((m) => {
         const totalSalary = (parseFloat(m.rankSalary) || 0) + (parseFloat(m.locationAllowance) || 0) + (parseFloat(m.foodAllowance) || 0);
-        const originalIndex = membersData.indexOf(m);
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50">
                 <td class="p-2.5">
@@ -268,7 +253,7 @@ function renderFilteredTable() {
                 </td>
                 <td class="p-2.5">
                     <div class="font-medium text-slate-700">${m.branch}</div>
-                    <div class="text-[10px] text-indigo-600">${m.jobPosition}</div>
+                    <div class="text-[10px] text-indigo-600">${m.jobPosition || '-'}</div>
                 </td>
                 <td class="p-2.5">
                     <div class="font-semibold text-slate-900">${m.rank}</div>
@@ -282,7 +267,7 @@ function renderFilteredTable() {
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">${m.status}</span>
                 </td>
                 <td class="p-2.5">
-                    <button onclick="deleteMember(${originalIndex})" class="bg-rose-500 hover:bg-rose-600 text-white px-2 py-1 rounded text-[10px]">Haqi</button>
+                    <span class="text-[10px] text-slate-400">-</span>
                 </td>
             </tr>
         `;
@@ -297,7 +282,7 @@ function renderFullMembersTable() {
     const totalBadge = document.getElementById('totalBadge');
     if(totalBadge) totalBadge.textContent = `${membersData.length} Total`;
 
-    membersData.forEach((m, idx) => {
+    membersData.forEach((m) => {
         const totalSalary = (parseFloat(m.rankSalary) || 0) + (parseFloat(m.locationAllowance) || 0) + (parseFloat(m.foodAllowance) || 0);
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50">
@@ -307,16 +292,16 @@ function renderFullMembersTable() {
                 </td>
                 <td class="p-3">
                     <div class="font-medium text-slate-700">${m.branch}</div>
-                    <div class="text-[10px] text-indigo-600">${m.jobPosition}</div>
+                    <div class="text-[10px] text-indigo-600">${m.jobPosition || '-'}</div>
                 </td>
                 <td class="p-3">
                     <div class="font-semibold text-slate-900">${m.rank}</div>
                     <div class="text-[10px] text-emerald-600">ETB ${totalSalary.toLocaleString()}</div>
                 </td>
-                <td class="p-3 text-slate-600">${m.eduLevel}</td>
+                <td class="p-3 text-slate-600">${m.eduLevel || '-'}</td>
                 <td class="p-3 text-slate-600">Qac: ${m.hireYear}</td>
                 <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">${m.status}</span></td>
-                <td class="p-3"><button onclick="deleteMember(${idx})" class="bg-rose-500 hover:bg-rose-600 text-white px-2.5 py-1 rounded text-[10px]">Haqi</button></td>
+                <td class="p-3"><span class="text-[10px] text-slate-400">-</span></td>
             </tr>
         `;
     });
@@ -331,7 +316,7 @@ function renderBranchesGrid() {
     if(previewList) previewList.innerHTML = "";
 
     branchesList.forEach(b => {
-        const count = membersData.filter(m => m.branch === b && m.status === "Active").length;
+        const count = membersData.filter(m => m.branch === b && (m.status === "Active" || m.status === "active")).length;
         
         grid.innerHTML += `
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between space-y-2">
@@ -365,22 +350,15 @@ function renderUsersTable() {
     const userCountBadge = document.getElementById('userCountBadge');
     if(userCountBadge) userCountBadge.textContent = `${usersData.length} Users`;
 
+    usersData.usersData = usersData || [];
     usersData.forEach(u => {
         tbody.innerHTML += `
             <tr class="hover:bg-slate-50">
                 <td class="p-3 font-bold text-slate-800">${u.username}</td>
-                <td class="p-3 text-indigo-600 font-semibold">${u.role}</td>
-                <td class="p-3 text-slate-500">${u.date}</td>
+                <td class="p-3 text-indigo-600 font-semibold">${u.role || u.branch || '-'}</td>
+                <td class="p-3 text-slate-500">${u.date || '-'}</td>
                 <td class="p-3 text-slate-400">-</td>
             </tr>
         `;
     });
-}
-
-function deleteMember(idx) {
-    if(confirm("Miseensa kana haquu barbaaddaa?")) {
-        membersData.splice(idx, 1);
-        saveData();
-        initApp();
-    }
 }
