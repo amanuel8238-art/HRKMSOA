@@ -1,29 +1,20 @@
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
-db = SQLAlchemy()
+# Kuni dirqama app jedhamuun barreeffamuu qaba!
+app = Flask(__name__)
 
-# Caasaa Raankii Hojjetootaa (Rank Structure)
-RANKS_LIST = [
-    "Komishinara General",
-    "Komishinara Dooktar",
-    "Komishinara Itti Aanaa",
-    "Komishinara",
-    "Kommanderii Guddaa",
-    "Kommanderii",
-    "Inspeekterii Olaanoo",
-    "Inspeekterii Ibsaa",
-    "Inspeekterii",
-    "Sajjootti Olaanoo",
-    "Sajjootti",
-    "Hojjetaa Idilee"
-]
+# Database Configuration (Fakkeenyaaf Supabase / PostgreSQL)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'YOUR_DATABASE_URL_HERE'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-class Employee(db.Model):
-    __tablename__ = 'employees'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    gender = db.Column(db.String(20), nullable=False)
-    branch = db.Column(db.String(100), nullable=False)
-    position = db.Column(db.String(100), nullable=False)
-    rank = db.Column(db.String(50), nullable=False)
+db = SQLAlchemy(app)
+
+# --- Routes fi Models kee asitti galchita ---
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
