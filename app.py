@@ -5,20 +5,16 @@ from flask_sqlalchemy import SQLAlchemy
 # Flask app jalqabsiisuu
 app = Flask(__name__)
 
-# Database Configuration
+# --- Database Configuration (Sirreeffama Qajeelaa) ---
 database_url = os.environ.get('DATABASE_URL')
 
-if database_url:
+if not database_url or database_url.strip() == "":
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
+else:
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-else:
-    # Yoo Render irratti Environment Variable hin jirre ta'e, local-f sqlite fayyadama
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///hrkmso.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -50,7 +46,6 @@ class Employee(db.Model):
 def index():
     return render_template('index.html')
 
-# Hojjetoota argachuufi (GET) fi Hojjetaa haaraa galchuuf (POST)
 @app.route('/api/employees', methods=['GET', 'POST'])
 def handle_employees():
     if request.method == 'POST':
