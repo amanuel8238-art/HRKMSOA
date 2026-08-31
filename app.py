@@ -5,11 +5,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 
-# Supabase Configuration
+# Supabase Configuration (Render Environment Variables irraa fudhata)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-supabase = None
+supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -17,6 +17,7 @@ if SUPABASE_URL and SUPABASE_KEY:
 def index():
     return render_template('index.html')
 
+# API Route: Members fiduuf (GET) fi Galchuuf (POST)
 @app.route('/api/members', methods=['GET', 'POST'])
 def handle_members():
     if not supabase:
@@ -38,6 +39,7 @@ def handle_members():
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 500
 
+# API Route: Users fiduuf (GET) fi Uumuuf (POST)
 @app.route('/api/users', methods=['GET', 'POST'])
 def handle_users():
     if not supabase:
@@ -47,8 +49,8 @@ def handle_users():
         try:
             response = supabase.table('users').select("*").execute()
             return jsonify(response.data), 200
-        except Exception as e:
-            print("SERVER ERROR /api/users:", str(e))
+        except Exception as t:
+            print("SERVER ERROR /api/users:", str(t))
             return jsonify([]), 200
 
     elif request.method == 'POST':
@@ -62,6 +64,7 @@ def handle_users():
         except Exception as e:
             return jsonify({"success": False, "message": str(e)}), 500
 
+# API Route: Login gochuuf (POST)
 @app.route('/api/login', methods=['POST'])
 def login():
     try:
