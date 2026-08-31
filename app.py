@@ -1,4 +1,67 @@
+from flask import Flask, request, jsonify, render_template
+import os
+from supabase import create_client, Client
 from werkzeug.security import check_password_hash, generate_password_hash
+
+app = Flask(__name__)
+
+# Supabase Configuration
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+supabase: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# API Route: Members fiduuf (GET) fi Galchuuf (POST)
+@app.route('/api/members', methods=['GET', 'POST'])
+def handle_members():
+    if not supabase:
+        return jsonify({"success": False, "message": "Supabase connection not configured!"}), 500
+
+    if request.method == 'GET':
+        try:
+            response = supabase.table('members').select("*").execute()
+            return jsonify(response.data), 200
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)}), 500
+
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            response = supabase.table('members').insert(data).execute()
+            return jsonify({"success": True, "message": "Miseensi milkaa'inaan galmaa'e!", "data": response.data}), 201
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)}), 500
+
+# API Route: Users fiduuf (GET) fi Uumuuf (POST)
+@app.route('/api/users', methods=['GET', 'POST'])
+def handle_users():
+    if not supabase:
+        return jsonify({"success": False, "message": "Supabase connection not configured!"}), 500
+
+    if request.method == 'GET':
+        try:
+            response = supabase.table('users').select("*").execute()
+            return jsonify(response.data), 200
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)}), 500
+
+    elif request.method == 'POST':
+        try:
+            data = request.get_json()
+            # Password hashing optional uumuu yoo barbaadame
+            if 'password' in data and data['password']:
+                data['password'] = generate_password_hash(data['password'])
+                
+            response = supabase.table('users').insert(data).execute()
+            return jsonify({"success": True, "message": "User milkaa'inaan uumame!", "data": response.data}), 201
+        except Exception as e:
+            return jsonify({"success": False, "message": str(e)}), 500
 
 # API Route: Login gochuuf (POST)
 @app.route('/api/login', methods=['POST'])
@@ -42,3 +105,6 @@ def login():
     except Exception as e:
         print("Dogoggora Login:", str(e))
         return jsonify({"success": False, "message": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
