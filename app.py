@@ -4,15 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# Database configuration with safe fallback
-database_url = os.environ.get("DATABASE_URL")
-if not database_url:
-    database_url = (
-        "postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
-    )
-
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+# Direct, clean connection string to prevent parsing errors
+database_url = "postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -26,7 +19,7 @@ class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
     gender = db.Column(db.String(20), nullable=True)
-    birth_date = db.Column(db.String(20), nullable=True)  # Age 55 tracking
+    birth_date = db.Column(db.String(20), nullable=True)
     branch = db.Column(db.String(100), nullable=False)
     rank = db.Column(db.String(100), nullable=False)
     salary = db.Column(db.Float, nullable=True)
