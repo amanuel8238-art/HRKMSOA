@@ -1,74 +1,89 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 
-# Flask app jalqabsiisuu
 app = Flask(__name__)
 
-# --- Database Configuration (Sirreeffama Qajeelaa) ---
-database_url = os.environ.get('DATABASE_URL')
+# Database configuration with safe fallback
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+  database_url = "postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
 
-if not database_url or database_url.strip() == "":
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
-else:
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+if database_url and database_url.startswith("postgres://"):
+  database_url = database_url.replace("postgres://", "postgresql://", 1)
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-# --- Database Models ---
+
+# Model for Employees (Komishinii Manneen Sirreessaa Oromiyaa - HRKMSOB)
 class Employee(db.Model):
-    __tablename__ = 'employees'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    gender = db.Column(db.String(20), nullable=False)
-    branch = db.Column(db.String(100), nullable=False)
-    position = db.Column(db.String(100), nullable=False)
-    rank = db.Column(db.String(50), nullable=False)
+  __tablename__ = "employees"
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "full_name": self.full_name,
-            "gender": self.gender,
-            "branch": self.branch,
-            "position": self.position,
-            "rank": self.rank
-        }
+  id = db.Column(db.Integer, primary_key=True)
+  full_name = db.Column(db.String(150), nullable=False)
+  gender = db.Column(db.String(20), nullable=True)
+  birth_date = db.Column(db.String(20), nullable=True)  # Age 55 tracking
+  branch = db.Column(
+      db.String(100), nullable=False
+  )  # Dadar, Head Office, Shagar, etc.
+  rank = db.Column(db.String(100), nullable=False)  # Konstaabilii to Komishinaraa
+  salary = db.Column(db.Float, nullable=True)
+  hire_date = db.Column(db.String(20), nullable=True)
 
-# --- Routes (Endpoints) ---
+  def to_dict(self):
+    return {
+        "id": self.id,
+        "full_name": self.full_name,
+        "gender": self.gender,
+        "birth_date": self.birth_date,
+        "branch": self.branch,
+        "rank": self.rank,
+        "salary": self.salary,
+        "hire_date": self.hire_date,
+    }
 
-@app.route('/')
-def index():
-    return render_template('index.html')
 
-@app.route('/api/employees', methods=['GET', 'POST'])
-def handle_employees():
-    if request.method == 'POST':
-        data = request.get_json()
-        new_emp = Employee(
-            full_name=data.get('full_name'),
-            gender=data.get('gender'),
-            branch=data.get('branch'),
-            position=data.get('position'),
-            rank=data.get('rank')
-        )
-        db.session.add(new_emp)
-        db.session.commit()
-        return jsonify({"message": "Hojjetaan haaraan milkaa'inaan galmeeffameera!", "employee": new_emp.to_dict()}), 201
-    
-    employees = Employee.query.all()
-    return jsonify([emp.to_dict() for emp in employees])
-
-# --- Database Tables uumuu ---
 with app.app_context():
-    db.create_all()
+  db.create_all()
 
-# --- Server Kaasuu (Render Port & Local Support) ---
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+
+@app.route("/")
+def index():
+  return render_template("index.html")
+
+
+# API to get all employees
+@app.route("/api/employees", methods=["GET"])
+def get_employees():
+  employees = Employee.query.all()
+  return jsonify([e.to_dict() for e in employees])
+
+
+# API to add employee
+@app.route("/api/employees", methods=["POST"])
+def add_employee():
+  data = request.json
+  new_emp = Employee(
+      full_name=data.get("full_name"),
+      gender=data.get("gender"),
+      birth_date=data.get("birth_date"),
+      branch=data.get("branch"),
+      rank=data.get("rank"),
+      salary=data.get("salary"),
+      hire_date=data.get("hire_date"),
+  )
+  db.session.add(new_emp)
+  db.session.commit()
+  return (
+      jsonify(
+          {"message": "Employee added successfully!", "employee": new_emp.to_dict()}
+      ),
+      201,
+  )
+
+
+if __name__ == "__main__":
+  app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
