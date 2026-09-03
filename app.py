@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# Database URL qajeelaa fi nageenya qabu
+# Database configuration with safe fallback
 database_url = os.environ.get("DATABASE_URL")
 if not database_url:
     database_url = (
@@ -26,7 +26,7 @@ class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
     gender = db.Column(db.String(20), nullable=True)
-    birth_date = db.Column(db.String(20), nullable=True)
+    birth_date = db.Column(db.String(20), nullable=True)  # Age 55 tracking
     branch = db.Column(db.String(100), nullable=False)
     rank = db.Column(db.String(100), nullable=False)
     salary = db.Column(db.Float, nullable=True)
