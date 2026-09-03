@@ -4,8 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# Direct, clean connection string to prevent parsing errors
-database_url = "postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+# Direct database connection string with SSL mode for Supabase
+database_url = "postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -39,7 +39,11 @@ class Employee(db.Model):
 
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        print("Database tables created successfully!")
+    except Exception as e:
+        print(f"Database connection error: {e}")
 
 
 @app.route("/")
@@ -49,33 +53,40 @@ def index():
 
 @app.route("/api/employees", methods=["GET"])
 def get_employees():
-    employees = Employee.query.all()
-    return jsonify([e.to_dict() for e in employees])
+    try:
+        employees = Employee.query.all()
+        return jsonify([e.to_dict() for e in employees])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/employees", methods=["POST"])
 def add_employee():
-    data = request.json
-    new_emp = Employee(
-        full_name=data.get("full_name"),
-        gender=data.get("gender"),
-        birth_date=data.get("birth_date"),
-        branch=data.get("branch"),
-        rank=data.get("rank"),
-        salary=data.get("salary"),
-        hire_date=data.get("hire_date"),
-    )
-    db.session.add(new_emp)
-    db.session.commit()
-    return (
-        jsonify(
-            {
-                "message": "Employee added successfully!",
-                "employee": new_emp.to_dict(),
-            }
-        ),
-        201,
-    )
+    try:
+        data = request.json
+        new_emp = Employee(
+            full_name=data.get("full_name"),
+            gender=data.get("gender"),
+            birth_date=data.get("birth_date"),
+            branch=data.get("branch"),
+            rank=data.get("rank"),
+            salary=data.get("salary"),
+            hire_date=data.get("hire_date"),
+        )
+        db.session.add(new_emp)
+        db.session.commit()
+        return (
+            jsonify(
+                {
+                    "message": "Employee added successfully!",
+                    "employee": new_emp.to_dict(),
+                }
+            ),
+            201,
+        )
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
