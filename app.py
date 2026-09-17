@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, redirect, url_for, request, flash, abort
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -5,8 +6,9 @@ from models import db, User, Employee, Branch, Rank, Transfer
 from functools import wraps
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'hrkmso-secret-key-2026'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+# Render irratti Supabase (PostgreSQL) akka qabatuuf os.environ.get fayyanna
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///hrkmso.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
