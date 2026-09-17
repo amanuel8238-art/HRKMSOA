@@ -43,7 +43,7 @@
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
-                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Sirreessaa (Total)</p>
+                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Sirreessaa (Total 39)</p>
                 </div>
                 <div class="flex items-center gap-4 text-sm">
                     <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b id="currentAdminUser">admin_hrkmso</b></span>
@@ -56,7 +56,7 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
             
-            <!-- Navigation Tabs -->
+            <!-- Navigation Tabs (Menu) -->
             <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold">
                 <button onclick="switchTab('dashboard')" id="tabBtnDashboard" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Dashboordii</button>
                 <button onclick="switchTab('register')" id="tabBtnRegister" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmeessuu</button>
@@ -175,7 +175,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: REGISTRATION (HIDDEN BY DEFAULT) -->
+            <!-- TAB 2: REGISTRATION -->
             <div id="tabRegister" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
                 <h2 id="regFormTitle" class="text-base font-bold text-slate-800">Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara)</h2>
                 <form id="memberForm" onsubmit="handleRegistration(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
@@ -315,7 +315,7 @@
             <div id="tabBranches" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h2 class="text-base font-bold text-slate-800">Bulchiinsa Dameewwanii (Komishinii Manneen Sirreessaa Oromiyaa)</h2>
-                    <span class="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-semibold">Head Office + Dameewwan Godinaalee</span>
+                    <span class="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-semibold">Head Office + Dameewwan Godinaalee (39)</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-xs" id="branchesGrid">
                     <!-- Populated via JS -->
