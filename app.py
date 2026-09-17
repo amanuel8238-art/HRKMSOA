@@ -33,6 +33,24 @@ def admin_required(f):
 
 with app.app_context():
     db.create_all()
+    
+    # Dameewwan 39an hunda ofumaan database keessatti galchuuf
+    branches_list = [
+        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+    ]
+    
+    for b_name in branches_list:
+        if not Branch.query.filter_by(name=b_name).first():
+            db.session.add(Branch(name=b_name, location='Oromia'))
+    db.session.commit()
 
 # --- ROUTES ---
 
@@ -123,12 +141,6 @@ def create_initial_data():
         hashed_pw = generate_password_hash('admin123')
         admin_user = User(username='admin', password=hashed_pw, role='admin')
         db.session.add(admin_user)
-        db.session.commit()
-    
-    # Fakkeenyaaf Damee Dadar fi Raankii jalqabaa galchuuf
-    if not Branch.query.filter_by(name='Dadar').first():
-        dadar_branch = Branch(name='Dadar', location='Oromia')
-        db.session.add(dadar_branch)
         db.session.commit()
 
 if __name__ == '__main__':
