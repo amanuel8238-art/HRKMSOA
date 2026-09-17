@@ -1,38 +1,54 @@
-<form id="employee-form">
-    <div class="form-group">
-        <label>Maqaa Guutuu <span style="color:red">*</span></label>
-        <input type="text" id="emp-name" required placeholder="Maqaa guutuu galchaa">
-    </div>
-
-    <div class="form-row" style="display: flex; gap: 16px;">
-        <div class="form-group" style="flex: 1;">
-            <label>Saala <span style="color:red">*</span></label>
-            <select id="emp-gender" required>
-                <option value="">-- Saala Filadhu --</option>
-                <option value="Dhiira">Dhiira</option>
-                <option value="Dhalaa">Dhalaa</option>
-            </select>
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <title>HRKMSO - Komishinii Manneen Sirreessaa Oromiyaa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{{ url_for('dashboard') }}">HRKMSO</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Daashboordii</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('employees') }}">Hojjetoota</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('branches') }}">Dameewwan (39)</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('transfers') }}">Jijjiirraa</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('ranks') }}">Sadarkaa / Raankii</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('reports') }}">Gabaasa</a></li>
+                    
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item"><a class="nav-link text-warning fw-bold" href="{{ url_for('settings') }}">⚙️ Qindaa'ina (Admin)</a></li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><span class="navbar-text me-3 text-light">Seene: {{ current_user.username }} ({{ current_user.role }})</span></li>
+                    <li class="nav-item"><a class="btn btn-outline-danger btn-sm mt-1" href="{{ url_for('logout') }}">Baahuu</a></li>
+                </ul>
+                {% endif %}
+            </div>
         </div>
+    </nav>
 
-        <div class="form-group" style="flex: 1;">
-            <label>Raankii / Sadarkaa <span style="color:red">*</span></label>
-            <select id="emp-rank" required>
-                <!-- JavaScript tiin guutama -->
-            </select>
-        </div>
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
     </div>
 
-    <div class="form-group">
-        <label>Damee / Aanaa (Aanaa Dadar dabalatee) <span style="color:red">*</span></label>
-        <select id="emp-branch" required>
-            <!-- JavaScript tiin guutama -->
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Gahee Hojii (Position) <span style="color:red">*</span></label>
-        <input type="text" id="emp-position" required placeholder="Gahee hojii galchaa">
-    </div>
-
-    <button type="submit" class="btn-primary full-width" style="width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Miseensa Galmeessi</button>
-</form>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

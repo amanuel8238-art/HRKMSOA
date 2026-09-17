@@ -1,93 +1,133 @@
-import os
-from flask import Flask, jsonify, render_template, request
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, redirect, url_for, request, flash, abort
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from models import db, User, Employee, Branch, Rank, Transfer
+from functools import wraps
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'hrkmso-secret-key-2026'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Direct database connection string with SSL mode for Supabase
-database_url = "postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require"
+db.init_app(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
-db = SQLAlchemy(app)
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-
-class Employee(db.Model):
-    __tablename__ = "employees"
-
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(150), nullable=False)
-    gender = db.Column(db.String(20), nullable=True)
-    birth_date = db.Column(db.String(20), nullable=True)
-    branch = db.Column(db.String(100), nullable=False)
-    rank = db.Column(db.String(100), nullable=False)
-    salary = db.Column(db.Float, nullable=True)
-    hire_date = db.Column(db.String(20), nullable=True)
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "full_name": self.full_name,
-            "gender": self.gender,
-            "birth_date": self.birth_date,
-            "branch": self.branch,
-            "rank": self.rank,
-            "salary": self.salary,
-            "hire_date": self.hire_date,
-        }
-
+# Admin Qofaaf eeyyamuuf (RBAC Decorator)
+def admin_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if current_user.role != 'admin':
+            abort(403) # Mirga hin qabdu
+        return f(*args, **kwargs)
+    return decorated_function
 
 with app.app_context():
-    try:
-        db.create_all()
-        print("Database tables created successfully!")
-    except Exception as e:
-        print(f"Database connection error: {e}")
+    db.create_all()
 
+# --- ROUTES ---
 
-@app.route("/")
-def index():
-    return render_template("index.html")
+@app.route('/')
+@login_required
+def dashboard():
+    emp_count = Employee.query.count()
+    branch_count = Branch.query.count()
+    transfer_count = Transfer.query.count()
+    return render_template('dashboard.html', emp_count=emp_count, branch_count=branch_count, transfer_count=transfer_count)
 
+@app.route('/employees')
+@login_required
+def employees():
+    all_employees = Employee.query.all()
+    all_branches = Branch.query.all()
+    all_ranks = Rank.query.all()
+    return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
-@app.route("/api/employees", methods=["GET"])
-def get_employees():
-    try:
-        employees = Employee.query.all()
-        return jsonify([e.to_dict() for e in employees])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/employees", methods=["POST"])
+# Hojjetaa haaraa dabaluuf (Admin ykn User eeyyamame)
+@app.route('/add_employee', methods=['POST'])
+@login_required
 def add_employee():
-    try:
-        data = request.json
-        new_emp = Employee(
-            full_name=data.get("full_name"),
-            gender=data.get("gender"),
-            birth_date=data.get("birth_date"),
-            branch=data.get("branch"),
-            rank=data.get("rank"),
-            salary=data.get("salary"),
-            hire_date=data.get("hire_date"),
-        )
-        db.session.add(new_emp)
+    full_name = request.form.get('full_name')
+    gender = request.form.get('gender')
+    branch_id = request.form.get('branch_id')
+    rank_id = request.form.get('rank_id')
+    
+    new_emp = Employee(full_name=full_name, gender=gender, branch_id=branch_id, rank_id=rank_id)
+    db.session.add(new_emp)
+    db.session.commit()
+    flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
+    return redirect(url_for('employees'))
+
+@app.route('/branches')
+@login_required
+def branches():
+    all_branches = Branch.query.all()
+    return render_template('branches.html', branches=all_branches)
+
+@app.route('/transfers')
+@login_required
+def transfers():
+    all_transfers = Transfer.query.all()
+    return render_template('transfers.html', transfers=all_transfers)
+
+@app.route('/ranks')
+@login_required
+def ranks():
+    all_ranks = Rank.query.all()
+    return render_template('ranks.html', ranks=all_ranks)
+
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('reports.html')
+
+# Qindaa'ina - Admin Qofaaf
+@app.route('/settings')
+@admin_required
+def settings():
+    users = User.query.all()
+    return render_template('settings.html', users=users)
+
+# --- AUTH ROUTES ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        flash('Maqaan fayyadamaa ykn jechi icciti dogoggordha!', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# Admin Jalqabaa uumuu
+@app.before_request
+def create_initial_data():
+    if not User.query.filter_by(username='admin').first():
+        hashed_pw = generate_password_hash('admin123')
+        admin_user = User(username='admin', password=hashed_pw, role='admin')
+        db.session.add(admin_user)
         db.session.commit()
-        return (
-            jsonify(
-                {
-                    "message": "Employee added successfully!",
-                    "employee": new_emp.to_dict(),
-                }
-            ),
-            201,
-        )
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+    
+    # Fakkeenyaaf Damee Dadar fi Raankii jalqabaa galchuuf
+    if not Branch.query.filter_by(name='Dadar').first():
+        dadar_branch = Branch(name='Dadar', location='Oromia')
+        db.session.add(dadar_branch)
+        db.session.commit()
 
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+if __name__ == '__main__':
+    app.run(debug=True)
