@@ -6,7 +6,14 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
-            <h2>Gulaataa Gonfoo / Sadarkaa (Ranks)</h2>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Buttoon Deebi'i (Dashboard) Gara Dashboard tti deebisuuf -->
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Deebi'i
+                </a>
+                <h2 class="mb-0">Gulaataa Gonfoo / Sadarkaa (Ranks)</h2>
+            </div>
+            
             <!-- Sadarkaa Haaraa Galchuuf Button -->
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRankModal">
                 <i class="fas fa-plus"></i> Sadarkaa Haaraa Galchi
@@ -62,14 +69,14 @@
 <div class="modal fade" id="addRankModal" tabindex="-1" aria-labelledby="addRankModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" action="">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addRankModalButtonLabel">Sadarkaa Haaraa Dabaluu</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <form method="POST" action="{{ url_for('ranks') }}">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="addRankModalLabel">Sadarkaa Haaraa Dabaluu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Maqaa Sadarkaa</label>
+                        <label for="name" class="form-label">Maqaa Sadarkaa *</label>
                         <input type="text" class="form-control" id="name" name="name" required>
                     </div>
                     <div class="mb-3">
