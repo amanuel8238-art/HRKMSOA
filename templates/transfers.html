@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HRKMSO - Galmee Jijjiirraa</title>
+    <title>HRKMSO - Galmee Jijjiirraa (Transfers)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Alpine.js Modal fi UI togglesaf -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800">
-    <div class="min-h-screen flex flex-col">
+    <div class="min-h-screen flex flex-col" x-data="{ openAddModal: false }">
+        <!-- Header -->
         <header class="bg-indigo-900 text-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <h1 class="text-lg font-bold">HRKMSO - Galmee Jijjiirraa (Transfers)</h1>
@@ -16,15 +19,35 @@
             </div>
         </header>
 
+        <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
-            <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold">
-                <a href="{{ url_for('dashboard') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dashboordii</a>
-                <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
-                <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
-                <a href="{{ url_for('transfers') }}" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Galmee Jijjiirraa</a>
-                <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+            <!-- Navigation Tabs -->
+            <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold justify-between items-center">
+                <div class="flex gap-6">
+                    <a href="{{ url_for('dashboard') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dashboordii</a>
+                    <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
+                    <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
+                    <a href="{{ url_for('transfers') }}" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Galmee Jijjiirraa</a>
+                    <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+                </div>
+                <!-- Button Gaaffii Haaraa -->
+                <button @click="openAddModal = true" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-plus"></i> Gaaffii Jijjiirraa Galchi
+                </button>
             </div>
 
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-3 rounded-lg text-xs {% if category == 'success' %}bg-emerald-100 text-emerald-800 border border-emerald-200{% else %}bg-rose-100 text-rose-800 border border-rose-200{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Table Card -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex justify-between items-center">
                     <h2 class="text-base font-bold text-slate-800">Tarree Jijjiirraa Hojjettootaa</h2>
@@ -37,25 +60,81 @@
                             <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
                                 <th class="p-3">#</th>
                                 <th class="p-3">Maqaa Hojjetaa</th>
-                                <th class="p-3">Damee Duraanii (From)</th>
-                                <th class="p-3">Damee Haaraa (To)</th>
-                                <th class="p-3">Guyyaa Jijjiirraa</th>
+                                <th class="p-3">Damee Duraanii</th>
+                                <th class="p-3">Damee Haaraa</th>
+                                <th class="p-3">Sababa Gaafatame</th>
+                                <th class="p-3">Sababa Murtee (Admin)</th>
+                                <th class="p-3">Guyyaa</th>
+                                <th class="p-3">Haala (Status)</th>
+                                <th class="p-3 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
                             {% if transfers %}
                                 {% for t in transfers %}
-                                <tr class="hover:bg-slate-50">
+                                <tr class="hover:bg-slate-50" x-data="{ openReview: false }">
                                     <td class="p-3">{{ loop.index }}</td>
                                     <td class="p-3 font-bold text-slate-800">{{ t.employee.full_name if t.employee else '-' }}</td>
-                                    <td class="p-3 text-slate-600">{{ t.from_branch }}</td>
-                                    <td class="p-3 text-emerald-700 font-semibold">{{ t.to_branch }}</td>
-                                    <td class="p-3 text-slate-500">{{ t.transfer_date.strftime('%Y-%m-%d') }}</td>
+                                    <td class="p-3 text-slate-600">{{ t.from_branch.name if t.from_branch else '-' }}</td>
+                                    <td class="p-3 text-emerald-700 font-semibold">{{ t.to_branch.name if t.to_branch else '-' }}</td>
+                                    <td class="p-3 text-indigo-700 max-w-xs truncate" title="{{ t.reason }}">{{ t.reason if t.reason else '-' }}</td>
+                                    <td class="p-3 text-slate-600 max-w-xs truncate" title="{{ t.approval_reason }}">{{ t.approval_reason if t.approval_reason else '-' }}</td>
+                                    <td class="p-3 text-slate-500">{{ t.transfer_date if t.transfer_date else '-' }}</td>
+                                    <td class="p-3">
+                                        {% if t.status == 'Approved' %}
+                                            <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">Hayyamame</span>
+                                        {% elif t.status == 'Rejected' %}
+                                            <span class="px-2 py-1 bg-rose-100 text-rose-800 rounded font-bold text-[10px]">Dhorkame</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Eeggannoorra</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="p-3 text-center">
+                                        {% if current_user.role == 'admin' %}
+                                            <button @click="openReview = true" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1 rounded text-[11px] transition">
+                                                <i class="fas fa-edit"></i> Murtee
+                                            </button>
+
+                                            <!-- Review Modal for each row -->
+                                            <div x-show="openReview" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;">
+                                                <div @click.away="openReview = false" class="bg-white rounded-xl max-w-md w-full p-6 text-left space-y-4 shadow-xl">
+                                                    <div class="flex justify-between items-center border-b pb-3">
+                                                        <h3 class="font-bold text-sm text-slate-800">Murtee Jijjiirraa: {{ t.employee.full_name if t.employee else '' }}</h3>
+                                                        <button @click="openReview = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                                                    </div>
+                                                    <form method="POST" action="{{ url_for('update_transfer_status', id=t.id) }}" class="space-y-3">
+                                                        <div>
+                                                            <label class="block text-slate-500 text-[11px] mb-1 font-semibold">Sababa Hojjetaan Dhiyeesse:</label>
+                                                            <p class="p-2 bg-slate-50 border rounded text-slate-700 text-xs">{{ t.reason }}</p>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-slate-700 font-semibold mb-1">Murtee Head Office *</label>
+                                                            <select name="status" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
+                                                                <option value="Approved" {% if t.status == 'Approved' %}selected{% endif %}>Hayyami (Approve)</option>
+                                                                <option value="Rejected" {% if t.status == 'Rejected' %}selected{% endif %}>Dhorki (Reject)</option>
+                                                                <option value="Pending" {% if t.status == 'Pending' %}selected{% endif %}>Eeggannoorra Tursiisi</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-slate-700 font-semibold mb-1">Sababa Murtichaa / Remark</label>
+                                                            <textarea name="approval_reason" rows="3" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="Sababa murtichaa barreessi...">{{ t.approval_reason }}</textarea>
+                                                        </div>
+                                                        <div class="flex justify-end gap-2 pt-2">
+                                                            <button type="button" @click="openReview = false" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-xs">Cufi</button>
+                                                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded text-xs font-bold">Save</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-slate-400 text-[11px]">Admin Qofaaf</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-8 text-slate-400">
+                                    <td colspan="9" class="text-center py-8 text-slate-400">
                                         Galmeen jijjiirraa argame hin jiru.
                                     </td>
                                 </tr>
@@ -65,6 +144,48 @@
                 </div>
             </div>
         </main>
+
+        <!-- Modal Gaaffii Jijjiirraa Galchuuf (Add Transfer Modal) -->
+        <div x-show="openAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;">
+            <div @click.away="openAddModal = false" class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-bold text-sm text-slate-800">Gaaffii Jijjiirraa Haaraa Galchi</h3>
+                    <button @click="openAddModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                </div>
+                <form method="POST" action="{{ url_for('add_transfer') }}" class="space-y-3">
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1">Hojjetaa Jijjiiramu *</label>
+                        <select name="employee_id" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Hojjetaa filadhu</option>
+                            {% for emp in employees %}
+                                <option value="{{ emp.id }}">{{ emp.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1">Gara Damee Kamiitti? (To) *</label>
+                        <select name="to_branch_id" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Damee filadhu</option>
+                            {% for branch in branches %}
+                                <option value="{{ branch.id }}">{{ branch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1">Sababa Jijjiirraa Gaafatame *</label>
+                        <textarea name="reason" rows="3" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required placeholder="Sababa jijjiirraa barreessi..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1">Guyyaa Gaaffiin Dhiyaate *</label>
+                        <input type="text" name="transfer_date" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="openAddModal = false" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-xs">Cufi</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded text-xs font-bold">Gaaffii Ergi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>

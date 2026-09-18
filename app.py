@@ -126,13 +126,12 @@ def add_employee():
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf (Edit Route) - Kana dabaleera
+# Hojjetaa Jiru Gulaaluuf (Edit Route)
 @app.route('/edit_employee/<int:id>', methods=['POST'])
 @login_required
 def edit_employee(id):
     emp = Employee.query.get_or_404(id)
     
-    # Yoo user damee ta'e hojjettoota damee isaarra hin jirre gita hin qabneef eegumsa gochuuf
     if current_user.role != 'admin' and emp.branch_id != current_user.branch_id:
         abort(403)
 
@@ -171,17 +170,71 @@ def branches():
     all_branches = Branch.query.all()
     return render_template('branches.html', branches=all_branches)
 
+# --- TRANSFER ROUTES (KUN DABALAMEE / SIRRAAYEERA) ---
+
 @app.route('/transfers')
 @login_required
 def transfers():
     if current_user.role == 'admin':
         all_transfers = Transfer.query.all()
     else:
-        if hasattr(Transfer, 'from_branch_id'):
-            all_transfers = Transfer.query.filter_by(from_branch_id=current_user.branch_id).all() if current_user.branch_id else []
+        if hasattr(Transfer, 'from_branch_id') and current_user.branch_id:
+            all_transfers = Transfer.query.filter_by(from_branch_id=current_user.branch_id).all()
         else:
             all_transfers = Transfer.query.all()
-    return render_template('transfers.html', transfers=all_transfers)
+            
+    all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=current_user.branch_id).all()
+    all_branches = Branch.query.all()
+    return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches)
+
+@app.route('/add_transfer', methods=['POST'])
+@login_required
+def add_transfer():
+    employee_id = request.form.get('employee_id')
+    to_branch_id = request.form.get('to_branch_id')
+    reason = request.form.get('reason')
+    transfer_date = request.form.get('transfer_date')
+    
+    emp = Employee.query.get_or_404(employee_id)
+    
+    # Hojjetaan kun damee kam irraa akka ka'u (from_branch_id)
+    from_branch_id = emp.branch_id
+    
+    new_transfer = Transfer(
+        employee_id=employee_id,
+        from_branch_id=from_branch_id,
+        to_branch_id=to_branch_id,
+        reason=reason,
+        transfer_date=transfer_date,
+        status='Pending'
+    )
+    
+    db.session.add(new_transfer)
+    db.session.commit()
+    flash('Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!', 'success')
+    return redirect(url_for('transfers'))
+
+@app.route('/update_transfer_status/<int:id>', methods=['POST'])
+@admin_required
+def update_transfer_status(id):
+    tr = Transfer.query.get_or_404(id)
+    status = request.form.get('status') # 'Approved' ykn 'Rejected'
+    approval_reason = request.form.get('approval_reason') # Sababa Head Office
+    
+    tr.status = status
+    tr.approval_reason = approval_reason
+    
+    # Yoo hayyamame (Approved) ta'e, branch_id hojjetaasichaa gara damee haaraatti jijjiirama
+    if status == 'Approved' and tr.to_branch_id:
+        emp = Employee.query.get(tr.employee_id)
+        if emp:
+            emp.branch_id = tr.to_branch_id
+            
+    db.session.commit()
+    flash('Murteen jijjiirraa milkaa\'inaan galmaa\'eera!', 'success')
+    return redirect(url_for('transfers'))
+
+# ----------------------------------------------------
 
 @app.route('/ranks', methods=['GET', 'POST'])
 @login_required
