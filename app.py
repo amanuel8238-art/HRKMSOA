@@ -85,8 +85,9 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=branch_id)
 
+    # SIRREEFFAMA: Rank relationship wajjin wal simsiisuuf Rank table wajjin join godhamee barbaadama
     if rank:
-        query = query.filter_by(rank=rank)
+        query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == rank))
     
     if gender:
         query = query.filter_by(gender=gender)
@@ -118,7 +119,7 @@ def add_employee():
     else:
         branch_id = current_user.branch_id
 
-    rank = request.form.get('rank_id') # Asirratti Model kee irratti rank field yoo string ta'e kallattiin fudhata
+    rank = request.form.get('rank_id')
     rank_date = request.form.get('rank_date')
     hire_date = request.form.get('hire_date')
     birth_date = request.form.get('birth_date')
