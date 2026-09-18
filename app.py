@@ -70,13 +70,39 @@ def dashboard():
 @app.route('/employees')
 @login_required
 def employees():
-    if current_user.role == 'admin':
-        all_employees = Employee.query.all()
-    else:
-        all_employees = Employee.query.filter_by(branch_id=current_user.branch_id).all() if current_user.branch_id else []
-        
+    # Filannoo fi search parameter fudhachuu
+    branch_id = request.args.get('branch_id')
+    rank = request.args.get('rank')
+    gender = request.args.get('gender')
+    search_query = request.args.get('search', '')
+
+    query = Employee.query
+
+    # Haala user kanaan branch daangessuu (Admin yoo ta'e hunda argata)
+    if current_user.role != 'admin':
+        branch_id = current_user.branch_id
+        query = query.filter_by(branch_id=branch_id)
+    elif branch_id:
+        query = query.filter_by(branch_id=branch_id)
+
+    if rank:
+        query = query.filter_by(rank=rank)
+    
+    if gender:
+        query = query.filter_by(gender=gender)
+
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{search_query}%'),
+                Employee.unique_id.ilike(f'%{search_query}%')
+            )
+        )
+
+    all_employees = query.all()
     all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
+    
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
 # Hojjetaa haaraa dabaluuf
@@ -92,7 +118,7 @@ def add_employee():
     else:
         branch_id = current_user.branch_id
 
-    rank_id = request.form.get('rank_id')
+    rank = request.form.get('rank_id') # Asirratti Model kee irratti rank field yoo string ta'e kallattiin fudhata
     rank_date = request.form.get('rank_date')
     hire_date = request.form.get('hire_date')
     birth_date = request.form.get('birth_date')
@@ -109,7 +135,7 @@ def add_employee():
         unique_id=unique_id,
         gender=gender,
         branch_id=branch_id,
-        rank_id=rank_id,
+        rank=rank,
         rank_date=rank_date,
         hire_date=hire_date,
         birth_date=birth_date,
@@ -142,7 +168,7 @@ def edit_employee(id):
     if current_user.role == 'admin':
         emp.branch_id = request.form.get('branch_id')
 
-    emp.rank_id = request.form.get('rank_id')
+    emp.rank = request.form.get('rank_id')
     emp.rank_date = request.form.get('rank_date')
     emp.hire_date = request.form.get('hire_date')
     emp.birth_date = request.form.get('birth_date')

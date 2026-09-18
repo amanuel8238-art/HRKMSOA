@@ -7,7 +7,7 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <!-- Buttoon Deebi'i (Dashboard) -->
+                <!-- Button Deebi'i (Dashboard) -->
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Deebi'i
                 </a>
@@ -48,11 +48,15 @@
                                 <td><strong>{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
                                 <td>{{ emp.branch.name if emp.branch else '-' }}</td>
-                                <td>{{ emp.rank.name if emp.rank else '-' }}</td>
+                                <td>{{ emp.rank if emp.rank else '-' }}</td>
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
-                                <td><span class="badge bg-success">{{ emp.status }}</span></td>
                                 <td>
-                                    <!-- Button Gulaaluu - Modal of danda'e waama -->
+                                    <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ emp.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Button Gulaaluu -->
                                     <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ emp.id }}">
                                         <i class="fas fa-edit"></i> Gulaali
                                     </button>
@@ -98,17 +102,30 @@
                         <div class="col-md-6 mb-3">
                             <label for="branch_id" class="form-label">Damee / Godina *</label>
                             <select class="form-select" id="branch_id" name="branch_id" required>
+                                <option value="">-- Damee Filadhu --</option>
                                 {% for branch in branches %}
                                     <option value="{{ branch.id }}">{{ branch.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="rank_id" class="form-label">Gulaataa Gonfoo (Rank) *</label>
+                            <label for="rank_id" class="form-label">Gulaantaa Gonfoo (Rank) *</label>
                             <select class="form-select" id="rank_id" name="rank_id" required>
-                                {% for rank in ranks %}
-                                    <option value="{{ rank.id }}">{{ rank.name }}</option>
-                                {% endfor %}
+                                <option value="">-- Gulaantaa Filadhu --</option>
+                                <option value="Konstaabilii">Konstaabilii</option>
+                                <option value="Gar/Sajjiin">Gar/Sajjiin</option>
+                                <option value="It/A/Sajjiin">It/A/Sajjiin</option>
+                                <option value="Sajjiin">Sajjiin</option>
+                                <option value="Sajjiin Olaannaa">Sajjiin Olaannaa</option>
+                                <option value="Gar/Inspeektaraa">Gar/Inspeektaraa</option>
+                                <option value="It/A/Inspeektaraa">It/A/Inspeektaraa</option>
+                                <option value="Inspeektaraa">Inspeektaraa</option>
+                                <option value="Inspeektaraa Olaannaa">Inspeektaraa Olaannaa</option>
+                                <option value="It/A/Komaanderaa">It/A/Komaanderaa</option>
+                                <option value="Komaanderaa">Komaanderaa</option>
+                                <option value="Gar/Komishineraa">Gar/Komishineraa</option>
+                                <option value="It/A/Komishineraa">It/A/Komishineraa</option>
+                                <option value="Komishineraa">Komishineraa</option>
                             </select>
                         </div>
                     </div>
@@ -231,11 +248,23 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Gulaataa Gonfoo (Rank) *</label>
+                                <label class="form-label">Gulaantaa Gonfoo (Rank) *</label>
                                 <select class="form-select" name="rank_id" required>
-                                    {% for rank in ranks %}
-                                        <option value="{{ rank.id }}" {% if emp.rank_id == rank.id %}selected{% endif %}>{{ rank.name }}</option>
-                                    {% endfor %}
+                                    {% set current_rank = emp.rank %}
+                                    <option value="Konstaabilii" {% if current_rank == 'Konstaabilii' %}selected{% endif %}>Konstaabilii</option>
+                                    <option value="Gar/Sajjiin" {% if current_rank == 'Gar/Sajjiin' %}selected{% endif %}>Gar/Sajjiin</option>
+                                    <option value="It/A/Sajjiin" {% if current_rank == 'It/A/Sajjiin' %}selected{% endif %}>It/A/Sajjiin</option>
+                                    <option value="Sajjiin" {% if current_rank == 'Sajjiin' %}selected{% endif %}>Sajjiin</option>
+                                    <option value="Sajjiin Olaannaa" {% if current_rank == 'Sajjiin Olaannaa' %}selected{% endif %}>Sajjiin Olaannaa</option>
+                                    <option value="Gar/Inspeektaraa" {% if current_rank == 'Gar/Inspeektaraa' %}selected{% endif %}>Gar/Inspeektaraa</option>
+                                    <option value="It/A/Inspeektaraa" {% if current_rank == 'It/A/Inspeektaraa' %}selected{% endif %}>It/A/Inspeektaraa</option>
+                                    <option value="Inspeektaraa" {% if current_rank == 'Inspeektaraa' %}selected{% endif %}>Inspeektaraa</option>
+                                    <option value="Inspeektaraa Olaannaa" {% if current_rank == 'Inspeektaraa Olaannaa' %}selected{% endif %}>Inspeektaraa Olaannaa</option>
+                                    <option value="It/A/Komaanderaa" {% if current_rank == 'It/A/Komaanderaa' %}selected{% endif %}>It/A/Komaanderaa</option>
+                                    <option value="Komaanderaa" {% if current_rank == 'Komaanderaa' %}selected{% endif %}>Komaanderaa</option>
+                                    <option value="Gar/Komishineraa" {% if current_rank == 'Gar/Komishineraa' %}selected{% endif %}>Gar/Komishineraa</option>
+                                    <option value="It/A/Komishineraa" {% if current_rank == 'It/A/Komishineraa' %}selected{% endif %}>It/A/Komishineraa</option>
+                                    <option value="Komishineraa" {% if current_rank == 'Komishineraa' %}selected{% endif %}>Komishineraa</option>
                                 </select>
                             </div>
                         </div>
