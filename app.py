@@ -170,7 +170,7 @@ def branches():
     all_branches = Branch.query.all()
     return render_template('branches.html', branches=all_branches)
 
-# --- TRANSFER ROUTES (KUN DABALAMEE / SIRRAAYEERA) ---
+# --- TRANSFER ROUTES ---
 
 @app.route('/transfers')
 @login_required
@@ -196,8 +196,6 @@ def add_transfer():
     transfer_date = request.form.get('transfer_date')
     
     emp = Employee.query.get_or_404(employee_id)
-    
-    # Hojjetaan kun damee kam irraa akka ka'u (from_branch_id)
     from_branch_id = emp.branch_id
     
     new_transfer = Transfer(
@@ -218,13 +216,12 @@ def add_transfer():
 @admin_required
 def update_transfer_status(id):
     tr = Transfer.query.get_or_404(id)
-    status = request.form.get('status') # 'Approved' ykn 'Rejected'
-    approval_reason = request.form.get('approval_reason') # Sababa Head Office
+    status = request.form.get('status')
+    approval_reason = request.form.get('approval_reason')
     
     tr.status = status
     tr.approval_reason = approval_reason
     
-    # Yoo hayyamame (Approved) ta'e, branch_id hojjetaasichaa gara damee haaraatti jijjiirama
     if status == 'Approved' and tr.to_branch_id:
         emp = Employee.query.get(tr.employee_id)
         if emp:
@@ -269,7 +266,6 @@ def settings():
     branches = Branch.query.all()
     return render_template('settings.html', users=users, branches=branches)
 
-# Fayyadamaa haaraa uumuu (Damee isaa waliin) - Admin Qofaaf
 @app.route('/add_user', methods=['POST'])
 @admin_required
 def add_user():
