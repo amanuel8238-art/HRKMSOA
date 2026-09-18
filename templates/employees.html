@@ -21,6 +21,74 @@
         </div>
     </div>
 
+    <!-- FILTER & SEARCH SECTION -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <form method="GET" action="{{ url_for('employees') }}" class="row g-3">
+                <!-- Search Bar (Maqaa ykn ID-n) -->
+                <div class="col-md-3">
+                    <label for="search" class="form-label fw-bold">Barbaadi (Maqaa / ID)</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ request.args.get('search', '') }}" placeholder="Maqaa ykn ID...">
+                </div>
+
+                <!-- Damee (Branch) Filter -->
+                {% if current_user.role == 'admin' %}
+                <div class="col-md-3">
+                    <label for="branch_id" class="form-label fw-bold">Damee (Branch)</label>
+                    <select class="form-select" id="branch_id" name="branch_id">
+                        <option value="">-- Dameewwan Hunda --</option>
+                        {% for branch in branches %}
+                            <option value="{{ branch.id }}" {% if request.args.get('branch_id') == branch.id|string %}selected{% endif %}>{{ branch.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Rank Filter -->
+                <div class="col-md-2">
+                    <label for="rank" class="form-label fw-bold">Gulantaa / Rank</label>
+                    <select class="form-select" id="rank" name="rank">
+                        <option value="">-- Hunda --</option>
+                        <option value="Konstaabilii" {% if request.args.get('rank') == 'Konstaabilii' %}selected{% endif %}>Konstaabilii</option>
+                        <option value="Gar/Sajjiin" {% if request.args.get('rank') == 'Gar/Sajjiin' %}selected{% endif %}>Gar/Sajjiin</option>
+                        <option value="It/A/Sajjiin" {% if request.args.get('rank') == 'It/A/Sajjiin' %}selected{% endif %}>It/A/Sajjiin</option>
+                        <option value="Sajjiin" {% if request.args.get('rank') == 'Sajjiin' %}selected{% endif %}>Sajjiin</option>
+                        <option value="Sajjiin Olaannaa" {% if request.args.get('rank') == 'Sajjiin Olaannaa' %}selected{% endif %}>Sajjiin Olaannaa</option>
+                        <option value="Gar/Inspeektaraa" {% if request.args.get('rank') == 'Gar/Inspeektaraa' %}selected{% endif %}>Gar/Inspeektaraa</option>
+                        <option value="It/A/Inspeektaraa" {% if request.args.get('rank') == 'It/A/Inspeektaraa' %}selected{% endif %}>It/A/Inspeektaraa</option>
+                        <option value="Inspeektaraa" {% if request.args.get('rank') == 'Inspeektaraa' %}selected{% endif %}>Inspeektaraa</option>
+                        <option value="Inspeektaraa Olaannaa" {% if request.args.get('rank') == 'Inspeektaraa Olaannaa' %}selected{% endif %}>Inspeektaraa Olaannaa</option>
+                        <option value="It/A/Komaanderaa" {% if request.args.get('rank') == 'It/A/Komaanderaa' %}selected{% endif %}>It/A/Komaanderaa</option>
+                        <option value="Komaanderaa" {% if request.args.get('rank') == 'Komaanderaa' %}selected{% endif %}>Komaanderaa</option>
+                        <option value="Gar/Komishineraa" {% if request.args.get('rank') == 'Gar/Komishineraa' %}selected{% endif %}>Gar/Komishineraa</option>
+                        <option value="It/A/Komishineraa" {% if request.args.get('rank') == 'It/A/Komishineraa' %}selected{% endif %}>It/A/Komishineraa</option>
+                        <option value="Komishineraa" {% if request.args.get('rank') == 'Komishineraa' %}selected{% endif %}>Komishineraa</option>
+                    </select>
+                </div>
+
+                <!-- Saala (Gender) Filter -->
+                <div class="col-md-2">
+                    <label for="gender" class="form-label fw-bold">Saala</label>
+                    <select class="form-select" id="gender" name="gender">
+                        <option value="">-- Hunda --</option>
+                        <option value="Dhiira" {% if request.args.get('gender') == 'Dhiira' %}selected{% endif %}>Dhiira</option>
+                        <option value="Dhalaa" {% if request.args.get('gender') == 'Dhalaa' %}selected{% endif %}>Dhalaa</option>
+                    </select>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-dark w-100">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary" title="Haquu (Reset)">
+                        <i class="fas fa-redo"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Table of Employees -->
     <div class="card shadow-sm">
         <div class="card-body">
@@ -66,7 +134,7 @@
                         {% else %}
                             <tr>
                                 <td colspan="9" class="text-center py-4 text-muted">
-                                    Hojjetaan galmaa'e hin jiru.
+                                    Hojjetaan filtarii kana waliin wal simu argamuu hin dandeenye.
                                 </td>
                             </tr>
                         {% endif %}
