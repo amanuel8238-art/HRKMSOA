@@ -65,7 +65,8 @@ def dashboard():
         # Fayyadamaa Damee: Hojjettoota damee isaa qofa ilaala
         emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
-        transfer_count = Transfer.query.filter_by(from_branch_id=current_user.branch_id).count() if current_user.branch_id else 0
+        # Eegumsaaf: Transfer model keessatti branch_id ykn from_branch_id jiraachuu isaa mirkaneessi
+        transfer_count = Transfer.query.filter_by(from_branch_id=current_user.branch_id).count() if (current_user.branch_id and hasattr(Transfer, 'from_branch_id')) else 0
 
     return render_template('dashboard.html', emp_count=emp_count, branch_count=branch_count, transfer_count=transfer_count)
 
@@ -142,7 +143,10 @@ def transfers():
     if current_user.role == 'admin':
         all_transfers = Transfer.query.all()
     else:
-        all_transfers = Transfer.query.filter_by(from_branch_id=current_user.branch_id).all() if current_user.branch_id else []
+        if hasattr(Transfer, 'from_branch_id'):
+            all_transfers = Transfer.query.filter_by(from_branch_id=current_user.branch_id).all() if current_user.branch_id else []
+        else:
+            all_transfers = Transfer.query.all()
     return render_template('transfers.html', transfers=all_transfers)
 
 @app.route('/ranks', methods=['GET', 'POST'])
@@ -175,7 +179,7 @@ def reports():
 @admin_required
 def settings():
     users = User.query.all()
-    branches = Branch.query.all() # Dameewwan 38/39 uumuu keessatti filachuuf ni gargaara
+    branches = Branch.query.all()
     return render_template('settings.html', users=users, branches=branches)
 
 # Fayyadamaa haaraa uumuu (Damee isaa waliin) - Admin Qofaaf
@@ -185,7 +189,7 @@ def add_user():
     username = request.form.get('username')
     password = request.form.get('password')
     role = request.form.get('role', 'user')
-    branch_id = request.form.get('branch_id') # Damee filatame fudhachuu
+    branch_id = request.form.get('branch_id')
     
     existing_user = User.query.filter_by(username=username).first()
     if existing_user:
