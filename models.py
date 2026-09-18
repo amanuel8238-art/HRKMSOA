@@ -4,13 +4,17 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-# 1. To'annoo Fayyadamtootaa (User & Admin Role)
+# 1. To'annoo Fayyadamtootaa (User & Admin Role) - Damee isaanii waliin
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), nullable=False, default='user') # 'admin' ykn 'user'
+    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True) # Fayyadamaan damee kam akka qabu agarsiisa
+
+    # Relationship to Branch
+    branch = db.relationship('Branch', backref=db.backref('users', lazy=True))
 
 # 2. Dameewwan (Branches - 39 branches including Dadar)
 class Branch(db.Model):

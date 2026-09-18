@@ -5,13 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRKMSO - Tarree Miseensotaa</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-100 text-slate-800">
     <div class="min-h-screen flex flex-col">
         <header class="bg-indigo-900 text-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <h1 class="text-lg font-bold">HRKMSO - Tarree Miseensotaa</h1>
-                <a href="{{ url_for('dashboard') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded transition text-white">Gara Dashboordii</a>
+                <div class="flex items-center gap-3">
+                    <!-- Buttoon Deebi'i (Back) miidhagaan dabalamteetti -->
+                    <a href="{{ url_for('dashboard') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-lg transition text-white flex items-center gap-1 font-semibold">
+                        <i class="fas fa-arrow-left"></i> Deebi'i
+                    </a>
+                    <h1 class="text-lg font-bold">HRKMSO - Tarree Miseensotaa</h1>
+                </div>
+                <a href="{{ url_for('logout') }}" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg transition text-white font-semibold">Bahi (Logout)</a>
             </div>
         </header>
 
@@ -23,6 +30,9 @@
                 <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
                 <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
                 <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('settings') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Qindaa'ina (Settings)</a>
+                {% endif %}
             </div>
 
             <!-- Add Employee Form Box -->
@@ -34,28 +44,59 @@
                         <input type="text" name="full_name" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Maqaa Guutuu">
                     </div>
                     <div>
+                        <label class="block text-slate-700 font-medium mb-1">ID Addaa *</label>
+                        <input type="text" name="unique_id" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Unique ID">
+                    </div>
+                    <div>
                         <label class="block text-slate-700 font-medium mb-1">Saala *</label>
                         <select name="gender" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="Dhiira">Dhiira</option>
                             <option value="Dhalaa">Dhalaa</option>
                         </select>
                     </div>
+
+                    <!-- Yoo Admin ta'e dameewwan hunda keessaa filata, yoo User ta'e garuu damee isaa qofa qabata -->
                     <div>
                         <label class="block text-slate-700 font-medium mb-1">Damee / Godina *</label>
+                        {% if current_user.role == 'admin' %}
                         <select name="branch_id" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- Damee Filadhu --</option>
                             {% for b in branches %}
                             <option value="{{ b.id }}">{{ b.name }}</option>
                             {% endfor %}
                         </select>
+                        {% else %}
+                        <!-- User idii damee isaa ofumaan qabatee darba -->
+                        <input type="text" disabled value="{{ current_user.branch.name if current_user.branch else 'Damee Koo' }}" class="w-full border rounded-lg p-2 bg-slate-100 text-slate-600 font-semibold">
+                        {% endif %}
                     </div>
+
                     <div>
                         <label class="block text-slate-700 font-medium mb-1">Gulaataa Gonfoo *</label>
                         <select name="rank_id" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">-- Sadarkaa Filadhu --</option>
                             {% for r in ranks %}
                             <option value="{{ r.id }}">{{ r.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Gita Hojii *</label>
+                        <input type="text" name="job_position" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Gita Hojii">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Mindaa Gulaantaa *</label>
+                        <input type="number" step="0.01" name="rank_salary" required class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-medium mb-1">Status *</label>
+                        <select name="status" required class="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="Active">Hojii Irra (Active)</option>
+                            <option value="Du'aan">Sababa Du'aan</option>
+                            <option value="Fedhiitiin">Sababa Fedhiitiin</option>
+                        </select>
+                    </div>
+
                     <div class="md:col-span-4 flex justify-end">
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg transition text-xs">Miseensa Galmeessi</button>
                     </div>
@@ -65,29 +106,43 @@
             <!-- Employees Table -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden space-y-4">
                 <div class="px-6 py-4 border-b flex justify-between items-center">
-                    <h3 class="font-bold text-slate-800 text-sm">Tarree Hojjettoota Waliigalaa</h3>
+                    <h3 class="font-bold text-slate-800 text-sm">
+                        {% if current_user.role == 'admin' %}
+                            Tarree Hojjettoota Waliigalaa (Head Office)
+                        {% else %}
+                            Hojjettoota Damee Koo ({{ current_user.branch.name if current_user.branch else '' }})
+                        {% endif %}
+                    </h3>
                     <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-semibold">{{ employees|length }} Total</span>
                 </div>
                 <div class="overflow-x-auto px-6 pb-6">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="bg-slate-100 text-slate-600 uppercase">
+                                <th class="p-3">#</th>
+                                <th class="p-3">ID Addaa</th>
                                 <th class="p-3">Maqaa Guutuu</th>
                                 <th class="p-3">Saala</th>
                                 <th class="p-3">Damee</th>
                                 <th class="p-3">Gonfoo</th>
+                                <th class="p-3">Gita Hojii</th>
+                                <th class="p-3">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
                             {% for emp in employees %}
                             <tr class="hover:bg-slate-50">
+                                <td class="p-3 text-slate-600">{{ loop.index }}</td>
+                                <td class="p-3 text-slate-600">{{ emp.unique_id if emp.unique_id else '-' }}</td>
                                 <td class="p-3 font-bold text-slate-800">{{ emp.full_name }}</td>
                                 <td class="p-3 text-slate-600">{{ emp.gender }}</td>
                                 <td class="p-3 text-slate-700">{{ emp.branch.name if emp.branch else '-' }}</td>
                                 <td class="p-3 text-slate-700">{{ emp.rank.name if emp.rank else '-' }}</td>
+                                <td class="p-3 text-slate-700">{{ emp.job_position if emp.job_position else '-' }}</td>
+                                <td class="p-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded">{{ emp.status }}</span></td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="4" class="text-center py-4 text-slate-400">Daataan hojjettootaa hin jiru.</td></tr>
+                            <tr><td colspan="8" class="text-center py-6 text-slate-400">Daataan hojjettootaa hin jiru.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
