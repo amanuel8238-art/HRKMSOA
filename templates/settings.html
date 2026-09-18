@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRKMSO - Qindaa'ina (Settings)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap CSS for modals if needed, or tailwind -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 text-slate-800">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-indigo-900 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <h1 class="text-lg font-bold">HRKMSO - Qindaa'ina Sistamii (Settings)</h1>
+                <a href="{{ url_for('dashboard') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded transition text-white">Gara Dashboordii</a>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+            <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold">
+                <a href="{{ url_for('dashboard') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dashboordii</a>
+                <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
+                <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
+                <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
+                <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Add User Section -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-base font-bold text-slate-800"><i class="fas fa-user-plus text-indigo-600 me-2"></i> Fayyadamaa (User) Haaraa Uumuu</h2>
+                <form action="{{ url_for('add_user') }}" method="POST" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-xs font-bold">Maqaa Fayyadamaa (Username)</label>
+                        <input type="text" name="username" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-xs font-bold">Jecha Icciti (Password)</label>
+                        <input type="password" name="password" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label text-xs font-bold">Gahee (Role)</label>
+                        <select name="role" class="form-select form-select-sm">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-sm btn-success w-100"><i class="fas fa-plus"></i> Galchi</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Users Table -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-base font-bold text-slate-800"><i class="fas fa-users-cog text-indigo-600 me-2"></i> Tarree Fayyadamtoota Sistamichaa</h2>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-semibold">Waliigala: {{ users | length }} Fayyadamtoota</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-xs">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Maqaa Fayyadamaa (Username)</th>
+                                <th>Gahee (Role)</th>
+                                <th>To'annoo (Actions: Password Reset / Delete)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users %}
+                                {% for u in users %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td><strong>{{ u.username }}</strong></td>
+                                    <td>
+                                        {% if u.role == 'admin' %}
+                                            <span class="badge bg-danger">Admin</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- Reset Password Form -->
+                                        <form action="{{ url_for('reset_password', user_id=u.id) }}" method="POST" class="d-inline-flex gap-2 align-items-center">
+                                            <input type="password" name="new_password" placeholder="Pass haaraa" class="form-control form-control-sm" style="width: 130px;" required>
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Jecha Icciti Jijjiiri">
+                                                <i class="fas fa-key"></i> Reset
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete User -->
+                                        {% if u.username != 'admin' %}
+                                        <form action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('Fayyadamaa kana haquudhaaf mirkaneessiteettaa?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Fayyadamaa Haqi">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        Fayyadamtoonni galmaa'an hin jiran.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

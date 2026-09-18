@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Gulaataa Gonfoo (Ranks) - HRKMSO{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2>Gulaataa Gonfoo / Sadarkaa (Ranks)</h2>
+            <!-- Sadarkaa Haaraa Galchuuf Button -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRankModal">
+                <i class="fas fa-plus"></i> Sadarkaa Haaraa Galchi
+            </button>
+        </div>
+    </div>
+
+    <!-- Table of Ranks -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Maqaa Sadarkaa (Rank Name)</th>
+                            <th>Ibsa / Description</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if ranks %}
+                            {% for rank in ranks %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><strong>{{ rank.name }}</strong></td>
+                                <td>{{ rank.description if rank.description else '-' }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i> Gulaali
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Haquuf
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    Daataan sadarkaa (rank) galmaa'e hin jiru.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sadarkaa Haaraa Itti Dabalan -->
+<div class="modal fade" id="addRankModal" tabindex="-1" aria-labelledby="addRankModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRankModalButtonLabel">Sadarkaa Haaraa Dabaluu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Maqaa Sadarkaa</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Ibsa (Description)</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
+                    <button type="submit" class="btn btn-success">Galchi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

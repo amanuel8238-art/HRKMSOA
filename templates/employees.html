@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Miseensota (Employees) - HRKMSO{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2>Hojjettoota / Miseensota Komishinichaa</h2>
+            <!-- Hojjetaa Haaraa Galchuuf Button -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <i class="fas fa-user-plus"></i> Galmee Miseensa Haaraa
+            </button>
+        </div>
+    </div>
+
+    <!-- Table of Employees -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>ID Addaa</th>
+                            <th>Maqaa Guutuu</th>
+                            <th>Saala</th>
+                            <th>Damee (Branch)</th>
+                            <th>Gulantaa / Rank</th>
+                            <th>Gita Hojii</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if employees %}
+                            {% for emp in employees %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ emp.unique_id if emp.unique_id else '-' }}</td>
+                                <td><strong>{{ emp.full_name }}</strong></td>
+                                <td>{{ emp.gender if emp.gender else '-' }}</td>
+                                <td>{{ emp.branch.name if emp.branch else '-' }}</td>
+                                <td>{{ emp.rank.name if emp.rank else '-' }}</td>
+                                <td>{{ emp.job_position if emp.job_position else '-' }}</td>
+                                <td><span class="badge bg-success">{{ emp.status }}</span></td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i> Gulaali
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    Hojjetaan galmaa'e hin jiru.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Galmee Miseensa Haaraa (Ethiopian Calendar: Guyyaa/Ji'a/Bara) -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_employee') }}">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="addEmployeeModalLabel">Galmee Miseensa Haaraa (Guyyaa/Ji'a/Bara)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="full_name" class="form-label">Maqaa Guutuu *</label>
+                            <input type="text" class="form-control" id="full_name" name="full_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="unique_id" class="form-label">ID Addaa (Unique ID) *</label>
+                            <input type="text" class="form-control" id="unique_id" name="unique_id" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="branch_id" class="form-label">Damee / Godina *</label>
+                            <select class="form-select" id="branch_id" name="branch_id" required>
+                                {% for branch in branches %}
+                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="rank_id" class="form-label">Gulaataa Gonfoo (Rank) *</label>
+                            <select class="form-select" id="rank_id" name="rank_id" required>
+                                {% for rank in ranks %}
+                                    <option value="{{ rank.id }}">{{ rank.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="rank_date" class="form-label">Guyyaa Gulaantaa Gonfoo Argate *</label>
+                            <input type="text" class="form-control" id="rank_date" name="rank_date" placeholder="DD/MM/YYYY" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="hire_date" class="form-label">Guyyaa Qacarichaa *</label>
+                            <input type="text" class="form-control" id="hire_date" name="hire_date" placeholder="DD/MM/YYYY" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="birth_date" class="form-label">Guyyaa Dhalootaa *</label>
+                            <input type="text" class="form-control" id="birth_date" name="birth_date" placeholder="DD/MM/YYYY" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="rank_salary" class="form-label">Mindaa Gulaantaa Gonfoo *</label>
+                            <input type="number" step="0.01" class="form-control" id="rank_salary" name="rank_salary" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="location_allowance" class="form-label">Mindaa Kaffaltii Idoo</label>
+                            <input type="number" step="0.01" class="form-control" id="location_allowance" name="location_allowance" value="0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="food_allowance" class="form-label">Durgoo Nyaataa</label>
+                            <input type="number" step="0.01" class="form-control" id="food_allowance" name="food_allowance" value="0">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Saala *</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="Dhiira">Dhiira</option>
+                                <option value="Dhalaa">Dhalaa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="education_level" class="form-label">Sadarkaa Barumsaa</label>
+                            <select class="form-select" id="education_level" name="education_level">
+                                <option value="Kutaa 8ffaa">Kutaa 8ffaa</option>
+                                <option value="High School (9-12)">High School (9-12)</option>
+                                <option value="Certificate">Certificate</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Degree">Degree</option>
+                                <option value="Masters & Above">Masters & Above</option>
+                                <option value="Kan Biroo">Kan Biroo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="field_of_study" class="form-label">Gosa Barumsaa (Field of Study)</label>
+                            <input type="text" class="form-control" id="field_of_study" name="field_of_study">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="job_position" class="form-label">Gita Hojii Irratti Ramadame *</label>
+                            <input type="text" class="form-control" id="job_position" name="job_position" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="status" class="form-label">Haala / Status Jalqabaa *</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="Active">Hojii Irra (Active)</option>
+                                <option value="Du'aan">Sababa Du'aan</option>
+                                <option value="Fedhiitiin">Sababa Fedhiitiin</option>
+                                <option value="Dhukkubaan">Sababa Dhukkubaan</option>
+                                <option value="Dismissed">Badii Naamuusaan (Dismissed)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
+                    <button type="submit" class="btn btn-success">Miseensa Galmeessi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
