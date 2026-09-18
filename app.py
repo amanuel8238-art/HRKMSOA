@@ -33,7 +33,7 @@ def admin_required(f):
 with app.app_context():
     db.create_all()
     
-    # Dameewwan 39an hunda ofumaan database keessatti galchuuf
+    # Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar is included here)
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -57,15 +57,12 @@ with app.app_context():
 @login_required
 def dashboard():
     if current_user.role == 'admin':
-        # Admin: Dameewwan hunda irraa gabaasa waliigalaa arga
         emp_count = Employee.query.count()
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
     else:
-        # Fayyadamaa Damee: Hojjettoota damee isaa qofa ilaala
         emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
-        # Eegumsaaf: Transfer model keessatti branch_id ykn from_branch_id jiraachuu isaa mirkaneessi
         transfer_count = Transfer.query.filter_by(from_branch_id=current_user.branch_id).count() if (current_user.branch_id and hasattr(Transfer, 'from_branch_id')) else 0
 
     return render_template('dashboard.html', emp_count=emp_count, branch_count=branch_count, transfer_count=transfer_count)
@@ -76,7 +73,6 @@ def employees():
     if current_user.role == 'admin':
         all_employees = Employee.query.all()
     else:
-        # Fayyadamaan damee hojjettoota damee isa qofa arga
         all_employees = Employee.query.filter_by(branch_id=current_user.branch_id).all() if current_user.branch_id else []
         
     all_branches = Branch.query.all()
@@ -91,7 +87,6 @@ def add_employee():
     unique_id = request.form.get('unique_id')
     gender = request.form.get('gender')
     
-    # Yoo admin ta'e damee foormii irraa dhufe filata, yoo user ta'e garuu ofumaan damee isaaf kenname qabata
     if current_user.role == 'admin':
         branch_id = request.form.get('branch_id')
     else:
@@ -129,6 +124,45 @@ def add_employee():
     db.session.add(new_emp)
     db.session.commit()
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
+    return redirect(url_for('employees'))
+
+# Hojjetaa Jiru Gulaaluuf (Edit Route) - Kana dabaleera
+@app.route('/edit_employee/<int:id>', methods=['POST'])
+@login_required
+def edit_employee(id):
+    emp = Employee.query.get_or_404(id)
+    
+    # Yoo user damee ta'e hojjettoota damee isaarra hin jirre gita hin qabneef eegumsa gochuuf
+    if current_user.role != 'admin' and emp.branch_id != current_user.branch_id:
+        abort(403)
+
+    emp.full_name = request.form.get('full_name')
+    emp.unique_id = request.form.get('unique_id')
+    emp.gender = request.form.get('gender')
+    
+    if current_user.role == 'admin':
+        emp.branch_id = request.form.get('branch_id')
+
+    emp.rank_id = request.form.get('rank_id')
+    emp.rank_date = request.form.get('rank_date')
+    emp.hire_date = request.form.get('hire_date')
+    emp.birth_date = request.form.get('birth_date')
+    
+    rank_salary = request.form.get('rank_salary')
+    location_allowance = request.form.get('location_allowance')
+    food_allowance = request.form.get('food_allowance')
+    
+    emp.rank_salary = float(rank_salary) if rank_salary else 0.0
+    emp.location_allowance = float(location_allowance) if location_allowance else 0.0
+    emp.food_allowance = float(food_allowance) if food_allowance else 0.0
+    
+    emp.education_level = request.form.get('education_level')
+    emp.field_of_study = request.form.get('field_of_study')
+    emp.job_position = request.form.get('job_position')
+    emp.status = request.form.get('status')
+    
+    db.session.commit()
+    flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
     return redirect(url_for('employees'))
 
 @app.route('/branches')

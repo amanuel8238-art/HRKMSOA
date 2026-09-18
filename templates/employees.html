@@ -7,7 +7,7 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <!-- Buttoon Deebi'i (Dashboard) Bakka kana jiraachuu qaba -->
+                <!-- Buttoon Deebi'i (Dashboard) -->
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Deebi'i
                 </a>
@@ -52,9 +52,10 @@
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td><span class="badge bg-success">{{ emp.status }}</span></td>
                                 <td>
-                                    <a href="#" class="btn btn-sm btn-outline-warning">
+                                    <!-- Button Gulaaluu - Modal of danda'e waama -->
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ emp.id }}">
                                         <i class="fas fa-edit"></i> Gulaali
-                                    </a>
+                                    </button>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -78,7 +79,7 @@
         <div class="modal-content">
             <form method="POST" action="{{ url_for('add_employee') }}">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title" id="addEmployeeModalLabel">Galmee Miseensa Haaraa (Guyyaa/Ji'a/Bara)</h5>
+                    <h5 class="modal-title" id="addEmployeeModalLabel">Galmee Miseensa Haaraa</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -184,7 +185,6 @@
                             </select>
                         </div>
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
@@ -194,4 +194,133 @@
         </div>
     </div>
 </div>
+
+<!-- Modal-wwan Gulaaluu (Edit Modals) Hojjetaa Tokko Tokkoof -->
+{% if employees %}
+    {% for emp in employees %}
+    <div class="modal fade" id="editEmployeeModal{{ emp.id }}" tabindex="-1" aria-labelledby="editEmployeeModalLabel{{ emp.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="{{ url_for('edit_employee', id=emp.id) }}">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title" id="editEmployeeModalLabel{{ emp.id }}">Odeeffannoo Hojjetaa Gulaali: {{ emp.full_name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Maqaa Guutuu *</label>
+                                <input type="text" class="form-control" name="full_name" value="{{ emp.full_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">ID Addaa (Unique ID) *</label>
+                                <input type="text" class="form-control" name="unique_id" value="{{ emp.unique_id }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Damee / Godina *</label>
+                                <select class="form-select" name="branch_id" {% if current_user.role != 'admin' %}disabled{% endif %} required>
+                                    {% for branch in branches %}
+                                        <option value="{{ branch.id }}" {% if emp.branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if current_user.role != 'admin' %}
+                                    <input type="hidden" name="branch_id" value="{{ emp.branch_id }}">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Gulaataa Gonfoo (Rank) *</label>
+                                <select class="form-select" name="rank_id" required>
+                                    {% for rank in ranks %}
+                                        <option value="{{ rank.id }}" {% if emp.rank_id == rank.id %}selected{% endif %}>{{ rank.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Guyyaa Gulaantaa Gonfoo Argate *</label>
+                                <input type="text" class="form-control" name="rank_date" value="{{ emp.rank_date }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Guyyaa Qacarichaa *</label>
+                                <input type="text" class="form-control" name="hire_date" value="{{ emp.hire_date }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Guyyaa Dhalootaa *</label>
+                                <input type="text" class="form-control" name="birth_date" value="{{ emp.birth_date }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Mindaa Gulaantaa Gonfoo *</label>
+                                <input type="number" step="0.01" class="form-control" name="rank_salary" value="{{ emp.rank_salary }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Mindaa Kaffaltii Idoo</label>
+                                <input type="number" step="0.01" class="form-control" name="location_allowance" value="{{ emp.location_allowance }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Durgoo Nyaataa</label>
+                                <input type="number" step="0.01" class="form-control" name="food_allowance" value="{{ emp.food_allowance }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Saala *</label>
+                                <select class="form-select" name="gender" required>
+                                    <option value="Dhiira" {% if emp.gender == 'Dhiira' %}selected{% endif %}>Dhiira</option>
+                                    <option value="Dhalaa" {% if emp.gender == 'Dhalaa' %}selected{% endif %}>Dhalaa</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sadarkaa Barumsaa</label>
+                                <select class="form-select" name="education_level">
+                                    <option value="Kutaa 8ffaa" {% if emp.education_level == 'Kutaa 8ffaa' %}selected{% endif %}>Kutaa 8ffaa</option>
+                                    <option value="High School (9-12)" {% if emp.education_level == 'High School (9-12)' %}selected{% endif %}>High School (9-12)</option>
+                                    <option value="Certificate" {% if emp.education_level == 'Certificate' %}selected{% endif %}>Certificate</option>
+                                    <option value="Diploma" {% if emp.education_level == 'Diploma' %}selected{% endif %}>Diploma</option>
+                                    <option value="Degree" {% if emp.education_level == 'Degree' %}selected{% endif %}>Degree</option>
+                                    <option value="Masters & Above" {% if emp.education_level == 'Masters & Above' %}selected{% endif %}>Masters & Above</option>
+                                    <option value="Kan Biroo" {% if emp.education_level == 'Kan Biroo' %}selected{% endif %}>Kan Biroo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Gosa Barumsaa (Field of Study)</label>
+                                <input type="text" class="form-control" name="field_of_study" value="{{ emp.field_of_study }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Gita Hojii Irratti Ramadame *</label>
+                                <input type="text" class="form-control" name="job_position" value="{{ emp.job_position }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Haala / Status *</label>
+                                <select class="form-select" name="status" required>
+                                    <option value="Active" {% if emp.status == 'Active' %}selected{% endif %}>Hojii Irra (Active)</option>
+                                    <option value="Du'aan" {% if emp.status == "Du'aan" %}selected{% endif %}>Sababa Du'aan</option>
+                                    <option value="Fedhiitiin" {% if emp.status == 'Fedhiitiin' %}selected{% endif %}>Sababa Fedhiitiin</option>
+                                    <option value="Dhukkubaan" {% if emp.status == 'Dhukkubaan' %}selected{% endif %}>Sababa Dhukkubaan</option>
+                                    <option value="Dismissed" {% if emp.status == 'Dismissed' %}selected{% endif %}>Badii Naamuusaan (Dismissed)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
+                        <button type="submit" class="btn btn-warning">Fooyya'i (Save)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
 {% endblock %}
