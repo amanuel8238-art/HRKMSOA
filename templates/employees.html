@@ -6,7 +6,14 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
-            <h2>Hojjettoota / Miseensota Komishinichaa</h2>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Button Gara Dashboard Deebisuuf Dabalamte -->
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Deebi'i
+                </a>
+                <h2 class="mb-0">Hojjettoota / Miseensota Komishinichaa</h2>
+            </div>
+            
             <!-- Hojjetaa Haaraa Galchuuf Button -->
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                 <i class="fas fa-user-plus"></i> Galmee Miseensa Haaraa
