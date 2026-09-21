@@ -30,14 +30,17 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Rank input (ID ykn Name) sirriitti gara integer-tti jijjiiruuf
+# Rank input (ID ykn Name) sirriitti barbaaduuf
 def resolve_rank_id(rank_input):
     if not rank_input:
         return None
     if str(rank_input).isdigit():
         return int(rank_input)
     else:
+        # Exact match ykn Case-insensitive match barbaaduuf
         r_obj = Rank.query.filter_by(name=rank_input).first()
+        if not r_obj:
+            r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
 with app.app_context():
@@ -128,6 +131,10 @@ def add_employee():
 
     rank_input = request.form.get('rank_id')
     rank_id = resolve_rank_id(rank_input)
+    if not rank_id:
+        # Fallback to first rank if none found, to prevent NotNullViolation
+        first_rank = Rank.query.first()
+        rank_id = first_rank.id if first_rank else 1
 
     rank_date = request.form.get('rank_date')
     hire_date = request.form.get('hire_date')
@@ -181,7 +188,9 @@ def edit_employee(id):
             emp.branch_id = int(branch_id) if branch_id else None
 
         rank_input = request.form.get('rank_id')
-        emp.rank_id = resolve_rank_id(rank_input)
+        resolved_rank_id = resolve_rank_id(rank_input)
+        if resolved_rank_id:
+            emp.rank_id = resolved_rank_id
         
         emp.rank_date = request.form.get('rank_date') if request.form.get('rank_date') else None
         emp.hire_date = request.form.get('hire_date') if request.form.get('hire_date') else None
