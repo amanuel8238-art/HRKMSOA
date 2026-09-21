@@ -54,14 +54,16 @@ class Employee(db.Model):
     branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-# 5. Jijjiirraa (Transfers) - Database keessatti koluniin 'from_branch' fi 'to_branch' ta'uu isaanii wajjin walqabsiifameera
+# 5. Jijjiirraa (Transfers) - Sirnaan sirreeffame
 class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
-    # Koloniin database keessa jiran suniin akka wal qabatan godhameera
-    from_branch_id = db.Column('from_branch', db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    # Database keessatti 'from_branch_id' dha (_id qaba)
+    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    
+    # Database keessatti 'to_branch' dha (_id hin qabu, kanaaf maqaan kolonichaa 'to_branch' jedhamee map godhameera)
     to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
     
     reason = db.Column(db.Text, nullable=True)
