@@ -350,7 +350,6 @@ def reset_password(user_id):
         
     return redirect(url_for('settings'))
 
-@app.delete_user('/delete_user/<int:user_id>', methods=['POST']) if hasattr(app, 'delete_user') else None # Keep router clean
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 @admin_required
 def delete_user(user_id):
