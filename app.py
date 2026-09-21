@@ -33,7 +33,7 @@ def admin_required(f):
 with app.app_context():
     db.create_all()
     
-    # Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar is included here)
+    # Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar included)
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -70,7 +70,6 @@ def dashboard():
 @app.route('/employees')
 @login_required
 def employees():
-    # Filannoo fi search parameter fudhachuu
     branch_id = request.args.get('branch_id')
     rank = request.args.get('rank')
     gender = request.args.get('gender')
@@ -78,14 +77,12 @@ def employees():
 
     query = Employee.query
 
-    # Haala user kanaan branch daangessuu (Admin yoo ta'e hunda argata)
     if current_user.role != 'admin':
         branch_id = current_user.branch_id
         query = query.filter_by(branch_id=branch_id)
     elif branch_id:
         query = query.filter_by(branch_id=branch_id)
 
-    # Rank relationship wajjin wal simsiisuuf Rank table wajjin join godhamee barbaadama
     if rank:
         query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == rank))
     
@@ -119,7 +116,7 @@ def add_employee():
     else:
         branch_id = current_user.branch_id
 
-    rank = request.form.get('rank_id')
+    rank_id = request.form.get('rank_id')
     rank_date = request.form.get('rank_date')
     hire_date = request.form.get('hire_date')
     birth_date = request.form.get('birth_date')
@@ -135,11 +132,11 @@ def add_employee():
         full_name=full_name,
         unique_id=unique_id,
         gender=gender,
-        branch_id=branch_id,
-        rank=rank,
-        rank_date=rank_date,
-        hire_date=hire_date,
-        birth_date=birth_date,
+        branch_id=int(branch_id) if branch_id else None,
+        rank_id=int(rank_id) if rank_id else None,
+        rank_date=rank_date if rank_date else None,
+        hire_date=hire_date if hire_date else None,
+        birth_date=birth_date if birth_date else None,
         rank_salary=float(rank_salary) if rank_salary else 0.0,
         location_allowance=float(location_allowance) if location_allowance else 0.0,
         food_allowance=float(food_allowance) if food_allowance else 0.0,
@@ -153,7 +150,7 @@ def add_employee():
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf (Edit Route - Sirreeffameera: GET & POST)
+# Hojjetaa Jiru Gulaaluuf (Edit Route - Sirreeffameera)
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(id):
@@ -168,12 +165,15 @@ def edit_employee(id):
         emp.gender = request.form.get('gender')
         
         if current_user.role == 'admin':
-            emp.branch_id = request.form.get('branch_id')
+            branch_id = request.form.get('branch_id')
+            emp.branch_id = int(branch_id) if branch_id else None
 
-        emp.rank = request.form.get('rank_id')
-        emp.rank_date = request.form.get('rank_date')
-        emp.hire_date = request.form.get('hire_date')
-        emp.birth_date = request.form.get('birth_date')
+        rank_id = request.form.get('rank_id')
+        emp.rank_id = int(rank_id) if rank_id else None
+        
+        emp.rank_date = request.form.get('rank_date') if request.form.get('rank_date') else None
+        emp.hire_date = request.form.get('hire_date') if request.form.get('hire_date') else None
+        emp.birth_date = request.form.get('birth_date') if request.form.get('birth_date') else None
         
         rank_salary = request.form.get('rank_salary')
         location_allowance = request.form.get('location_allowance')
@@ -192,7 +192,6 @@ def edit_employee(id):
         flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
         return redirect(url_for('employees'))
 
-    # Yoo GET ta'e fuula edit agarsiisa (Yoo template addaa qabaate asitti render godhama)
     all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
