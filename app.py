@@ -46,7 +46,18 @@ def resolve_rank_id(rank_input):
 with app.app_context():
     db.create_all()
     
-    # Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar included)
+    # 1. Admin Jalqabaa Uumuu
+    if not User.query.filter_by(username='admin').first():
+        hashed_pw = generate_password_hash('admin123')
+        admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
+        db.session.add(admin_user)
+
+    # 2. Sadarkaa (Rank) Jalqabaa akka hin dhabamne (Fallback Rank) uumuu
+    if not Rank.query.first():
+        default_rank = Rank(name='Standard Rank', description='Default system rank')
+        db.session.add(default_rank)
+
+    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar included)
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -62,6 +73,7 @@ with app.app_context():
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
+            
     db.session.commit()
 
 # --- ROUTES ---
@@ -144,7 +156,7 @@ def add_employee():
     education_level = request.form.get('education_level')
     field_of_study = request.form.get('field_of_study')
     job_position = request.form.get('job_position')
-    status = request.form.get('status')
+    status = request.form.get('status', 'Active')
     
     new_emp = Employee(
         full_name=full_name,
@@ -168,7 +180,7 @@ def add_employee():
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf
+# Hojjetaa Jiru Gulaaluuf (Rank_id None ta'uu irraa akka eegamu godhameera)
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(id):
@@ -187,9 +199,10 @@ def edit_employee(id):
             emp.branch_id = int(branch_id) if branch_id else None
 
         rank_input = request.form.get('rank_id')
-        resolved_rank_id = resolve_rank_id(rank_input)
-        if resolved_rank_id:
-            emp.rank_id = resolved_rank_id
+        if rank_input:
+            resolved_rank_id = resolve_rank_id(rank_input)
+            if resolved_rank_id:
+                emp.rank_id = resolved_rank_id
         
         emp.rank_date = request.form.get('rank_date') if request.form.get('rank_date') else None
         emp.hire_date = request.form.get('hire_date') if request.form.get('hire_date') else None
@@ -206,7 +219,7 @@ def edit_employee(id):
         emp.education_level = request.form.get('education_level')
         emp.field_of_study = request.form.get('field_of_study')
         emp.job_position = request.form.get('job_position')
-        emp.status = request.form.get('status')
+        emp.status = request.form.get('status', emp.status)
         
         db.session.commit()
         flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
@@ -250,7 +263,6 @@ def add_transfer():
     emp = Employee.query.get_or_404(employee_id)
     from_branch_id = emp.branch_id
     
-    # Safely parse transfer date
     parsed_date = datetime.utcnow()
     if transfer_date_str:
         try:
@@ -396,14 +408,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-@app.before_request
-def create_initial_data():
-    if not User.query.filter_by(username='admin').first():
-        hashed_pw = generate_password_hash('admin123')
-        admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
-        db.session.add(admin_user)
-        db.session.commit()
 
 if __name__ == '__main__':
     app.run(debug=True)
