@@ -114,8 +114,12 @@ def employees():
     if rank:
         query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == rank))
     
+    # Fooyya'iinsi Gender Filter: Dhalaa ykn Dubartii ta'uu isaa hubatee akka fidu
     if gender:
-        query = query.filter_by(gender=gender)
+        if gender in ['Dhalaa', 'Dubartii']:
+            query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
+        else:
+            query = query.filter_by(gender=gender)
 
     if search_query:
         query = query.filter(
@@ -273,7 +277,6 @@ def add_transfer():
         except ValueError:
             pass
     
-    #kwargs check dynamic to avoid missing column crashes
     transfer_data = {
         'employee_id': employee_id,
         'to_branch_id': to_branch_id,
