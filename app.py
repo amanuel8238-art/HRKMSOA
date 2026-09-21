@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer
 from functools import wraps
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
@@ -18,7 +19,7 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # Admin Qofaaf eeyyamuuf (RBAC Decorator)
 def admin_required(f):
@@ -37,7 +38,6 @@ def resolve_rank_id(rank_input):
     if str(rank_input).isdigit():
         return int(rank_input)
     else:
-        # Exact match ykn Case-insensitive match barbaaduuf
         r_obj = Rank.query.filter_by(name=rank_input).first()
         if not r_obj:
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
@@ -132,7 +132,6 @@ def add_employee():
     rank_input = request.form.get('rank_id')
     rank_id = resolve_rank_id(rank_input)
     if not rank_id:
-        # Fallback to first rank if none found, to prevent NotNullViolation
         first_rank = Rank.query.first()
         rank_id = first_rank.id if first_rank else 1
 
@@ -169,7 +168,7 @@ def add_employee():
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf (Edit Route - Sirreeffameera)
+# Hojjetaa Jiru Gulaaluuf
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(id):
@@ -246,17 +245,25 @@ def add_transfer():
     employee_id = request.form.get('employee_id')
     to_branch_id = request.form.get('to_branch_id')
     reason = request.form.get('reason')
-    transfer_date = request.form.get('transfer_date')
+    transfer_date_str = request.form.get('transfer_date')
     
     emp = Employee.query.get_or_404(employee_id)
     from_branch_id = emp.branch_id
+    
+    # Safely parse transfer date
+    parsed_date = datetime.utcnow()
+    if transfer_date_str:
+        try:
+            parsed_date = datetime.strptime(transfer_date_str, '%Y-%m-%d')
+        except ValueError:
+            pass
     
     new_transfer = Transfer(
         employee_id=employee_id,
         from_branch_id=from_branch_id,
         to_branch_id=to_branch_id,
         reason=reason,
-        transfer_date=transfer_date,
+        transfer_date=parsed_date,
         status='Pending'
     )
     
