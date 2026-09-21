@@ -54,14 +54,14 @@ class Employee(db.Model):
     branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-# 5. Jijjiirraa (Transfers) - Database keessatti 'from_branch' jedhamee waan jiruuf suniin wal qabateera
+# 5. Jijjiirraa (Transfers) - Supabase irratti koluniin 'from_branch_id' ta'uu isaa waliin sirreeffameera
 class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
-    # Asitti maqaan kolonii database keessaa 'from_branch' ta'uu isaa hubachuun walqabsiifameera
-    from_branch_id = db.Column('from_branch', db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    # Asitti kallattiidhaan from_branch_id jedhamee taa'eera
+    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
     
     to_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
     reason = db.Column(db.Text, nullable=True)
