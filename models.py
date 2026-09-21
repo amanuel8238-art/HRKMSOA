@@ -4,25 +4,25 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-# 1. To'annoo Fayyadamtootaa (User & Admin Role) - Damee isaanii waliin
+# 1. To'annoo Fayyadamtootaa (User & Admin Role)
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='user') # 'admin' ykn 'user'
+    role = db.Column(db.String(50), nullable=False, default='user')
     branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
 
     branch = db.relationship('Branch', backref=db.backref('users', lazy=True))
 
-# 2. Dameewwan (Branches - 39 branches including Dadar)
+# 2. Dameewwan (Branches)
 class Branch(db.Model):
     __tablename__ = 'branch'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     location = db.Column(db.String(150))
 
-# 3. Sadarkaa / Gulantaa Gonfoo (Ranks)
+# 3. Sadarkaa (Ranks)
 class Rank(db.Model):
     __tablename__ = 'rank'
     id = db.Column(db.Integer, primary_key=True)
@@ -54,20 +54,17 @@ class Employee(db.Model):
     branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-# 5. Jijjiirraa (Transfers) - Sirnaan sirreeffame
+# 5. Jijjiirraa (Transfers) - Koloniin lamaanuu kallattiidhaan _id qabu
 class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
-    # Database keessatti 'from_branch_id' dha (_id qaba)
     from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
-    
-    # Database keessatti 'to_branch' dha (_id hin qabu, kanaaf maqaan kolonichaa 'to_branch' jedhamee map godhameera)
-    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
+    to_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
     
     reason = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
+    status = db.Column(db.String(50), default='Pending')
     approval_reason = db.Column(db.Text, nullable=True)
     transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
     
