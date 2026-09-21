@@ -19,7 +19,7 @@
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
-                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Sirreessaa (Total {{ branch_count }})</p>
+                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Dadar (Total {{ branch_count }})</p>
                 </div>
                 <div class="flex items-center gap-4 text-sm">
                     <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b>{{ current_user.username }}</b></span>
@@ -40,7 +40,9 @@
                 <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
                 <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
                 <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
+                {% if url_for('ranks') %}
                 <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+                {% endif %}
                 {% if current_user.role == 'admin' %}
                 <a href="{{ url_for('settings') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Useroota (Users)</a>
                 {% endif %}
@@ -70,11 +72,11 @@
 
                 <!-- Quick Actions / Welcome Card -->
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <h2 class="text-lg font-bold text-slate-800">Baga nagaan dhufte, Bulchaa!</h2>
-                    <p class="text-xs text-slate-600">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa fayyadamuun hojjettoota galmeessuu, dameewwan 39an bulchuu, akkasumas gabaasa ilaaluu ni dandeessa.</p>
+                    <h2 class="text-lg font-bold text-slate-800">Baga nagaan dhufte, {{ current_user.username }}!</h2>
+                    <p class="text-xs text-slate-600">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa fayyadamuun hojjettoota galmeessuu, dameewwan bulchuu, akkasumas gabaasa ilaaluu ni dandeessa.</p>
                     <div class="flex gap-3 pt-2">
                         <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Miseensota Ilaali</a>
-                        <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Dameewwan 39 Ilaali</a>
+                        <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Dameewwan Ilaali</a>
                     </div>
                 </div>
             </div>
