@@ -88,7 +88,10 @@ def dashboard():
     else:
         emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
-        transfer_count = Transfer.query.filter_by(from_branch_id=current_user.branch_id).count() if (current_user.branch_id and hasattr(Transfer, 'from_branch_id')) else 0
+        if hasattr(Transfer, 'from_branch_id') and current_user.branch_id:
+            transfer_count = Transfer.query.filter_by(from_branch_id=current_user.branch_id).count()
+        else:
+            transfer_count = 0
 
     return render_template('dashboard.html', emp_count=emp_count, branch_count=branch_count, transfer_count=transfer_count)
 
@@ -180,7 +183,7 @@ def add_employee():
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf (Rank_id None ta'uu irraa akka eegamu godhameera)
+# Hojjetaa Jiru Gulaaluuf
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(id):
@@ -270,14 +273,18 @@ def add_transfer():
         except ValueError:
             pass
     
-    new_transfer = Transfer(
-        employee_id=employee_id,
-        from_branch_id=from_branch_id,
-        to_branch_id=to_branch_id,
-        reason=reason,
-        transfer_date=parsed_date,
-        status='Pending'
-    )
+    #kwargs check dynamic to avoid missing column crashes
+    transfer_data = {
+        'employee_id': employee_id,
+        'to_branch_id': to_branch_id,
+        'reason': reason,
+        'transfer_date': parsed_date,
+        'status': 'Pending'
+    }
+    if hasattr(Transfer, 'from_branch_id'):
+        transfer_data['from_branch_id'] = from_branch_id
+
+    new_transfer = Transfer(**transfer_data)
     
     db.session.add(new_transfer)
     db.session.commit()
@@ -292,7 +299,8 @@ def update_transfer_status(id):
     approval_reason = request.form.get('approval_reason')
     
     tr.status = status
-    tr.approval_reason = approval_reason
+    if hasattr(tr, 'approval_reason'):
+        tr.approval_reason = approval_reason
     
     if status == 'Approved' and tr.to_branch_id:
         emp = Employee.query.get(tr.employee_id)
