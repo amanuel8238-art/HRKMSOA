@@ -88,8 +88,9 @@ def dashboard():
     else:
         emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
+        # ASIIRRATTI STRING-ITTI JIJJIIRAMEERA (PostgreSQL Error dhowruuf)
         if hasattr(Transfer, 'from_branch_id') and current_user.branch_id:
-            transfer_count = Transfer.query.filter_by(from_branch_id=current_user.branch_id).count()
+            transfer_count = Transfer.query.filter_by(from_branch_id=str(current_user.branch_id)).count()
         else:
             transfer_count = 0
 
@@ -111,14 +112,12 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=branch_id)
 
-    # Fooyya'iinsi Rank Filter: PostgreSQL error dhowruuf (integer ykn name ta'uu isaa addaan baasee ilaala)
     if rank:
         if str(rank).isdigit():
             query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == int(rank)))
         else:
             query = query.join(Employee.rank).filter(Rank.name == rank)
     
-    # Fooyya'iinsi Gender Filter: Dhalaa ykn Dubartii ta'uu isaa hubatee akka fidu
     if gender:
         if gender in ['Dhalaa', 'Dubartii']:
             query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
@@ -254,8 +253,9 @@ def transfers():
     if current_user.role == 'admin':
         all_transfers = Transfer.query.all()
     else:
+        # ASIIRRATTI STRING-ITTI JIJJIIRAMEERA
         if hasattr(Transfer, 'from_branch_id') and current_user.branch_id:
-            all_transfers = Transfer.query.filter_by(from_branch_id=current_user.branch_id).all()
+            all_transfers = Transfer.query.filter_by(from_branch_id=str(current_user.branch_id)).all()
         else:
             all_transfers = Transfer.query.all()
             
@@ -289,7 +289,7 @@ def add_transfer():
         'status': 'Pending'
     }
     if hasattr(Transfer, 'from_branch_id'):
-        transfer_data['from_branch_id'] = from_branch_id
+        transfer_data['from_branch_id'] = str(from_branch_id) if from_branch_id else None
 
     new_transfer = Transfer(**transfer_data)
     
