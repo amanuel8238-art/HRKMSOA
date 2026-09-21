@@ -54,16 +54,16 @@ class Employee(db.Model):
     branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-# 5. Jijjiirraa (Transfers) - Supabase irratti koluniin 'from_branch_id' ta'uu isaa waliin sirreeffameera
+# 5. Jijjiirraa (Transfers) - Database keessatti koluniin 'from_branch' fi 'to_branch' jedhamanii waan jiraniif sirreeffameera
 class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
-    # Asitti kallattiidhaan from_branch_id jedhamee taa'eera
-    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    # Koloniin database keessa jiran suniin akka wal qabatan godhameera
+    from_branch_id = db.Column('from_branch', db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
     
-    to_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
     reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
     approval_reason = db.Column(db.Text, nullable=True)
