@@ -85,7 +85,7 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=branch_id)
 
-    # SIRREEFFAMA: Rank relationship wajjin wal simsiisuuf Rank table wajjin join godhamee barbaadama
+    # Rank relationship wajjin wal simsiisuuf Rank table wajjin join godhamee barbaadama
     if rank:
         query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == rank))
     
@@ -153,8 +153,8 @@ def add_employee():
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf (Edit Route)
-@app.route('/edit_employee/<int:id>', methods=['POST'])
+# Hojjetaa Jiru Gulaaluuf (Edit Route - Sirreeffameera: GET & POST)
+@app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(id):
     emp = Employee.query.get_or_404(id)
@@ -162,34 +162,40 @@ def edit_employee(id):
     if current_user.role != 'admin' and emp.branch_id != current_user.branch_id:
         abort(403)
 
-    emp.full_name = request.form.get('full_name')
-    emp.unique_id = request.form.get('unique_id')
-    emp.gender = request.form.get('gender')
-    
-    if current_user.role == 'admin':
-        emp.branch_id = request.form.get('branch_id')
+    if request.method == 'POST':
+        emp.full_name = request.form.get('full_name')
+        emp.unique_id = request.form.get('unique_id')
+        emp.gender = request.form.get('gender')
+        
+        if current_user.role == 'admin':
+            emp.branch_id = request.form.get('branch_id')
 
-    emp.rank = request.form.get('rank_id')
-    emp.rank_date = request.form.get('rank_date')
-    emp.hire_date = request.form.get('hire_date')
-    emp.birth_date = request.form.get('birth_date')
-    
-    rank_salary = request.form.get('rank_salary')
-    location_allowance = request.form.get('location_allowance')
-    food_allowance = request.form.get('food_allowance')
-    
-    emp.rank_salary = float(rank_salary) if rank_salary else 0.0
-    emp.location_allowance = float(location_allowance) if location_allowance else 0.0
-    emp.food_allowance = float(food_allowance) if food_allowance else 0.0
-    
-    emp.education_level = request.form.get('education_level')
-    emp.field_of_study = request.form.get('field_of_study')
-    emp.job_position = request.form.get('job_position')
-    emp.status = request.form.get('status')
-    
-    db.session.commit()
-    flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
-    return redirect(url_for('employees'))
+        emp.rank = request.form.get('rank_id')
+        emp.rank_date = request.form.get('rank_date')
+        emp.hire_date = request.form.get('hire_date')
+        emp.birth_date = request.form.get('birth_date')
+        
+        rank_salary = request.form.get('rank_salary')
+        location_allowance = request.form.get('location_allowance')
+        food_allowance = request.form.get('food_allowance')
+        
+        emp.rank_salary = float(rank_salary) if rank_salary else 0.0
+        emp.location_allowance = float(location_allowance) if location_allowance else 0.0
+        emp.food_allowance = float(food_allowance) if food_allowance else 0.0
+        
+        emp.education_level = request.form.get('education_level')
+        emp.field_of_study = request.form.get('field_of_study')
+        emp.job_position = request.form.get('job_position')
+        emp.status = request.form.get('status')
+        
+        db.session.commit()
+        flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
+        return redirect(url_for('employees'))
+
+    # Yoo GET ta'e fuula edit agarsiisa (Yoo template addaa qabaate asitti render godhama)
+    all_branches = Branch.query.all()
+    all_ranks = Rank.query.all()
+    return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
 @app.route('/branches')
 @login_required
