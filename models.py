@@ -54,14 +54,16 @@ class Employee(db.Model):
     branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-# 5. Jijjiirraa (Transfers) - Koloniin lamaanuu kallattiidhaan _id qabu
+# 5. Jijjiirraa (Transfers) - Sirnaan map godhame
 class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
     from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
-    to_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
+    
+    # Asitti database keessatti 'to_branch' qofa waan ta'eef kolunichi sirriitti map ta'eera
+    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
     
     reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), default='Pending')
