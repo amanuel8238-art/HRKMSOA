@@ -111,8 +111,12 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=branch_id)
 
+    # Fooyya'iinsi Rank Filter: PostgreSQL error dhowruuf (integer ykn name ta'uu isaa addaan baasee ilaala)
     if rank:
-        query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == rank))
+        if str(rank).isdigit():
+            query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == int(rank)))
+        else:
+            query = query.join(Employee.rank).filter(Rank.name == rank)
     
     # Fooyya'iinsi Gender Filter: Dhalaa ykn Dubartii ta'uu isaa hubatee akka fidu
     if gender:
