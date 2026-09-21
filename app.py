@@ -30,6 +30,16 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Rank input (ID ykn Name) sirriitti gara integer-tti jijjiiruuf
+def resolve_rank_id(rank_input):
+    if not rank_input:
+        return None
+    if str(rank_input).isdigit():
+        return int(rank_input)
+    else:
+        r_obj = Rank.query.filter_by(name=rank_input).first()
+        return r_obj.id if r_obj else None
+
 with app.app_context():
     db.create_all()
     
@@ -116,7 +126,9 @@ def add_employee():
     else:
         branch_id = current_user.branch_id
 
-    rank_id = request.form.get('rank_id')
+    rank_input = request.form.get('rank_id')
+    rank_id = resolve_rank_id(rank_input)
+
     rank_date = request.form.get('rank_date')
     hire_date = request.form.get('hire_date')
     birth_date = request.form.get('birth_date')
@@ -133,7 +145,7 @@ def add_employee():
         unique_id=unique_id,
         gender=gender,
         branch_id=int(branch_id) if branch_id else None,
-        rank_id=int(rank_id) if rank_id else None,
+        rank_id=rank_id,
         rank_date=rank_date if rank_date else None,
         hire_date=hire_date if hire_date else None,
         birth_date=birth_date if birth_date else None,
@@ -168,8 +180,8 @@ def edit_employee(id):
             branch_id = request.form.get('branch_id')
             emp.branch_id = int(branch_id) if branch_id else None
 
-        rank_id = request.form.get('rank_id')
-        emp.rank_id = int(rank_id) if rank_id else None
+        rank_input = request.form.get('rank_id')
+        emp.rank_id = resolve_rank_id(rank_input)
         
         emp.rank_date = request.form.get('rank_date') if request.form.get('rank_date') else None
         emp.hire_date = request.form.get('hire_date') if request.form.get('hire_date') else None
@@ -338,6 +350,7 @@ def reset_password(user_id):
         
     return redirect(url_for('settings'))
 
+@app.delete_user('/delete_user/<int:user_id>', methods=['POST']) if hasattr(app, 'delete_user') else None # Keep router clean
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 @admin_required
 def delete_user(user_id):
