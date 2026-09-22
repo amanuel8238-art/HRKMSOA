@@ -86,21 +86,20 @@ def dashboard():
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
     else:
-        emp_count = Employee.query.filter_by(branch_id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).count() if current_user.branch_id else 0
+        user_b = current_user.branch_id
+        emp_count = Employee.query.filter_by(branch_id=int(user_b) if user_b and str(user_b).isdigit() else user_b).count() if user_b else 0
         branch_count = 1
-        if current_user.branch_id:
-            # from_branch_id string (varchar) waan ta'ef str() godhama, to_branch ammoo int() godhama
-            b_str = str(current_user.branch_id)
-            b_int = int(current_user.branch_id) if str(current_user.branch_id).isdigit() else current_user.branch_id
-            
+        if user_b:
+            b_str = str(user_b)
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
             from_col = getattr(Transfer, 'from_branch_id', None)
             
             conditions = []
             if from_col is not None:
-                conditions.append(from_col == b_str)
+                # Type casting dhabsiisuuf lamaanuu string taasifamanii qoramu
+                conditions.append(db.cast(from_col, db.String) == b_str)
             if to_col is not None:
-                conditions.append(to_col == b_int)
+                conditions.append(db.cast(to_col, db.String) == b_str)
                 
             if conditions:
                 transfer_count = Transfer.query.filter(db.or_(*conditions)).count()
@@ -280,18 +279,17 @@ def transfers():
     if current_user.role == 'admin':
         all_transfers = Transfer.query.all()
     else:
-        if current_user.branch_id:
-            b_str = str(current_user.branch_id)
-            b_int = int(current_user.branch_id) if str(current_user.branch_id).isdigit() else current_user.branch_id
-            
+        user_b = current_user.branch_id
+        if user_b:
+            b_str = str(user_b)
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
             from_col = getattr(Transfer, 'from_branch_id', None)
             
             conditions = []
             if from_col is not None:
-                conditions.append(from_col == b_str)
+                conditions.append(db.cast(from_col, db.String) == b_str)
             if to_col is not None:
-                conditions.append(to_col == b_int)
+                conditions.append(db.cast(to_col, db.String) == b_str)
                 
             if conditions:
                 all_transfers = Transfer.query.filter(db.or_(*conditions)).all()
