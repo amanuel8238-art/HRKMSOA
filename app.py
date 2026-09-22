@@ -52,12 +52,12 @@ with app.app_context():
         admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
         db.session.add(admin_user)
 
-    # 2. Sadarkaa (Rank) Jalqabaa akka hin dhabamne (Fallback Rank) uumuu
+    # 2. Sadarkaa (Rank) Jalqabaa akka hin dhabamne uumuu
     if not Rank.query.first():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar included)
+    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -88,9 +88,13 @@ def dashboard():
     else:
         emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
-        # ASIIRRATTI STRING-ITTI JIJJIIRAMEERA (PostgreSQL Error dhowruuf)
-        if hasattr(Transfer, 'from_branch_id') and current_user.branch_id:
-            transfer_count = Transfer.query.filter_by(from_branch_id=str(current_user.branch_id)).count()
+        if current_user.branch_id:
+            transfer_count = Transfer.query.filter(
+                db.or_(
+                    Transfer.from_branch_id == str(current_user.branch_id),
+                    Transfer.to_branch_id == current_user.branch_id
+                )
+            ).count()
         else:
             transfer_count = 0
 
@@ -106,6 +110,7 @@ def employees():
 
     query = Employee.query
 
+    # Dameen alagaan akka hin ilaalamne cimsinee cuunfa
     if current_user.role != 'admin':
         branch_id = current_user.branch_id
         query = query.filter_by(branch_id=branch_id)
@@ -133,7 +138,13 @@ def employees():
         )
 
     all_employees = query.all()
-    all_branches = Branch.query.all()
+    
+    # Admin qofatu damee hunda filachuu danda'a
+    if current_user.role == 'admin':
+        all_branches = Branch.query.all()
+    else:
+        all_branches = Branch.query.filter_by(id=current_user.branch_id).all()
+        
     all_ranks = Rank.query.all()
     
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
@@ -146,6 +157,7 @@ def add_employee():
     unique_id = request.form.get('unique_id')
     gender = request.form.get('gender')
     
+    # Fayyadamaan damee ofumaan damee isaa qofatti galcha
     if current_user.role == 'admin':
         branch_id = request.form.get('branch_id')
     else:
@@ -235,14 +247,21 @@ def edit_employee(id):
         flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
         return redirect(url_for('employees'))
 
-    all_branches = Branch.query.all()
+    if current_user.role == 'admin':
+        all_branches = Branch.query.all()
+    else:
+        all_branches = Branch.query.filter_by(id=current_user.branch_id).all()
+        
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
 @app.route('/branches')
 @login_required
 def branches():
-    all_branches = Branch.query.all()
+    if current_user.role == 'admin':
+        all_branches = Branch.query.all()
+    else:
+        all_branches = Branch.query.filter_by(id=current_user.branch_id).all()
     return render_template('branches.html', branches=all_branches)
 
 # --- TRANSFER ROUTES ---
@@ -253,14 +272,23 @@ def transfers():
     if current_user.role == 'admin':
         all_transfers = Transfer.query.all()
     else:
-        # ASIIRRATTI STRING-ITTI JIJJIIRAMEERA
-        if hasattr(Transfer, 'from_branch_id') and current_user.branch_id:
-            all_transfers = Transfer.query.filter_by(from_branch_id=str(current_user.branch_id)).all()
+        if current_user.branch_id:
+            all_transfers = Transfer.query.filter(
+                db.or_(
+                    Transfer.from_branch_id == str(current_user.branch_id),
+                    Transfer.to_branch_id == current_user.branch_id
+                )
+            ).all()
         else:
-            all_transfers = Transfer.query.all()
+            all_transfers = []
             
     all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=current_user.branch_id).all()
-    all_branches = Branch.query.all()
+    
+    if current_user.role == 'admin':
+        all_branches = Branch.query.all()
+    else:
+        all_branches = Branch.query.all() # Transfer yeroo gaafatan damee biroo filachuu danda'uuf
+        
     return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches)
 
 @app.route('/add_transfer', methods=['POST'])
@@ -272,6 +300,11 @@ def add_transfer():
     transfer_date_str = request.form.get('transfer_date')
     
     emp = Employee.query.get_or_404(employee_id)
+    
+    # Check if regular user owns this employee
+    if current_user.role != 'admin' and emp.branch_id != current_user.branch_id:
+        abort(403)
+        
     from_branch_id = emp.branch_id
     
     parsed_date = datetime.utcnow()
@@ -312,7 +345,7 @@ def update_transfer_status(id):
     if status == 'Approved' and tr.to_branch_id:
         emp = Employee.query.get(tr.employee_id)
         if emp:
-            emp.branch_id = tr.to_branch_id
+            emp.branch_id = int(tr.to_branch_id) if str(tr.to_branch_id).isdigit() else tr.to_branch_id
             
     db.session.commit()
     flash('Murteen jijjiirraa milkaa\'inaan galmaa\'eera!', 'success')
