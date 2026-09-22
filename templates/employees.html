@@ -178,7 +178,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="rank_id" class="form-label">Gulaantaa Gonfoo (Rank) *</label>
-                            <select class="form-select" id="rank_id" name="rank_id" required>
+                            <select class="form-select" id="rank_id" name="rank" required>
                                 <option value="">-- Gulaantaa Filadhu --</option>
                                 <option value="Konstaabilii">Konstaabilii</option>
                                 <option value="Gar/Sajjiin">Gar/Sajjiin</option>
@@ -317,7 +317,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Gulaantaa Gonfoo (Rank) *</label>
-                                <select class="form-select" name="rank_id" required>
+                                <select class="form-select" name="rank" required>
                                     {% set current_rank = emp.rank %}
                                     <option value="Konstaabilii" {% if current_rank == 'Konstaabilii' %}selected{% endif %}>Konstaabilii</option>
                                     <option value="Gar/Sajjiin" {% if current_rank == 'Gar/Sajjiin' %}selected{% endif %}>Gar/Sajjiin</option>
