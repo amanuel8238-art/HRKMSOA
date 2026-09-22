@@ -106,24 +106,26 @@ with app.app_context():
 def dashboard():
     today = date.today()
     if current_user.role == 'admin':
-        emp_count = Employee.query.count()
+        emp_count = Employee.query.filter_by(status='Active').count()
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
         
-        male_count = Employee.query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
-        female_count = Employee.query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
+        male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
+        female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
+        resigned_count = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated'])).count()
         
-        all_emps = Employee.query.all()
+        all_emps = Employee.query.filter_by(status='Active').all()
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        emp_count = Employee.query.filter_by(branch_id=branch_id_val).count() if user_b else 0
+        emp_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').count() if user_b else 0
         branch_count = 1
         
-        male_count = Employee.query.filter_by(branch_id=branch_id_val).filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
-        female_count = Employee.query.filter_by(branch_id=branch_id_val).filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
+        male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
+        female_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
+        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated'])).count() if user_b else 0
         
-        all_emps = Employee.query.filter_by(branch_id=branch_id_val).all() if user_b else []
+        all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
 
         if user_b:
             b_str = str(user_b)
@@ -157,7 +159,8 @@ def dashboard():
                            transfer_count=transfer_count,
                            male_count=male_count,
                            female_count=female_count,
-                           retired_count=retired_count)
+                           retired_count=retired_count,
+                           resigned_count=resigned_count)
 
 @app.route('/employees')
 @login_required
@@ -168,8 +171,12 @@ def employees():
     search_query = request.args.get('search', '')
     education_level = request.args.get('education_level', '')
     field_of_study = request.args.get('field_of_study', '')
+    status_filter = request.args.get('status', 'Active')
 
     query = Employee.query
+
+    if status_filter != 'All':
+        query = query.filter_by(status=status_filter)
 
     if current_user.role != 'admin':
         branch_id = current_user.branch_id
@@ -227,8 +234,11 @@ def export_employees_excel():
     search_query = request.args.get('search', '')
     education_level = request.args.get('education_level', '')
     field_of_study = request.args.get('field_of_study', '')
+    status_filter = request.args.get('status', 'Active')
 
     query = Employee.query
+    if status_filter != 'All':
+        query = query.filter_by(status=status_filter)
 
     if current_user.role != 'admin':
         branch_id = current_user.branch_id
@@ -288,7 +298,8 @@ def export_employees_excel():
             'Mindaa Gulaantaa': e.rank_salary if e.rank_salary else 0.0,
             'Mindaa Idoo': e.location_allowance if e.location_allowance else 0.0,
             'Durgoo Nyaataa': e.food_allowance if e.food_allowance else 0.0,
-            'Status': e.status if e.status else '-'
+            'Status': e.status if e.status else '-',
+            'Sababa Hojii Gadhiisuu': e.resignation_reason if hasattr(e, 'resignation_reason') and e.resignation_reason else '-'
         })
         
     df = pd.DataFrame(data)
@@ -379,7 +390,14 @@ def edit_employee(id):
         emp.education_level = request.form.get('education_level')
         emp.field_of_study = request.form.get('field_of_study')
         emp.job_position = request.form.get('job_position')
-        emp.status = request.form.get('status', emp.status)
+        
+        new_status = request.form.get('status', emp.status)
+        if new_status != emp.status and new_status in ['Resigned', 'Terminated']:
+            if hasattr(emp, 'resignation_reason'):
+                emp.resignation_reason = request.form.get('resignation_reason')
+            if hasattr(emp, 'resignation_date'):
+                emp.resignation_date = datetime.utcnow()
+        emp.status = new_status
         
         db.session.commit()
         flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
@@ -426,7 +444,8 @@ def transfers():
             all_transfers = []
             
     b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val).all()
+    all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
+    all_employees = all_employees.all()
     all_branches = Branch.query.all()
         
     return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches)
@@ -491,6 +510,8 @@ def update_transfer_status(id):
     if status == 'Approved' and target_branch is not None:
         emp = Employee.query.get(tr.employee_id)
         if emp:
+            if hasattr(tr, 'from_branch_id') and not tr.from_branch_id:
+                tr.from_branch_id = emp.branch_id
             emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
             
     db.session.commit()

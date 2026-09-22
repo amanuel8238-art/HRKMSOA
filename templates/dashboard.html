@@ -81,8 +81,8 @@
                     </div>
                 </div>
 
-                <!-- Gender & Retirement Stats Row -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Gender, Retirement & Resigned Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhiira</p>
@@ -103,6 +103,13 @@
                             <h3 class="text-xl font-bold text-amber-600 mt-1">{{ retired_count }}</h3>
                         </div>
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
+                            <h3 class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count else 0 }}</h3>
+                        </div>
+                        <span class="p-3 bg-red-50 text-red-600 rounded-lg text-lg">🚪</span>
                     </div>
                 </div>
 
