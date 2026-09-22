@@ -86,19 +86,21 @@ def dashboard():
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
     else:
-        emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
+        emp_count = Employee.query.filter_by(branch_id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
         if current_user.branch_id:
-            user_b_id = int(current_user.branch_id)
-            # Kolonni Transfer keessaa 'to_branch' ta'uu fi dhiisuu isaa ilaalee akka hin dogoggorreetti qopheessine
+            # from_branch_id string (varchar) waan ta'ef str() godhama, to_branch ammoo int() godhama
+            b_str = str(current_user.branch_id)
+            b_int = int(current_user.branch_id) if str(current_user.branch_id).isdigit() else current_user.branch_id
+            
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
             from_col = getattr(Transfer, 'from_branch_id', None)
             
             conditions = []
             if from_col is not None:
-                conditions.append(from_col == user_b_id)
+                conditions.append(from_col == b_str)
             if to_col is not None:
-                conditions.append(to_col == user_b_id)
+                conditions.append(to_col == b_int)
                 
             if conditions:
                 transfer_count = Transfer.query.filter(db.or_(*conditions)).count()
@@ -121,7 +123,7 @@ def employees():
 
     if current_user.role != 'admin':
         branch_id = current_user.branch_id
-        query = query.filter_by(branch_id=int(branch_id) if branch_id else None)
+        query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
@@ -150,7 +152,7 @@ def employees():
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
-        all_branches = Branch.query.filter_by(id=current_user.branch_id).all()
+        all_branches = Branch.query.filter_by(id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
         
     all_ranks = Rank.query.all()
     
@@ -190,7 +192,7 @@ def add_employee():
         full_name=full_name,
         unique_id=unique_id,
         gender=gender,
-        branch_id=int(branch_id) if branch_id else None,
+        branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
         rank_id=rank_id,
         rank_date=rank_date if rank_date else None,
         hire_date=hire_date if hire_date else None,
@@ -214,7 +216,7 @@ def add_employee():
 def edit_employee(id):
     emp = Employee.query.get_or_404(id)
     
-    if current_user.role != 'admin' and emp.branch_id != current_user.branch_id:
+    if current_user.role != 'admin' and emp.branch_id != (int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id):
         abort(403)
 
     if request.method == 'POST':
@@ -224,7 +226,7 @@ def edit_employee(id):
         
         if current_user.role == 'admin':
             branch_id = request.form.get('branch_id')
-            emp.branch_id = int(branch_id) if branch_id else None
+            emp.branch_id = int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
 
         rank_input = request.form.get('rank_id')
         if rank_input:
@@ -256,7 +258,7 @@ def edit_employee(id):
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
-        all_branches = Branch.query.filter_by(id=current_user.branch_id).all()
+        all_branches = Branch.query.filter_by(id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
         
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
@@ -267,7 +269,7 @@ def branches():
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
-        all_branches = Branch.query.filter_by(id=current_user.branch_id).all()
+        all_branches = Branch.query.filter_by(id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
     return render_template('branches.html', branches=all_branches)
 
 # --- TRANSFER ROUTES ---
@@ -279,15 +281,17 @@ def transfers():
         all_transfers = Transfer.query.all()
     else:
         if current_user.branch_id:
-            user_b_id = int(current_user.branch_id)
+            b_str = str(current_user.branch_id)
+            b_int = int(current_user.branch_id) if str(current_user.branch_id).isdigit() else current_user.branch_id
+            
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
             from_col = getattr(Transfer, 'from_branch_id', None)
             
             conditions = []
             if from_col is not None:
-                conditions.append(from_col == user_b_id)
+                conditions.append(from_col == b_str)
             if to_col is not None:
-                conditions.append(to_col == user_b_id)
+                conditions.append(to_col == b_int)
                 
             if conditions:
                 all_transfers = Transfer.query.filter(db.or_(*conditions)).all()
@@ -296,7 +300,7 @@ def transfers():
         else:
             all_transfers = []
             
-    all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=current_user.branch_id).all()
+    all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
     all_branches = Branch.query.all()
         
     return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches)
@@ -311,7 +315,8 @@ def add_transfer():
     
     emp = Employee.query.get_or_404(int(employee_id) if employee_id else 0)
     
-    if current_user.role != 'admin' and emp.branch_id != current_user.branch_id:
+    user_b_id = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_id:
         abort(403)
         
     from_branch_id = emp.branch_id
@@ -331,12 +336,12 @@ def add_transfer():
     }
     
     if hasattr(Transfer, 'to_branch_id'):
-        transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id else None
+        transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id
     elif hasattr(Transfer, 'to_branch'):
-        transfer_data['to_branch'] = int(to_branch_id) if to_branch_id else None
+        transfer_data['to_branch'] = int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id
         
     if hasattr(Transfer, 'from_branch_id'):
-        transfer_data['from_branch_id'] = int(from_branch_id) if from_branch_id else None
+        transfer_data['from_branch_id'] = str(from_branch_id) if from_branch_id is not None else None
 
     new_transfer = Transfer(**transfer_data)
     
@@ -360,7 +365,7 @@ def update_transfer_status(id):
     if status == 'Approved' and target_branch is not None:
         emp = Employee.query.get(tr.employee_id)
         if emp:
-            emp.branch_id = int(target_branch)
+            emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
             
     db.session.commit()
     flash('Murteen jijjiirraa milkaa\'inaan galmaa\'eera!', 'success')
@@ -417,7 +422,7 @@ def add_user():
             username=username, 
             password=hashed_pw, 
             role=role, 
-            branch_id=int(branch_id) if branch_id else None
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
         )
         db.session.add(new_user)
         db.session.commit()
