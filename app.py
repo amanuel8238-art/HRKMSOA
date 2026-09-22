@@ -89,13 +89,21 @@ def dashboard():
         emp_count = Employee.query.filter_by(branch_id=current_user.branch_id).count() if current_user.branch_id else 0
         branch_count = 1
         if current_user.branch_id:
-            # Fooyya'iinsa: String-tti jijjiiruu dhiisuun Integer-umaan query gochuu (PostgreSQL Type Error fura)
-            transfer_count = Transfer.query.filter(
-                db.or_(
-                    Transfer.from_branch_id == int(current_user.branch_id),
-                    Transfer.to_branch_id == int(current_user.branch_id)
-                )
-            ).count()
+            user_b_id = int(current_user.branch_id)
+            # Kolonni Transfer keessaa 'to_branch' ta'uu fi dhiisuu isaa ilaalee akka hin dogoggorreetti qopheessine
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            
+            conditions = []
+            if from_col is not None:
+                conditions.append(from_col == user_b_id)
+            if to_col is not None:
+                conditions.append(to_col == user_b_id)
+                
+            if conditions:
+                transfer_count = Transfer.query.filter(db.or_(*conditions)).count()
+            else:
+                transfer_count = 0
         else:
             transfer_count = 0
 
@@ -271,13 +279,20 @@ def transfers():
         all_transfers = Transfer.query.all()
     else:
         if current_user.branch_id:
-            # Fooyya'iinsa: Integer-umaan bakkisuun query gochuu
-            all_transfers = Transfer.query.filter(
-                db.or_(
-                    Transfer.from_branch_id == int(current_user.branch_id),
-                    Transfer.to_branch_id == int(current_user.branch_id)
-                )
-            ).all()
+            user_b_id = int(current_user.branch_id)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            
+            conditions = []
+            if from_col is not None:
+                conditions.append(from_col == user_b_id)
+            if to_col is not None:
+                conditions.append(to_col == user_b_id)
+                
+            if conditions:
+                all_transfers = Transfer.query.filter(db.or_(*conditions)).all()
+            else:
+                all_transfers = []
         else:
             all_transfers = []
             
@@ -310,12 +325,16 @@ def add_transfer():
     
     transfer_data = {
         'employee_id': int(employee_id) if employee_id else None,
-        'to_branch_id': int(to_branch_id) if to_branch_id else None,
         'reason': reason,
         'transfer_date': parsed_date,
         'status': 'Pending'
     }
     
+    if hasattr(Transfer, 'to_branch_id'):
+        transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id else None
+    elif hasattr(Transfer, 'to_branch'):
+        transfer_data['to_branch'] = int(to_branch_id) if to_branch_id else None
+        
     if hasattr(Transfer, 'from_branch_id'):
         transfer_data['from_branch_id'] = int(from_branch_id) if from_branch_id else None
 
@@ -337,10 +356,11 @@ def update_transfer_status(id):
     if hasattr(tr, 'approval_reason'):
         tr.approval_reason = approval_reason
     
-    if status == 'Approved' and tr.to_branch_id:
+    target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
+    if status == 'Approved' and target_branch is not None:
         emp = Employee.query.get(tr.employee_id)
         if emp:
-            emp.branch_id = int(tr.to_branch_id)
+            emp.branch_id = int(target_branch)
             
     db.session.commit()
     flash('Murteen jijjiirraa milkaa\'inaan galmaa\'eera!', 'success')
