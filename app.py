@@ -1,10 +1,12 @@
 import os
-from flask import Flask, render_template, redirect, url_for, request, flash, abort
+import io
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, date
+import pandas as pd
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
@@ -57,7 +59,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf
+    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar spell corrected)
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -85,10 +87,46 @@ def dashboard():
         emp_count = Employee.query.count()
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
+        
+        # Gender stats for charts
+        male_count = Employee.query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
+        female_count = Employee.query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
+        
+        # Retirement check (Age >= 55)
+        today = date.today()
+        all_emps = Employee.query.all()
+        retired_count = 0
+        for e in all_emps:
+            if e.birth_date:
+                try:
+                    b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
+                    age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
+                    if age >= 55:
+                        retired_count += 1
+                except:
+                    pass
     else:
         user_b = current_user.branch_id
-        emp_count = Employee.query.filter_by(branch_id=int(user_b) if user_b and str(user_b).isdigit() else user_b).count() if user_b else 0
+        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        emp_count = Employee.query.filter_by(branch_id=branch_id_val).count() if user_b else 0
         branch_count = 1
+        
+        male_count = Employee.query.filter_by(branch_id=branch_id_val).filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
+        female_count = Employee.query.filter_by(branch_id=branch_id_val).filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
+        
+        today = date.today()
+        branch_emps = Employee.query.filter_by(branch_id=branch_id_val).all() if user_b else []
+        retired_count = 0
+        for e in branch_emps:
+            if e.birth_date:
+                try:
+                    b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
+                    age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
+                    if age >= 55:
+                        retired_count += 1
+                except:
+                    pass
+
         if user_b:
             b_str = str(user_b)
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
@@ -96,7 +134,6 @@ def dashboard():
             
             conditions = []
             if from_col is not None:
-                # Type casting dhabsiisuuf lamaanuu string taasifamanii qoramu
                 conditions.append(db.cast(from_col, db.String) == b_str)
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
@@ -108,7 +145,13 @@ def dashboard():
         else:
             transfer_count = 0
 
-    return render_template('dashboard.html', emp_count=emp_count, branch_count=branch_count, transfer_count=transfer_count)
+    return render_template('dashboard.html', 
+                           emp_count=emp_count, 
+                           branch_count=branch_count, 
+                           transfer_count=transfer_count,
+                           male_count=male_count,
+                           female_count=female_count,
+                           retired_count=retired_count)
 
 @app.route('/employees')
 @login_required
@@ -117,6 +160,8 @@ def employees():
     rank = request.args.get('rank')
     gender = request.args.get('gender')
     search_query = request.args.get('search', '')
+    education_level = request.args.get('education_level', '')
+    field_of_study = request.args.get('field_of_study', '')
 
     query = Employee.query
 
@@ -135,14 +180,23 @@ def employees():
     if gender:
         if gender in ['Dhalaa', 'Dubartii']:
             query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
+        elif gender in ['Dhiira', 'Dhiirra']:
+            query = query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra'))
         else:
             query = query.filter_by(gender=gender)
+
+    if education_level:
+        query = query.filter(Employee.education_level.ilike(f'%{education_level}%'))
+
+    if field_of_study:
+        query = query.filter(Employee.field_of_study.ilike(f'%{field_of_study}%'))
 
     if search_query:
         query = query.filter(
             db.or_(
                 Employee.full_name.ilike(f'%{search_query}%'),
-                Employee.unique_id.ilike(f'%{search_query}%')
+                Employee.unique_id.ilike(f'%{search_query}%'),
+                Employee.job_position.ilike(f'%{search_query}%')
             )
         )
 
@@ -156,6 +210,41 @@ def employees():
     all_ranks = Rank.query.all()
     
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
+
+# Excel Export Feature for Employees
+@app.route('/export_employees_excel')
+@login_required
+def export_employees_excel():
+    query = Employee.query
+    if current_user.role != 'admin':
+        b_id = current_user.branch_id
+        query = query.filter_by(branch_id=int(b_id) if b_id and str(b_id).isdigit() else b_id)
+        
+    emps = query.all()
+    data = []
+    for e in emps:
+        branch_name = e.branch.name if e.branch else 'N/A'
+        rank_name = e.rank.name if e.rank else 'N/A'
+        data.append({
+            'Full Name': e.full_name,
+            'Unique ID': e.unique_id,
+            'Gender': e.gender,
+            'Branch': branch_name,
+            'Rank': rank_name,
+            'Job Position': e.job_position,
+            'Education Level': e.education_level,
+            'Field of Study': e.field_of_study,
+            'Salary': e.rank_salary,
+            'Status': e.status
+        })
+        
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Employees')
+    output.seek(0)
+    
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='Employees_Report.xlsx')
 
 # Hojjetaa haaraa dabaluuf
 @app.route('/add_employee', methods=['POST'])
@@ -443,7 +532,7 @@ def reset_password(user_id):
         
     return redirect(url_for('settings'))
 
-@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@app.route('/delete_user/<int:user_id>', Methods=['POST'])
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
