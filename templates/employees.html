@@ -14,8 +14,8 @@
             </div>
             
             <div class="d-flex gap-2">
-                <!-- Export to Excel Button -->
-                <a href="{{ url_for('export_excel', search=request.args.get('search', ''), branch_id=request.args.get('branch_id', ''), rank=request.args.get('rank', ''), gender=request.args.get('gender', '')) }}" class="btn btn-success">
+                <!-- Export to Excel Button - SIRREEFFAAMEE (export_employees_excel) -->
+                <a href="{{ url_for('export_employees_excel', search=request.args.get('search', ''), branch_id=request.args.get('branch_id', ''), rank=request.args.get('rank', ''), gender=request.args.get('gender', '')) }}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Excel-tti Buusi (Export)
                 </a>
                 <!-- Hojjetaa Haaraa Galchuuf Button -->
