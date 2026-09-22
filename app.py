@@ -58,7 +58,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar spell corrected)
+    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar corrected)
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -82,6 +82,7 @@ with app.app_context():
 @app.route('/')
 @login_required
 def dashboard():
+    today = date.today()
     if current_user.role == 'admin':
         emp_count = Employee.query.count()
         branch_count = Branch.query.count()
@@ -90,18 +91,7 @@ def dashboard():
         male_count = Employee.query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
         
-        today = date.today()
         all_emps = Employee.query.all()
-        retired_count = 0
-        for e in all_emps:
-            if e.birth_date:
-                try:
-                    b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
-                    age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
-                    if age >= 55:
-                        retired_count += 1
-                except:
-                    pass
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
@@ -111,18 +101,7 @@ def dashboard():
         male_count = Employee.query.filter_by(branch_id=branch_id_val).filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
         female_count = Employee.query.filter_by(branch_id=branch_id_val).filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
         
-        today = date.today()
-        branch_emps = Employee.query.filter_by(branch_id=branch_id_val).all() if user_b else []
-        retired_count = 0
-        for e in branch_emps:
-            if e.birth_date:
-                try:
-                    b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
-                    age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
-                    if age >= 55:
-                        retired_count += 1
-                except:
-                    pass
+        all_emps = Employee.query.filter_by(branch_id=branch_id_val).all() if user_b else []
 
         if user_b:
             b_str = str(user_b)
@@ -135,12 +114,20 @@ def dashboard():
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
                 
-            if conditions:
-                transfer_count = Transfer.query.filter(db.or_(*conditions)).count()
-            else:
-                transfer_count = 0
+            transfer_count = Transfer.query.filter(db.or_(*conditions)).count() if conditions else 0
         else:
             transfer_count = 0
+
+    retired_count = 0
+    for e in all_emps:
+        if e.birth_date:
+            try:
+                b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
+                age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
+                if age >= 55:
+                    retired_count += 1
+            except:
+                pass
 
     return render_template('dashboard.html', 
                            emp_count=emp_count, 
@@ -202,13 +189,13 @@ def employees():
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
-        all_branches = Branch.query.filter_by(id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
+        b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+        all_branches = Branch.query.filter_by(id=b_val).all()
         
     all_ranks = Rank.query.all()
     
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
-# Excel Export Feature for Employees (Updated to support active filters and full details)
 @app.route('/export_employees_excel')
 @login_required
 def export_employees_excel():
@@ -295,7 +282,6 @@ def export_employees_excel():
         download_name='HRKMSO_Miseensota_Report.xlsx'
     )
 
-# Hojjetaa haaraa dabaluuf
 @app.route('/add_employee', methods=['POST'])
 @login_required
 def add_employee():
@@ -314,46 +300,35 @@ def add_employee():
         first_rank = Rank.query.first()
         rank_id = first_rank.id if first_rank else 1
 
-    rank_date = request.form.get('rank_date')
-    hire_date = request.form.get('hire_date')
-    birth_date = request.form.get('birth_date')
-    rank_salary = request.form.get('rank_salary')
-    location_allowance = request.form.get('location_allowance')
-    food_allowance = request.form.get('food_allowance')
-    education_level = request.form.get('education_level')
-    field_of_study = request.form.get('field_of_study')
-    job_position = request.form.get('job_position')
-    status = request.form.get('status', 'Active')
-    
     new_emp = Employee(
         full_name=full_name,
         unique_id=unique_id,
         gender=gender,
         branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
         rank_id=rank_id,
-        rank_date=rank_date if rank_date else None,
-        hire_date=hire_date if hire_date else None,
-        birth_date=birth_date if birth_date else None,
-        rank_salary=float(rank_salary) if rank_salary else 0.0,
-        location_allowance=float(location_allowance) if location_allowance else 0.0,
-        food_allowance=float(food_allowance) if food_allowance else 0.0,
-        education_level=education_level,
-        field_of_study=field_of_study,
-        job_position=job_position,
-        status=status
+        rank_date=request.form.get('rank_date') or None,
+        hire_date=request.form.get('hire_date') or None,
+        birth_date=request.form.get('birth_date') or None,
+        rank_salary=float(request.form.get('rank_salary') or 0.0),
+        location_allowance=float(request.form.get('location_allowance') or 0.0),
+        food_allowance=float(request.form.get('food_allowance') or 0.0),
+        education_level=request.form.get('education_level'),
+        field_of_study=request.form.get('field_of_study'),
+        job_position=request.form.get('job_position'),
+        status=request.form.get('status', 'Active')
     )
     db.session.add(new_emp)
     db.session.commit()
     flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('employees'))
 
-# Hojjetaa Jiru Gulaaluuf
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(id):
     emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     
-    if current_user.role != 'admin' and emp.branch_id != (int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id):
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
 
     if request.method == 'POST':
@@ -371,17 +346,13 @@ def edit_employee(id):
             if resolved_rank_id:
                 emp.rank_id = resolved_rank_id
         
-        emp.rank_date = request.form.get('rank_date') if request.form.get('rank_date') else None
-        emp.hire_date = request.form.get('hire_date') if request.form.get('hire_date') else None
-        emp.birth_date = request.form.get('birth_date') if request.form.get('birth_date') else None
+        emp.rank_date = request.form.get('rank_date') or None
+        emp.hire_date = request.form.get('hire_date') or None
+        emp.birth_date = request.form.get('birth_date') or None
         
-        rank_salary = request.form.get('rank_salary')
-        location_allowance = request.form.get('location_allowance')
-        food_allowance = request.form.get('food_allowance')
-        
-        emp.rank_salary = float(rank_salary) if rank_salary else 0.0
-        emp.location_allowance = float(location_allowance) if location_allowance else 0.0
-        emp.food_allowance = float(food_allowance) if food_allowance else 0.0
+        emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
+        emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
+        emp.food_allowance = float(request.form.get('food_allowance') or 0.0)
         
         emp.education_level = request.form.get('education_level')
         emp.field_of_study = request.form.get('field_of_study')
@@ -395,7 +366,7 @@ def edit_employee(id):
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
-        all_branches = Branch.query.filter_by(id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
+        all_branches = Branch.query.filter_by(id=user_b_val).all()
         
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
@@ -406,10 +377,9 @@ def branches():
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
-        all_branches = Branch.query.filter_by(id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
+        b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+        all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
-
-# --- TRANSFER ROUTES ---
 
 @app.route('/transfers')
 @login_required
@@ -429,14 +399,12 @@ def transfers():
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
                 
-            if conditions:
-                all_transfers = Transfer.query.filter(db.or_(*conditions)).all()
-            else:
-                all_transfers = []
+            all_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
         else:
             all_transfers = []
             
-    all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id).all()
+    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    all_employees = Employee.query.all() if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val).all()
     all_branches = Branch.query.all()
         
     return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches)
@@ -506,8 +474,6 @@ def update_transfer_status(id):
     db.session.commit()
     flash('Murteen jijjiirraa milkaa\'inaan galmaa\'eera!', 'success')
     return redirect(url_for('transfers'))
-
-# ----------------------------------------------------
 
 @app.route('/ranks', methods=['GET', 'POST'])
 @login_required
@@ -597,7 +563,6 @@ def delete_user(user_id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
         username = request.form.get('username')
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
