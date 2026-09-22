@@ -1,11 +1,12 @@
 import os
 import io
+import shutil
+from datetime import datetime, date
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer
 from functools import wraps
-from datetime import datetime, date
 import pandas as pd
 
 app = Flask(__name__)
@@ -44,8 +45,29 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
+# --- AUTOMATIC DATABASE BACKUP FUNCTION ---
+def create_local_backup():
+    try:
+        db_path = os.path.join('instance', 'hrkmso.db')
+        backup_dir = 'backups'
+        
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir)
+            
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_file = os.path.join(backup_dir, f'hrkmso_backup_{timestamp}.db')
+        
+        if os.path.exists(db_path):
+            shutil.copy(db_path, backup_file)
+            print(f"[MILKAA'E] Database backup ta'eera: {backup_file}")
+    except Exception as e:
+        print(f"[ERR] Backup godhuu irratti rakkoon uumame: {e}")
+
 with app.app_context():
     db.create_all()
+    
+    # App-ichi yeroo ka'u automatic backup akka godhu
+    create_local_backup()
     
     # 1. Admin Jalqabaa Uumuu
     if not User.query.filter_by(username='admin').first():
