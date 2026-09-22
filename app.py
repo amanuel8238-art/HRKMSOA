@@ -26,9 +26,8 @@ def load_user(user_id):
 # Admin Qofaaf eeyyamuuf (RBAC Decorator)
 def admin_required(f):
     @wraps(f)
-    @login_required
     def decorated_function(*args, **kwargs):
-        if current_user.role != 'admin':
+        if not current_user.is_authenticated or current_user.role != 'admin':
             abort(403)
         return f(*args, **kwargs)
     return decorated_function
@@ -88,11 +87,9 @@ def dashboard():
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
         
-        # Gender stats for charts
         male_count = Employee.query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
         
-        # Retirement check (Age >= 55)
         today = date.today()
         all_emps = Employee.query.all()
         retired_count = 0
@@ -532,7 +529,7 @@ def reset_password(user_id):
         
     return redirect(url_for('settings'))
 
-@app.route('/delete_user/<int:user_id>', Methods=['POST'])
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
