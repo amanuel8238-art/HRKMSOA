@@ -5,19 +5,24 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-3">
-                <!-- Button Deebi'i (Dashboard) -->
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Deebi'i
                 </a>
                 <h2 class="mb-0">Hojjettoota / Miseensota Komishinichaa</h2>
             </div>
             
-            <!-- Hojjetaa Haaraa Galchuuf Button -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                <i class="fas fa-user-plus"></i> Galmee Miseensa Haaraa
-            </button>
+            <div class="d-flex gap-2">
+                <!-- Export to Excel Button -->
+                <a href="{{ url_for('export_excel', search=request.args.get('search', ''), branch_id=request.args.get('branch_id', ''), rank=request.args.get('rank', ''), gender=request.args.get('gender', '')) }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Excel-tti Buusi (Export)
+                </a>
+                <!-- Hojjetaa Haaraa Galchuuf Button -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    <i class="fas fa-user-plus"></i> Galmee Miseensa Haaraa
+                </button>
+            </div>
         </div>
     </div>
 
@@ -25,14 +30,11 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body bg-light">
             <form method="GET" action="{{ url_for('employees') }}" class="row g-3">
-                <!-- Search Bar (Maqaa ykn ID-n) -->
                 <div class="col-md-3">
                     <label for="search" class="form-label fw-bold">Barbaadi (Maqaa / ID)</label>
                     <input type="text" class="form-control" id="search" name="search" value="{{ request.args.get('search', '') }}" placeholder="Maqaa ykn ID...">
                 </div>
 
-                <!-- Damee (Branch) Filter -->
-                {% if current_user.role == 'admin' %}
                 <div class="col-md-3">
                     <label for="branch_id" class="form-label fw-bold">Damee (Branch)</label>
                     <select class="form-select" id="branch_id" name="branch_id">
@@ -42,9 +44,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                {% endif %}
 
-                <!-- Rank Filter -->
                 <div class="col-md-2">
                     <label for="rank" class="form-label fw-bold">Gulantaa / Rank</label>
                     <select class="form-select" id="rank" name="rank">
@@ -66,7 +66,6 @@
                     </select>
                 </div>
 
-                <!-- Saala (Gender) Filter -->
                 <div class="col-md-2">
                     <label for="gender" class="form-label fw-bold">Saala</label>
                     <select class="form-select" id="gender" name="gender">
@@ -76,7 +75,6 @@
                     </select>
                 </div>
 
-                <!-- Filter Buttons -->
                 <div class="col-md-2 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-dark w-100">
                         <i class="fas fa-filter"></i> Filter
@@ -124,7 +122,6 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <!-- Button Gulaaluu -->
                                     <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ emp.id }}">
                                         <i class="fas fa-edit"></i> Gulaali
                                     </button>
@@ -306,14 +303,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Damee / Godina *</label>
-                                <select class="form-select" name="branch_id" {% if current_user.role != 'admin' %}disabled{% endif %} required>
+                                <select class="form-select" name="branch_id" required>
                                     {% for branch in branches %}
                                         <option value="{{ branch.id }}" {% if emp.branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
                                     {% endfor %}
                                 </select>
-                                {% if current_user.role != 'admin' %}
-                                    <input type="hidden" name="branch_id" value="{{ emp.branch_id }}">
-                                {% endif %}
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Gulaantaa Gonfoo (Rank) *</label>

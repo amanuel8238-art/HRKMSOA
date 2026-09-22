@@ -208,40 +208,92 @@ def employees():
     
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
-# Excel Export Feature for Employees
+# Excel Export Feature for Employees (Updated to support active filters and full details)
 @app.route('/export_employees_excel')
 @login_required
 def export_employees_excel():
+    branch_id = request.args.get('branch_id')
+    rank = request.args.get('rank')
+    gender = request.args.get('gender')
+    search_query = request.args.get('search', '')
+    education_level = request.args.get('education_level', '')
+    field_of_study = request.args.get('field_of_study', '')
+
     query = Employee.query
+
     if current_user.role != 'admin':
-        b_id = current_user.branch_id
-        query = query.filter_by(branch_id=int(b_id) if b_id and str(b_id).isdigit() else b_id)
-        
+        branch_id = current_user.branch_id
+        query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
+    elif branch_id:
+        query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
+
+    if rank:
+        if str(rank).isdigit():
+            query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == int(rank)))
+        else:
+            query = query.join(Employee.rank).filter(Rank.name == rank)
+    
+    if gender:
+        if gender in ['Dhalaa', 'Dubartii']:
+            query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
+        elif gender in ['Dhiira', 'Dhiirra']:
+            query = query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra'))
+        else:
+            query = query.filter_by(gender=gender)
+
+    if education_level:
+        query = query.filter(Employee.education_level.ilike(f'%{education_level}%'))
+
+    if field_of_study:
+        query = query.filter(Employee.field_of_study.ilike(f'%{field_of_study}%'))
+
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{search_query}%'),
+                Employee.unique_id.ilike(f'%{search_query}%'),
+                Employee.job_position.ilike(f'%{search_query}%')
+            )
+        )
+
     emps = query.all()
     data = []
-    for e in emps:
+    
+    for idx, e in enumerate(emps, start=1):
         branch_name = e.branch.name if e.branch else 'N/A'
-        rank_name = e.rank.name if e.rank else 'N/A'
+        rank_name = e.rank.name if e.rank else (e.rank_val if hasattr(e, 'rank_val') else 'N/A')
+        
         data.append({
-            'Full Name': e.full_name,
-            'Unique ID': e.unique_id,
-            'Gender': e.gender,
-            'Branch': branch_name,
-            'Rank': rank_name,
-            'Job Position': e.job_position,
-            'Education Level': e.education_level,
-            'Field of Study': e.field_of_study,
-            'Salary': e.rank_salary,
-            'Status': e.status
+            'Lakk.': idx,
+            'ID Addaa': e.unique_id if e.unique_id else '-',
+            'Maqaa Guutuu': e.full_name,
+            'Saala': e.gender if e.gender else '-',
+            'Damee (Branch)': branch_name,
+            'Gulantaa / Rank': rank_name,
+            'Gita Hojii': e.job_position if e.job_position else '-',
+            'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
+            'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
+            'Guyyaa Qacarichaa': str(e.hire_date) if e.hire_date else '-',
+            'Guyyaa Gulaantaa': str(e.rank_date) if e.rank_date else '-',
+            'Guyyaa Dhalootaa': str(e.birth_date) if e.birth_date else '-',
+            'Mindaa Gulaantaa': e.rank_salary if e.rank_salary else 0.0,
+            'Mindaa Idoo': e.location_allowance if e.location_allowance else 0.0,
+            'Durgoo Nyaataa': e.food_allowance if e.food_allowance else 0.0,
+            'Status': e.status if e.status else '-'
         })
         
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Employees')
+        df.to_excel(writer, index=False, sheet_name='Miseensota Guutuu')
     output.seek(0)
     
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='Employees_Report.xlsx')
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='HRKMSO_Miseensota_Report.xlsx'
+    )
 
 # Hojjetaa haaraa dabaluuf
 @app.route('/add_employee', methods=['POST'])
@@ -545,6 +597,7 @@ def delete_user(user_id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        username = request.form.get('username')
         username = request.form.get('username')
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
