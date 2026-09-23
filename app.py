@@ -112,7 +112,7 @@ def dashboard():
         
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
-        resigned_count = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated'])).count()
+        resigned_count = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', 'Du\'aan', 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count()
         
         all_emps = Employee.query.filter_by(status='Active').all()
     else:
@@ -123,7 +123,7 @@ def dashboard():
         
         male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
         female_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
-        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated'])).count() if user_b else 0
+        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated', 'Du\'aan', 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count() if user_b else 0
         
         all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
 
@@ -327,11 +327,13 @@ def add_employee():
     else:
         branch_id = current_user.branch_id
 
-    rank_input = request.form.get('rank_id')
+    # Rank sirriitti fiduuf (Foomii irraa rank_id ykn rank dhufe qabachuun)
+    rank_input = request.form.get('rank_id') or request.form.get('rank')
     rank_id = resolve_rank_id(rank_input)
     if not rank_id:
+        # Yoo rank hin filatamne rank jalqabaa jiru ykn None akka hin taane godhuuf
         first_rank = Rank.query.first()
-        rank_id = first_rank.id if first_rank else 1
+        rank_id = first_rank.id if first_rank else None
 
     new_emp = Employee(
         full_name=full_name,
@@ -373,7 +375,7 @@ def edit_employee(id):
             branch_id = request.form.get('branch_id')
             emp.branch_id = int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
 
-        rank_input = request.form.get('rank_id')
+        rank_input = request.form.get('rank_id') or request.form.get('rank')
         if rank_input:
             resolved_rank_id = resolve_rank_id(rank_input)
             if resolved_rank_id:
@@ -392,7 +394,7 @@ def edit_employee(id):
         emp.job_position = request.form.get('job_position')
         
         new_status = request.form.get('status', emp.status)
-        if new_status != emp.status and new_status in ['Resigned', 'Terminated']:
+        if new_status != emp.status and new_status in ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']:
             if hasattr(emp, 'resignation_reason'):
                 emp.resignation_reason = request.form.get('resignation_reason')
             if hasattr(emp, 'resignation_date'):

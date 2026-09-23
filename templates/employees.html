@@ -4,39 +4,43 @@
 
 {% block content %}
 <div class="container-fluid py-4">
+    <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div class="d-flex align-items-center gap-3">
-                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Deebi'i
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary shadow-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Deebi'i
                 </a>
-                <h2 class="mb-0">Hojjettoota / Miseensota Komishinichaa</h2>
+                <h2 class="mb-0 fw-bold text-dark">Hojjettoota / Miseensota Komishinichaa</h2>
             </div>
             
             <div class="d-flex gap-2">
-                <!-- Export to Excel Button - SIRREEFFAAMEE (export_employees_excel) -->
-                <a href="{{ url_for('export_employees_excel', search=request.args.get('search', ''), branch_id=request.args.get('branch_id', ''), rank=request.args.get('rank', ''), gender=request.args.get('gender', '')) }}" class="btn btn-success">
-                    <i class="fas fa-file-excel"></i> Excel-tti Buusi (Export)
+                <!-- Export to Excel Button -->
+                <a href="{{ url_for('export_employees_excel', search=request.args.get('search', ''), branch_id=request.args.get('branch_id', ''), rank=request.args.get('rank', ''), gender=request.args.get('gender', '')) }}" class="btn btn-success shadow-sm">
+                    <i class="fas fa-file-excel me-1"></i> Excel-tti Buusi
                 </a>
-                <!-- Hojjetaa Haaraa Galchuuf Button -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                    <i class="fas fa-user-plus"></i> Galmee Miseensa Haaraa
+                <!-- Galmee Miseensa Haaraa Button -->
+                <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    <i class="fas fa-user-plus me-1"></i> Galmee Miseensa Haaraa
                 </button>
             </div>
         </div>
     </div>
 
     <!-- FILTER & SEARCH SECTION -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body bg-light">
+    <div class="card shadow-sm mb-4 border-0 rounded-3">
+        <div class="card-body bg-light rounded-3">
             <form method="GET" action="{{ url_for('employees') }}" class="row g-3">
                 <div class="col-md-3">
-                    <label for="search" class="form-label fw-bold">Barbaadi (Maqaa / ID)</label>
-                    <input type="text" class="form-control" id="search" name="search" value="{{ request.args.get('search', '') }}" placeholder="Maqaa ykn ID...">
+                    <label for="search" class="form-label fw-bold text-secondary small">Barbaadi (Maqaa / ID)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" class="form-control" id="search" name="search" value="{{ request.args.get('search', '') }}" placeholder="Maqaa ykn ID...">
+                    </div>
                 </div>
 
                 <div class="col-md-3">
-                    <label for="branch_id" class="form-label fw-bold">Damee (Branch)</label>
+                    <label for="branch_id" class="form-label fw-bold text-secondary small">Damee (Branch)</label>
                     <select class="form-select" id="branch_id" name="branch_id">
                         <option value="">-- Dameewwan Hunda --</option>
                         {% for branch in branches %}
@@ -46,7 +50,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label for="rank" class="form-label fw-bold">Gulantaa / Rank</label>
+                    <label for="rank" class="form-label fw-bold text-secondary small">Gulantaa / Rank</label>
                     <select class="form-select" id="rank" name="rank">
                         <option value="">-- Hunda --</option>
                         <option value="Konstaabilii" {% if request.args.get('rank') == 'Konstaabilii' %}selected{% endif %}>Konstaabilii</option>
@@ -67,7 +71,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label for="gender" class="form-label fw-bold">Saala</label>
+                    <label for="gender" class="form-label fw-bold text-secondary small">Saala</label>
                     <select class="form-select" id="gender" name="gender">
                         <option value="">-- Hunda --</option>
                         <option value="Dhiira" {% if request.args.get('gender') == 'Dhiira' %}selected{% endif %}>Dhiira</option>
@@ -76,10 +80,10 @@
                 </div>
 
                 <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-dark w-100">
-                        <i class="fas fa-filter"></i> Filter
+                    <button type="submit" class="btn btn-dark w-100 shadow-sm">
+                        <i class="fas fa-filter me-1"></i> Filter
                     </button>
-                    <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary" title="Haquu (Reset)">
+                    <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary shadow-sm" title="Haquu (Reset)">
                         <i class="fas fa-redo"></i>
                     </a>
                 </div>
@@ -88,49 +92,53 @@
     </div>
 
     <!-- Table of Employees -->
-    <div class="card shadow-sm">
-        <div class="card-body">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-dark">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark text-uppercase fs-7">
                         <tr>
-                            <th>#</th>
-                            <th>ID Addaa</th>
-                            <th>Maqaa Guutuu</th>
-                            <th>Saala</th>
-                            <th>Damee (Branch)</th>
-                            <th>Gulantaa / Rank</th>
-                            <th>Gita Hojii</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <th class="py-3 ps-3">#</th>
+                            <th class="py-3">ID Addaa</th>
+                            <th class="py-3">Maqaa Guutuu</th>
+                            <th class="py-3">Saala</th>
+                            <th class="py-3">Damee (Branch)</th>
+                            <th class="py-3">Gulantaa / Rank</th>
+                            <th class="py-3">Gita Hojii</th>
+                            <th class="py-3">Status</th>
+                            <th class="py-3 text-center pe-3">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if employees %}
                             {% for emp in employees %}
                             <tr>
-                                <td>{{ loop.index }}</td>
-                                <td>{{ emp.unique_id if emp.unique_id else '-' }}</td>
-                                <td><strong>{{ emp.full_name }}</strong></td>
+                                <td class="ps-3">{{ loop.index }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
+                                <td><strong class="text-primary">{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
                                 <td>{{ emp.branch.name if emp.branch else '-' }}</td>
                                 <td>{{ emp.rank if emp.rank else '-' }}</td>
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td>
-                                    <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %}">
+                                    <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} px-2 py-1">
                                         {{ emp.status }}
                                     </span>
                                 </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ emp.id }}">
-                                        <i class="fas fa-edit"></i> Gulaali
-                                    </button>
+                                <td class="text-center pe-3">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <!-- Edit Button -->
+                                        <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ emp.id }}" title="Gulaali">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
                                     Hojjetaan filtarii kana waliin wal simu argamuu hin dandeenye.
                                 </td>
                             </tr>
@@ -145,27 +153,27 @@
 <!-- Modal Galmee Miseensa Haaraa -->
 <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <form method="POST" action="{{ url_for('add_employee') }}">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title" id="addEmployeeModalLabel">Galmee Miseensa Haaraa</h5>
+                    <h5 class="modal-title" id="addEmployeeModalLabel"><i class="fas fa-user-plus me-2"></i> Galmee Miseensa Haaraa</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="full_name" class="form-label">Maqaa Guutuu *</label>
+                            <label for="full_name" class="form-label fw-bold">Maqaa Guutuu *</label>
                             <input type="text" class="form-control" id="full_name" name="full_name" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="unique_id" class="form-label">ID Addaa (Unique ID) *</label>
+                            <label for="unique_id" class="form-label fw-bold">ID Addaa (Unique ID) *</label>
                             <input type="text" class="form-control" id="unique_id" name="unique_id" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="branch_id_add" class="form-label">Damee / Godina *</label>
+                            <label for="branch_id_add" class="form-label fw-bold">Damee / Godina *</label>
                             <select class="form-select" id="branch_id_add" name="branch_id" required>
                                 <option value="">-- Damee Filadhu --</option>
                                 {% for branch in branches %}
@@ -174,7 +182,7 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="rank_id" class="form-label">Gulaantaa Gonfoo (Rank) *</label>
+                            <label for="rank_id" class="form-label fw-bold">Gulaantaa Gonfoo (Rank) *</label>
                             <select class="form-select" id="rank_id" name="rank" required>
                                 <option value="">-- Gulaantaa Filadhu --</option>
                                 <option value="Konstaabilii">Konstaabilii</option>
@@ -197,44 +205,44 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="rank_date" class="form-label">Guyyaa Gulaantaa Gonfoo Argate *</label>
+                            <label for="rank_date" class="form-label fw-bold">Guyyaa Gulaantaa Gonfoo Argate *</label>
                             <input type="date" class="form-control" id="rank_date" name="rank_date" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="hire_date" class="form-label">Guyyaa Qacarichaa *</label>
+                            <label for="hire_date" class="form-label fw-bold">Guyyaa Qacarichaa *</label>
                             <input type="date" class="form-control" id="hire_date" name="hire_date" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="birth_date" class="form-label">Guyyaa Dhalootaa *</label>
+                            <label for="birth_date" class="form-label fw-bold">Guyyaa Dhalootaa *</label>
                             <input type="date" class="form-control" id="birth_date" name="birth_date" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="rank_salary" class="form-label">Mindaa Gulaantaa Gonfoo *</label>
+                            <label for="rank_salary" class="form-label fw-bold">Mindaa Gulaantaa Gonfoo *</label>
                             <input type="number" step="0.01" class="form-control" id="rank_salary" name="rank_salary" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="location_allowance" class="form-label">Mindaa Kaffaltii Idoo</label>
+                            <label for="location_allowance" class="form-label fw-bold">Mindaa Kaffaltii Idoo</label>
                             <input type="number" step="0.01" class="form-control" id="location_allowance" name="location_allowance" value="0">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="food_allowance" class="form-label">Durgoo Nyaataa</label>
+                            <label for="food_allowance" class="form-label fw-bold">Durgoo Nyaataa</label>
                             <input type="number" step="0.01" class="form-control" id="food_allowance" name="food_allowance" value="0">
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="gender_add" class="form-label">Saala *</label>
+                            <label for="gender_add" class="form-label fw-bold">Saala *</label>
                             <select class="form-select" id="gender_add" name="gender" required>
                                 <option value="Dhiira">Dhiira</option>
                                 <option value="Dhalaa">Dhalaa</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="education_level" class="form-label">Sadarkaa Barumsaa</label>
+                            <label for="education_level" class="form-label fw-bold">Sadarkaa Barumsaa</label>
                             <select class="form-select" id="education_level" name="education_level">
                                 <option value="Kutaa 8ffaa">Kutaa 8ffaa</option>
                                 <option value="High School (9-12)">High School (9-12)</option>
@@ -249,15 +257,15 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="field_of_study" class="form-label">Gosa Barumsaa (Field of Study)</label>
+                            <label for="field_of_study" class="form-label fw-bold">Gosa Barumsaa (Field of Study)</label>
                             <input type="text" class="form-control" id="field_of_study" name="field_of_study">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="job_position" class="form-label">Gita Hojii Irratti Ramadame *</label>
+                            <label for="job_position" class="form-label fw-bold">Gita Hojii Irratti Ramadame *</label>
                             <input type="text" class="form-control" id="job_position" name="job_position" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="status_add" class="form-label">Haala / Status Jalqabaa *</label>
+                            <label for="status_add" class="form-label fw-bold">Haala / Status Jalqabaa *</label>
                             <select class="form-select" id="status_add" name="status" required>
                                 <option value="Active">Hojii Irra (Active)</option>
                                 <option value="Du'aan">Sababa Du'aan</option>
@@ -268,9 +276,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
-                    <button type="submit" class="btn btn-success">Miseensa Galmeessi</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Miseensa Galmeessi</button>
                 </div>
             </form>
         </div>
@@ -282,27 +290,27 @@
     {% for emp in employees %}
     <div class="modal fade" id="editEmployeeModal{{ emp.id }}" tabindex="-1" aria-labelledby="editEmployeeModalLabel{{ emp.id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+            <div class="modal-content border-0 shadow">
                 <form method="POST" action="{{ url_for('edit_employee', id=emp.id) }}">
                     <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title" id="editEmployeeModalLabel{{ emp.id }}">Odeeffannoo Hojjetaa Gulaali: {{ emp.full_name }}</h5>
+                        <h5 class="modal-title" id="editEmployeeModalLabel{{ emp.id }}"><i class="fas fa-edit me-2"></i> Odeeffannoo Hojjetaa Gulaali: {{ emp.full_name }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Maqaa Guutuu *</label>
+                                <label class="form-label fw-bold">Maqaa Guutuu *</label>
                                 <input type="text" class="form-control" name="full_name" value="{{ emp.full_name }}" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">ID Addaa (Unique ID) *</label>
+                                <label class="form-label fw-bold">ID Addaa (Unique ID) *</label>
                                 <input type="text" class="form-control" name="unique_id" value="{{ emp.unique_id }}" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Damee / Godina *</label>
+                                <label class="form-label fw-bold">Damee / Godina *</label>
                                 <select class="form-select" name="branch_id" required>
                                     {% for branch in branches %}
                                         <option value="{{ branch.id }}" {% if emp.branch_id == branch.id %}selected{% endif %}>{{ branch.name }}</option>
@@ -310,7 +318,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Gulaantaa Gonfoo (Rank) *</label>
+                                <label class="form-label fw-bold">Gulaantaa Gonfoo (Rank) *</label>
                                 <select class="form-select" name="rank" required>
                                     {% set current_rank = emp.rank %}
                                     <option value="Konstaabilii" {% if current_rank == 'Konstaabilii' %}selected{% endif %}>Konstaabilii</option>
@@ -333,44 +341,44 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Guyyaa Gulaantaa Gonfoo Argate *</label>
+                                <label class="form-label fw-bold">Guyyaa Gulaantaa Gonfoo Argate *</label>
                                 <input type="date" class="form-control" name="rank_date" value="{{ emp.rank_date }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Guyyaa Qacarichaa *</label>
+                                <label class="form-label fw-bold">Guyyaa Qacarichaa *</label>
                                 <input type="date" class="form-control" name="hire_date" value="{{ emp.hire_date }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Guyyaa Dhalootaa *</label>
+                                <label class="form-label fw-bold">Guyyaa Dhalootaa *</label>
                                 <input type="date" class="form-control" name="birth_date" value="{{ emp.birth_date }}" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Mindaa Gulaantaa Gonfoo *</label>
+                                <label class="form-label fw-bold">Mindaa Gulaantaa Gonfoo *</label>
                                 <input type="number" step="0.01" class="form-control" name="rank_salary" value="{{ emp.rank_salary }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Mindaa Kaffaltii Idoo</label>
+                                <label class="form-label fw-bold">Mindaa Kaffaltii Idoo</label>
                                 <input type="number" step="0.01" class="form-control" name="location_allowance" value="{{ emp.location_allowance }}">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Durgoo Nyaataa</label>
+                                <label class="form-label fw-bold">Durgoo Nyaataa</label>
                                 <input type="number" step="0.01" class="form-control" name="food_allowance" value="{{ emp.food_allowance }}">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Saala *</label>
+                                <label class="form-label fw-bold">Saala *</label>
                                 <select class="form-select" name="gender" required>
                                     <option value="Dhiira" {% if emp.gender == 'Dhiira' %}selected{% endif %}>Dhiira</option>
                                     <option value="Dhalaa" {% if emp.gender == 'Dhalaa' or emp.gender == 'Dubartii' %}selected{% endif %}>Dhalaa</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Sadarkaa Barumsaa</label>
+                                <label class="form-label fw-bold">Sadarkaa Barumsaa</label>
                                 <select class="form-select" name="education_level">
                                     <option value="Kutaa 8ffaa" {% if emp.education_level == 'Kutaa 8ffaa' %}selected{% endif %}>Kutaa 8ffaa</option>
                                     <option value="High School (9-12)" {% if emp.education_level == 'High School (9-12)' %}selected{% endif %}>High School (9-12)</option>
@@ -385,15 +393,15 @@
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Gosa Barumsaa (Field of Study)</label>
+                                <label class="form-label fw-bold">Gosa Barumsaa (Field of Study)</label>
                                 <input type="text" class="form-control" name="field_of_study" value="{{ emp.field_of_study }}">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Gita Hojii Irratti Ramadame *</label>
+                                <label class="form-label fw-bold">Gita Hojii Irratti Ramadame *</label>
                                 <input type="text" class="form-control" name="job_position" value="{{ emp.job_position }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Haala / Status *</label>
+                                <label class="form-label fw-bold">Haala / Status *</label>
                                 <select class="form-select" name="status" required>
                                     <option value="Active" {% if emp.status == 'Active' %}selected{% endif %}>Hojii Irra (Active)</option>
                                     <option value="Du'aan" {% if emp.status == "Du'aan" %}selected{% endif %}>Sababa Du'aan</option>
@@ -404,9 +412,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
-                        <button type="submit" class="btn btn-warning">Fooyya'i (Save)</button>
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> Fooyya'i (Save)</button>
                     </div>
                 </form>
             </div>

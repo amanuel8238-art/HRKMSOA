@@ -20,7 +20,7 @@ class Branch(db.Model):
     __tablename__ = 'branch'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
-    location = db.Column(db.String(150))
+    location = db.Column(db.String(150), nullable=True)
 
 # 3. Sadarkaa (Ranks)
 class Rank(db.Model):
@@ -36,19 +36,24 @@ class Employee(db.Model):
     full_name = db.Column(db.String(150), nullable=False)
     unique_id = db.Column(db.String(50), unique=True, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
-    rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=False)
+    
+    # Branch_id fi rank_id yeroo tokko tokko null ta'uu danda'uuf mijaawaa akka ta'u nullable=True godhameera (Safety)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True)
+    
     rank_date = db.Column(db.String(50), nullable=True)
     hire_date = db.Column(db.String(50), nullable=True)
     birth_date = db.Column(db.String(50), nullable=True)
+    
     rank_salary = db.Column(db.Float, nullable=True, default=0.0)
     location_allowance = db.Column(db.Float, nullable=True, default=0.0)
     food_allowance = db.Column(db.Float, nullable=True, default=0.0)
+    
     education_level = db.Column(db.String(100), nullable=True)
     field_of_study = db.Column(db.String(150), nullable=True)
     job_position = db.Column(db.String(150), nullable=True)
     
-    # Status: 'Active', 'Resigned' (Hojii Gadhiise), 'Terminated' (Badiidhaan Geeddare/Gaggeeffame)
+    # Status: 'Active', 'Resigned', 'Terminated', 'Du\'aan', 'Fedhiitiin', 'Dhukkubaan', wld.
     status = db.Column(db.String(50), default='Active')
     
     # Sababa Hojii Gadhiisuu ykn Jijjiiramaa galchuuf
@@ -58,7 +63,7 @@ class Employee(db.Model):
     retirement_age = db.Column(db.Integer, default=55)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
+    branch = db.relationship('Branch', foreign_keys=[branch_id], backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
 # 5. Jijjiirraa (Transfers) - Seenaa fi To'annoo Guutuu Wajjin
@@ -69,8 +74,8 @@ class Transfer(db.Model):
     
     from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
     
-    # Database keessatti 'to_branch' qofa waan ta'eef kolunichi sirriitti map ta'eera
-    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
+    # Database keessatti 'to_branch' jedhamee waan argamuuf column map sirrii ta'e
+    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=True)
     
     reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
