@@ -128,7 +128,18 @@ def dashboard():
         
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
-        resigned_count = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count()
+        
+        # Safe query using db.or_ instead of .in_() to prevent DB syntax errors
+        resigned_count = Employee.query.filter(
+            db.or_(
+                Employee.status == 'Resigned',
+                Employee.status == 'Terminated',
+                Employee.status == "Du'aan",
+                Employee.status == 'Fedhiitiin',
+                Employee.status == 'Dhukkubaan',
+                Employee.status == 'Dismissed'
+            )
+        ).count()
         
         all_emps = Employee.query.filter_by(status='Active').all()
     else:
@@ -139,7 +150,17 @@ def dashboard():
         
         male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
         female_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
-        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count() if user_b else 0
+        
+        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(
+            db.or_(
+                Employee.status == 'Resigned',
+                Employee.status == 'Terminated',
+                Employee.status == "Du'aan",
+                Employee.status == 'Fedhiitiin',
+                Employee.status == 'Dhukkubaan',
+                Employee.status == 'Dismissed'
+            )
+        ).count() if user_b else 0
         
         all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
 
@@ -223,11 +244,29 @@ def retired_employees():
 @login_required
 def resigned_employees():
     if current_user.role == 'admin':
-        resigned_list = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).all()
+        resigned_list = Employee.query.filter(
+            db.or_(
+                Employee.status == 'Resigned',
+                Employee.status == 'Terminated',
+                Employee.status == "Du'aan",
+                Employee.status == 'Fedhiitiin',
+                Employee.status == 'Dhukkubaan',
+                Employee.status == 'Dismissed'
+            )
+        ).all()
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        resigned_list = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).all() if user_b else []
+        resigned_list = Employee.query.filter_by(branch_id=branch_id_val).filter(
+            db.or_(
+                Employee.status == 'Resigned',
+                Employee.status == 'Terminated',
+                Employee.status == "Du'aan",
+                Employee.status == 'Fedhiitiin',
+                Employee.status == 'Dhukkubaan',
+                Employee.status == 'Dismissed'
+            )
+        ).all() if user_b else []
         
     return render_template('resigned_employees.html', employees=resigned_list)
 
@@ -630,26 +669,24 @@ def calendar_events():
     events = []
     
     for emp in employees:
-        # Guyyaa Qacaramuu yoo qabaate
         if emp.hire_date:
             try:
                 hire_str = str(emp.hire_date).split()[0]
                 events.append({
                     'title': f"Qacaramuu: {emp.full_name}",
                     'start': hire_str,
-                    'color': '#28a745' # Halluu Green
+                    'color': '#28a745'
                 })
             except:
                 pass
                 
-        # Guyyaa Dhalootaa yoo qabaate
         if emp.birth_date:
             try:
                 birth_str = str(emp.birth_date).split()[0]
                 events.append({
                     'title': f"Dhalootaa: {emp.full_name}",
                     'start': birth_str,
-                    'color': '#17a2b8' # Halluu Info/Cyan
+                    'color': '#17a2b8'
                 })
             except:
                 pass
@@ -747,7 +784,7 @@ def add_discipline(employee_id):
                 offense_date=datetime.strptime(request.form['offense_date'], '%Y-%m-%d').date(),
                 reporting_date=datetime.strptime(request.form['reporting_date'], '%Y-%m-%d').date(),
                 decision_date=datetime.strptime(request.form['decision_date'], '%Y-%m-%d').date(),
-                effective_date=datetime.strptime(request.form['effective_date'], '%Y-%m-%d').date(),
+                effective_date=datetime.strptime(request.file['effective_date'] if 'file' in request.files else request.form['effective_date'], '%Y-%m-%d').date() if 'effective_date' in request.form else datetime.utcnow().date(),
                 expiry_date=datetime.strptime(request.form['expiry_date'], '%Y-%m-%d').date(),
                 offense_type=request.form['offense_type'],
                 penalty_type=request.form['penalty_type'],
