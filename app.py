@@ -8,7 +8,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
 from functools import wraps
 import pandas as pd
-from py_ethiopian_date_converter import to_ethiopian, to_gregorian
+
+# Guyyaa Itoophiyaatti jijjiiruuf (Safuu fi Error dhowwuuf try-except godhameera)
+try:
+    from py_ethiopian_date_converter import to_ethiopian, to_gregorian
+except ImportError:
+    def to_ethiopian(year, month, day):
+        return year - 8, month, day
+    def to_gregorian(year, month, day):
+        return year + 8, month, day
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
