@@ -4,9 +4,12 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Header & Action Buttons -->
+    <!-- Back to Dashboard & Header & Action Buttons -->
     <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
+        <div class="col-md-6 d-flex align-items-center">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-3 shadow-sm" title="Gara Dashboarditti Deebi'i">
+                <i class="fas fa-arrow-left"></i> Deebi'i
+            </a>
             <h2 class="fw-bold text-primary mb-0"><i class="fas fa-users me-2"></i> Hojjettoota (Employees)</h2>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">

@@ -2,7 +2,7 @@ import os
 import io
 import shutil
 from datetime import datetime, date
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
@@ -617,6 +617,45 @@ def ranks():
 def reports():
     return render_template('reports.html')
 
+# --- KUTAA KALANDARII (CALENDAR ROUTES) ---
+@app.route('/calendar')
+@login_required
+def calendar_view():
+    return render_template('calendar.html')
+
+@app.route('/api/calendar-events')
+@login_required
+def calendar_events():
+    employees = Employee.query.all()
+    events = []
+    
+    for emp in employees:
+        # Guyyaa Qacaramuu yoo qabaate
+        if emp.hire_date:
+            try:
+                hire_str = str(emp.hire_date).split()[0]
+                events.append({
+                    'title': f"Qacaramuu: {emp.full_name}",
+                    'start': hire_str,
+                    'color': '#28a745' # Halluu Green
+                })
+            except:
+                pass
+                
+        # Guyyaa Dhalootaa yoo qabaate
+        if emp.birth_date:
+            try:
+                birth_str = str(emp.birth_date).split()[0]
+                events.append({
+                    'title': f"Dhalootaa: {emp.full_name}",
+                    'start': birth_str,
+                    'color': '#17a2b8' # Halluu Info/Cyan
+                })
+            except:
+                pass
+            
+    return jsonify(events)
+
 @app.route('/settings')
 @admin_required
 def settings():
@@ -723,6 +762,7 @@ def add_discipline(employee_id):
             flash('Galmeen Badii Naamusaa milkaa’inaan galmeeffameera!', 'success')
             return redirect(url_for('employees'))
         
+        .exception as e:
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')

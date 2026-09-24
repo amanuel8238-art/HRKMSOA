@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Kalandarii Hojii - HRKMSO{% endblock %}
+
+{% block styles %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+<style>
+    #calendar {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-calendar-alt me-2"></i> Kalandarii Hojii fi Yaadachiisaa</h2>
+        </div>
+    </div>
+
+    <!-- Calendar Card -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+            <div id='calendar'></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,listWeek'
+      },
+      themeSystem: 'bootstrap5',
+      // Data-wwan Python/Flask irraa dhufan asitti galchuuf
+      events: '/api/calendar-events' 
+    });
+    calendar.render();
+  });
+</script>
+{% endblock %}
