@@ -108,6 +108,30 @@ with app.app_context():
             
     db.session.commit()
 
+# --- HELPER FUNCTION FOR RETIRED AGE CALCULATION ---
+def get_retired_employees_list(active_employees):
+    today = date.today()
+    retired_list = []
+    for e in active_employees:
+        if e.birth_date:
+            try:
+                b_str = str(e.birth_date).strip().split()[0]
+                if '-' in b_str:
+                    parts = b_str.split('-')
+                    b_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
+                elif '/' in b_str:
+                    parts = b_str.split('/')
+                    b_date = date(int(parts[2]), int(parts[1]), int(parts[0]))
+                else:
+                    continue
+
+                age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
+                if age >= 55:
+                    retired_list.append(e)
+            except Exception:
+                pass
+    return retired_list
+
 # --- ROUTES ---
 
 @app.route('/')
@@ -161,16 +185,7 @@ def dashboard():
         else:
             transfer_count = 0
 
-    retired_count = 0
-    for e in all_emps:
-        if e.birth_date:
-            try:
-                b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
-                age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
-                if age >= 55:
-                    retired_count += 1
-            except:
-                pass
+    retired_count = len(get_retired_employees_list(all_emps))
 
     warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
     penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
@@ -201,7 +216,6 @@ def dashboard():
 @app.route('/retired_employees')
 @login_required
 def retired_employees():
-    today = date.today()
     if current_user.role == 'admin':
         all_active = Employee.query.filter_by(status='Active').all()
     else:
@@ -209,17 +223,7 @@ def retired_employees():
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
         
-    retired_list = []
-    for e in all_active:
-        if e.birth_date:
-            try:
-                b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
-                age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
-                if age >= 55:
-                    retired_list.append(e)
-            except:
-                pass
-                
+    retired_list = get_retired_employees_list(all_active)
     return render_template('retired_employees.html', employees=retired_list)
 
 @app.route('/resigned_employees')
