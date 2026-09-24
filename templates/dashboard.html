@@ -97,13 +97,17 @@
                         </div>
                         <span class="p-3 bg-pink-50 text-pink-600 rounded-lg text-lg">👩</span>
                     </div>
+                    
+                    <!-- Umrii 55+ (Retired) Card connected to retired_employees route -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Retired)</p>
                             <h3 class="text-xl font-bold text-amber-600 mt-1">{{ retired_count }}</h3>
+                            <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">Eenyuu fa'a? Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
                     </div>
+
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>

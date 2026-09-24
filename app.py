@@ -172,6 +172,31 @@ def dashboard():
                            reward_count=reward_count,
                            clean_count=clean_count)
 
+# --- KUTAA HAARAA: Hojjettoota Umrii 55+ Eenyuufaakka ta'an Agarsiisuuf ---
+@app.route('/retired_employees')
+@login_required
+def retired_employees():
+    today = date.today()
+    if current_user.role == 'admin':
+        all_active = Employee.query.filter_by(status='Active').all()
+    else:
+        user_b = current_user.branch_id
+        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
+        
+    retired_list = []
+    for e in all_active:
+        if e.birth_date:
+            try:
+                b_date = datetime.strptime(str(e.birth_date).split()[0], '%Y-%m-%d').date()
+                age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
+                if age >= 55:
+                    retired_list.append(e)
+            except:
+                pass
+                
+    return render_template('retired_employees.html', employees=retired_list)
+
 @app.route('/employees')
 @login_required
 def employees():
