@@ -115,7 +115,6 @@ with app.app_context():
 def dashboard():
     today = date.today()
     
-    # Guyyaa har'aa gara Kaandara Itiyoophiyaatti jijjiiruuf
     try:
         ethiopian_today = to_ethiopian(today.year, today.month, today.day)
     except Exception:
@@ -129,17 +128,8 @@ def dashboard():
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
         
-        # Safe query using db.or_ instead of .in_() to prevent DB syntax errors
-        resigned_count = Employee.query.filter(
-            db.or_(
-                Employee.status == 'Resigned',
-                Employee.status == 'Terminated',
-                Employee.status == "Du'aan",
-                Employee.status == 'Fedhiitiin',
-                Employee.status == 'Dhukkubaan',
-                Employee.status == 'Dismissed'
-            )
-        ).count()
+        inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
+        resigned_count = Employee.query.filter(Employee.status.in_(inactive_statuses)).count()
         
         all_emps = Employee.query.filter_by(status='Active').all()
     else:
@@ -151,16 +141,8 @@ def dashboard():
         male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
         female_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
         
-        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(
-            db.or_(
-                Employee.status == 'Resigned',
-                Employee.status == 'Terminated',
-                Employee.status == "Du'aan",
-                Employee.status == 'Fedhiitiin',
-                Employee.status == 'Dhukkubaan',
-                Employee.status == 'Dismissed'
-            )
-        ).count() if user_b else 0
+        inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
+        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(inactive_statuses)).count() if user_b else 0
         
         all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
 
@@ -243,31 +225,18 @@ def retired_employees():
 @app.route('/resigned_employees')
 @login_required
 def resigned_employees():
-    if current_user.role == 'admin':
-        resigned_list = Employee.query.filter(
-            db.or_(
-                Employee.status == 'Resigned',
-                Employee.status == 'Terminated',
-                Employee.status == "Du'aan",
-                Employee.status == 'Fedhiitiin',
-                Employee.status == 'Dhukkubaan',
-                Employee.status == 'Dismissed'
-            )
-        ).all()
-    else:
+    inactive_statuses = [
+        'Resigned', 'Terminated', "Du'aan", 
+        'Fedhiitiin', 'Dhukkubaan', 'Dismissed'
+    ]
+    query = Employee.query.filter(Employee.status.in_(inactive_statuses))
+    
+    if current_user.role != 'admin':
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        resigned_list = Employee.query.filter_by(branch_id=branch_id_val).filter(
-            db.or_(
-                Employee.status == 'Resigned',
-                Employee.status == 'Terminated',
-                Employee.status == "Du'aan",
-                Employee.status == 'Fedhiitiin',
-                Employee.status == 'Dhukkubaan',
-                Employee.status == 'Dismissed'
-            )
-        ).all() if user_b else []
+        query = query.filter_by(branch_id=branch_id_val) if user_b else query.filter(False)
         
+    resigned_list = query.all()
     return render_template('resigned_employees.html', employees=resigned_list)
 
 @app.route('/employees')
@@ -771,7 +740,7 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# --- KUTAA HAARAA: Galmee Badii Naamusaa (Discipline Records) ---
+# --- KUTAA GALMEE BADII NAAMUSAA (Discipline Records) ---
 @app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
 def add_discipline(employee_id):
@@ -781,24 +750,20 @@ def add_discipline(employee_id):
         try:
             new_record = DisciplineRecord(
                 employee_id=employee_id,
-                offense_date=datetime.strptime(request.form['offense_date'], '%Y-%m-%d').date(),
-                reporting_date=datetime.strptime(request.form['reporting_date'], '%Y-%m-%d').date(),
-                decision_date=datetime.strptime(request.form['decision_date'], '%Y-%m-%d').date(),
-                effective_date=datetime.strptime(request.file['effective_date'] if 'file' in request.files else request.form['effective_date'], '%Y-%m-%d').date() if 'effective_date' in request.form else datetime.utcnow().date(),
-                expiry_date=datetime.strptime(request.form['expiry_date'], '%Y-%m-%d').date(),
-                offense_type=request.form['offense_type'],
-                penalty_type=request.form['penalty_type'],
+                offense_date=datetime.strptime(request.form['offense_date'], '%Y-%m-%d').date() if request.form.get('offense_date') else None,
+                reporting_date=datetime.strptime(request.form['reporting_date'], '%Y-%m-%d').date() if request.form.get('reporting_date') else None,
+                decision_date=datetime.strptime(request.form['decision_date'], '%Y-%m-%d').date() if request.form.get('decision_date') else None,
+                effective_date=datetime.strptime(request.form['effective_date'], '%Y-%m-%d').date() if request.form.get('effective_date') else datetime.utcnow().date(),
+                expiry_date=datetime.strptime(request.form['expiry_date'], '%Y-%m-%d').date() if request.form.get('expiry_date') else None,
+                offense_type=request.form.get('offense_type'),
+                penalty_type=request.form.get('penalty_type'),
                 description=request.form.get('description'),
-                evidence_details=request.form.get('evidence_details'),
-                approved_by=request.form['approved_by'],
-                appeal_status=request.form.get('appeal_status', 'Hin Gaafatamne')
+                evidence_details=request.form.get('evidence_details')
             )
-            
             db.session.add(new_record)
             db.session.commit()
-            flash('Galmeen Badii Naamusaa milkaa’inaan galmeeffameera!', 'success')
+            flash('Galmeen naamusaa milkaa\'inaan galmaa\'eera!', 'success')
             return redirect(url_for('employees'))
-            
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')

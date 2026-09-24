@@ -29,27 +29,36 @@
                             <th class="py-3">Gita Hojii</th>
                             <th class="py-3">Status</th>
                             <th class="py-3">Sababa Hojii Gadhiisuu</th>
+                            <th class="py-3 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if employees %}
                             {% for emp in employees %}
-                            <tr>
-                                <td class="ps-3">{{ loop.index }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
-                                <td><strong class="text-danger">{{ emp.full_name }}</strong></td>
-                                <td>{{ emp.gender if emp.gender else '-' }}</td>
-                                <td>{{ emp.branch.name if emp.branch else '-' }}</td>
-                                <td>{{ emp.job_position if emp.job_position else '-' }}</td>
-                                <td>
-                                    <span class="badge bg-danger px-2 py-1">{{ emp.status }}</span>
-                                </td>
-                                <td>{{ emp.resignation_reason if emp.resignation_reason else '-' }}</td>
-                            </tr>
+                                <!-- Hojjetaan kun Active yoo ta'e akka asitti hin baane (Filter dabalataa) -->
+                                {% if emp.status != 'Active' %}
+                                <tr>
+                                    <td class="ps-3">{{ loop.index }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
+                                    <td><strong class="text-danger">{{ emp.full_name }}</strong></td>
+                                    <td>{{ emp.gender if emp.gender else '-' }}</td>
+                                    <td>{{ emp.branch.name if emp.branch else '-' }}</td>
+                                    <td>{{ emp.job_position if emp.job_position else '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-danger px-2 py-1">{{ emp.status }}</span>
+                                    </td>
+                                    <td>{{ emp.resignation_reason if emp.resignation_reason else '-' }}</td>
+                                    <td class="text-center">
+                                        <a href="{{ url_for('edit_employee', id=emp.id) }}" class="btn btn-sm btn-outline-primary" title="Status sirreessuuf">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
+                                <td colspan="9" class="text-center py-5 text-muted">
                                     <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
                                     Hojjetaan hojii gadhiise argame hin jiru.
                                 </td>
