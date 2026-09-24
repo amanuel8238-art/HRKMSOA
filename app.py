@@ -108,7 +108,7 @@ with app.app_context():
             
     db.session.commit()
 
-# --- HELPER FUNCTION FOR RETIRED AGE CALCULATION (Based on Birth Year <= 1971) ---
+# --- HELPER FUNCTION FOR RETIRED AGE CALCULATION (Fixed to 2019 Baseline) ---
 def get_retired_employees_list(active_employees):
     retired_list = []
     for e in active_employees:
@@ -135,10 +135,12 @@ def get_retired_employees_list(active_employees):
                 
                 if b_date:
                     birth_year = b_date.year
-                    # Namni bara 1971 ykn dura dhalate umriin isaa 55 fi ol (Retired) ta'a
-                    if birth_year <= 1971:
-                        age = 2026 - birth_year
-                        retired_list.append((e, age))
+                    
+                    # Namni bara 2019 fi sana dura dhalate (umrii 55+) akka ta'etti shallaguu
+                    if birth_year <= 2019:
+                        age = 2019 - birth_year
+                        if age >= 55:
+                            retired_list.append((e, age))
             except Exception:
                 pass
     return retired_list
