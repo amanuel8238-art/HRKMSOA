@@ -3,61 +3,68 @@
 {% block title %}Hojjettoota Umrii 55+ (Retired) - HRKMSO{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
-                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary shadow-sm">
-                    <i class="fas fa-arrow-left me-1"></i> Deebi'i
-                </a>
-                <h2 class="mb-0 fw-bold text-dark">Hojjettoota Umrii 55+ Geenyee Pensiyoonaaf Gahani (Retired)</h2>
+<div class="max-w-7xl mx-auto py-6 px-4 space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('dashboard') }}" class="inline-flex items-center justify-center bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm">
+                &larr; Deebi'i
+            </a>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Hojjettoota Umrii 55+ Geenyee Pensiyoonaaf Gahani (Retired)</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Tarreeffama hojjettoota umriin isaanii waggaa 55 fi ol ta'ee hojii irra jiran</p>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-dark text-uppercase fs-7">
-                        <tr>
-                            <th class="py-3 ps-3">#</th>
-                            <th class="py-3">ID Addaa</th>
-                            <th class="py-3">Maqaa Guutuu</th>
-                            <th class="py-3">Saala</th>
-                            <th class="py-3">Damee (Branch)</th>
-                            <th class="py-3">Gulantaa / Rank</th>
-                            <th class="py-3">Guyyaa Dhalootaa</th>
-                            <th class="py-3 text-center">Status</th>
+    <!-- Table Section -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-indigo-900 text-white text-xs uppercase tracking-wider">
+                        <th class="py-3 px-4 font-semibold">#</th>
+                        <th class="py-3 px-4 font-semibold">ID Addaa</th>
+                        <th class="py-3 px-4 font-semibold">Maqaa Guutuu</th>
+                        <th class="py-3 px-4 font-semibold">Saala</th>
+                        <th class="py-3 px-4 font-semibold">Damee (Branch)</th>
+                        <th class="py-3 px-4 font-semibold">Gulantaa / Rank</th>
+                        <th class="py-3 px-4 font-semibold">Guyyaa Dhalootaa</th>
+                        <th class="py-3 px-4 text-center font-semibold">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 text-sm">
+                    {% if employees %}
+                        {% for emp in employees %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-4 text-slate-600">{{ loop.index }}</td>
+                            <td class="py-3 px-4">
+                                <span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded border border-slate-200 text-xs font-mono">
+                                    {{ emp.unique_id if emp.unique_id else '-' }}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 font-bold text-indigo-900">{{ emp.full_name }}</td>
+                            <td class="py-3 px-4 text-slate-600">{{ emp.gender if emp.gender else '-' }}</td>
+                            <td class="py-3 px-4 text-slate-600">{{ emp.branch.name if emp.branch else '-' }}</td>
+                            <td class="py-3 px-4 text-slate-600">{{ emp.rank.name if emp.rank and emp.rank.name else (emp.rank if emp.rank else '-') }}</td>
+                            <td class="py-3 px-4 text-slate-600">{{ emp.birth_date if emp.birth_date else '-' }}</td>
+                            <td class="py-3 px-4 text-center">
+                                <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full">Umrii 55+</span>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% if employees %}
-                            {% for emp in employees %}
-                            <tr>
-                                <td class="ps-3">{{ loop.index }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
-                                <td><strong class="text-primary">{{ emp.full_name }}</strong></td>
-                                <td>{{ emp.gender if emp.gender else '-' }}</td>
-                                <td>{{ emp.branch.name if emp.branch else '-' }}</td>
-                                <td>{{ emp.rank.name if emp.rank and emp.rank.name else (emp.rank if emp.rank else '-') }}</td>
-                                <td>{{ emp.birth_date if emp.birth_date else '-' }}</td>
-                                <td class="text-center">
-                                    <span class="badge bg-warning text-dark px-2 py-1">Umrii 55+</span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
-                                    <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
-                                    Hojjetaan umrii 55 olii argame hin jiru.
-                                </td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-12 text-slate-500">
+                                <div class="flex flex-col items-center justify-center space-y-2">
+                                    <span class="text-3xl">📋</span>
+                                    <p class="text-sm font-medium">Hojjetaan umrii 55 olii argame hin jiru.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

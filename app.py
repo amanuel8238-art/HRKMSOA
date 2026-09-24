@@ -172,7 +172,7 @@ def dashboard():
                            reward_count=reward_count,
                            clean_count=clean_count)
 
-# --- KUTAA HAARAA: Hojjettoota Umrii 55+ Eenyuufaakka ta'an Agarsiisuuf ---
+# --- KUTAA HAARAA: Hojjettoota Umrii 55+ Eenyuufa akka ta'an Agarsiisuuf ---
 @app.route('/retired_employees')
 @login_required
 def retired_employees():
@@ -196,6 +196,19 @@ def retired_employees():
                 pass
                 
     return render_template('retired_employees.html', employees=retired_list)
+
+# --- KUTAA HAARAA: Hojjettoota Hojii Gadhiisan (Resigned Employees) Eenyuufa akka ta'an ---
+@app.route('/resigned_employees')
+@login_required
+def resigned_employees():
+    if current_user.role == 'admin':
+        resigned_list = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).all()
+    else:
+        user_b = current_user.branch_id
+        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        resigned_list = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).all() if user_b else []
+        
+    return render_template('resigned_employees.html', employees=resigned_list)
 
 @app.route('/employees')
 @login_required
