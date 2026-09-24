@@ -113,6 +113,76 @@
                     </div>
                 </div>
 
+                <!-- GOSA NAMUSAA (DISCIPLINE / ETHICS) CARDS SECTION -->
+                <div>
+                    <h3 class="text-sm font-bold text-slate-700 mb-3">Gosa Namusaa & Galmee Hojjettootaa (Ethics & Discipline Records)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Card 1: Of-eeggannoo (Warning) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Of-eeggannoo (Warning)</p>
+                                    <h3 class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠️</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
+                                    Ilaali / Galmeessi &rarr;
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Adabbii (Penalty/Discipline) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Adabbii (Penalties)</p>
+                                    <h3 class="text-xl font-bold text-rose-600 mt-1">{{ penalty_count if penalty_count else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-rose-50 text-rose-600 rounded-lg text-lg">⚖️</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
+                                    Ilaali / Galmeessi &rarr;
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Badhaasa / Galataa (Rewards/Appreciation) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Badhaasa / Galataa (Rewards)</p>
+                                    <h3 class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">🏆</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
+                                    Ilaali / Galmeessi &rarr;
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Galmee Qulqulluu (Clean Records) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Galmee Qulqulluu (Clean)</p>
+                                    <h3 class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count else emp_count }}</h3>
+                                </div>
+                                <span class="p-3 bg-sky-50 text-sky-600 rounded-lg text-lg">✨</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
+                                    Gabaasa Ilaali &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quick Actions / Welcome Card & Chart Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 lg:col-span-2 flex flex-col justify-between">

@@ -127,6 +127,7 @@
                                 <th class="p-3">Gonfoo</th>
                                 <th class="p-3">Gita Hojii</th>
                                 <th class="p-3">Status</th>
+                                <th class="p-3 text-center">Action (Naamusaa)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
@@ -140,9 +141,14 @@
                                 <td class="p-3 text-slate-700">{{ emp.rank.name if emp.rank else '-' }}</td>
                                 <td class="p-3 text-slate-700">{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td class="p-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded">{{ emp.status }}</span></td>
+                                <td class="p-3 text-center">
+                                    <a href="{{ url_for('add_discipline', employee_id=emp.id) }}" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg transition font-semibold shadow-sm inline-flex items-center gap-1">
+                                        <i class="fas fa-gavel"></i> Naamusaa Galchi
+                                    </a>
+                                </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="8" class="text-center py-6 text-slate-400">Daataan hojjettootaa hin jiru.</td></tr>
+                            <tr><td colspan="9" class="text-center py-6 text-slate-400">Daataan hojjettootaa hin jiru.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
