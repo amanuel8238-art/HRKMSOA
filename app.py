@@ -233,9 +233,8 @@ def retired_employees():
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
         
-    retired_tuples = get_retired_employees_list(all_active)
-    retired_list = [emp for emp, age in retired_tuples]
-    return render_template('retired_employees.html', employees=retired_list)
+    retired_list = get_retired_employees_list(all_active)
+    return render_template('retired_employees.html', retired_list=retired_list)
 
 @app.route('/resigned_employees')
 @login_required

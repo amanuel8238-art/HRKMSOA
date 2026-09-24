@@ -30,11 +30,11 @@
                         {% if retired_list %}
                             {% for emp, age in retired_list %}
                             <tr>
-                                <td>{{ emp.unique_id }}</td>
+                                <td>{{ emp.unique_id if emp.unique_id else '-' }}</td>
                                 <td>{{ emp.full_name }}</td>
-                                <td>{{ emp.gender }}</td>
+                                <td>{{ emp.gender if emp.gender else '-' }}</td>
                                 <td>{{ emp.branch.name if emp.branch else 'H/Hin qabne' }}</td>
-                                <td>{{ emp.job_position }}</td>
+                                <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td><span class="badge bg-warning text-dark">{{ age }} Waggaa</span></td>
                                 <td><span class="badge bg-info text-dark">Pansiyoona (Retired)</span></td>
                             </tr>
