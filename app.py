@@ -109,7 +109,7 @@ def dashboard():
     
     # Guyyaa har'aa gara Kaandara Itiyoophiyaatti jijjiiruuf
     try:
-        ethiopian_today = to_ethiopian(today.strftime('%Y-%m-%d'))
+        ethiopian_today = to_ethiopian(today.year, today.month, today.day)
     except Exception:
         ethiopian_today = None
 
