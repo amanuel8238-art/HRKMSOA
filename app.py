@@ -761,8 +761,7 @@ def add_discipline(employee_id):
             db.session.commit()
             flash('Galmeen Badii Naamusaa milkaa’inaan galmeeffameera!', 'success')
             return redirect(url_for('employees'))
-        
-        .exception as e:
+            
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
