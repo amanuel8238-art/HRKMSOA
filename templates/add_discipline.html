@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galmee Badii Naamusaa - HRKMSO</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Galmee Badii Naamusaa Galchuu</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Flash Messages -->
+                        with get_flashed_messages(with_categories=true) as messages:
+                            if messages:
+                                for category, message in messages:
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                    
+                        <div class="mb-4 p-3 bg-light border rounded">
+                            <h5 class="text-secondary">Odeeffannoo Hojjetaa</h5>
+                            <p class="mb-1"><strong>Maqaa Guutuu:</strong> {{ employee.full_name }}</p>
+                            <p class="mb-1"><strong>ID Addaa:</strong> {{ employee.unique_id if employee.unique_id else '-' }}</p>
+                            <p class="mb-0"><strong>Gita Hojii:</strong> {{ employee.job_position if employee.job_position else '-' }}</p>
+                        </div>
+
+                        <form method="POST">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="offense_date" class="form-label">Guyyaa Badiin Itti Raawwatame</label>
+                                    <input type="date" class="form-control" id="offense_date" name="offense_date" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="reporting_date" class="form-label">Guyyaa Itti Gabaafame</label>
+                                    <input type="date" class="form-control" id="reporting_date" name="reporting_date" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="decision_date" class="form-label">Guyyaa Murteen Itti Darbe</label>
+                                    <input type="date" class="form-control" id="decision_date" name="decision_date" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="effective_date" class="form-label">Guyyaa Hojii Irra Oolu</label>
+                                    <input type="date" class="form-control" id="effective_date" name="effective_date" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="expiry_date" class="form-label">Guyyaa Seeraan Ala Ta'u (Expiry Date)</label>
+                                    <input type="date" class="form-control" id="expiry_date" name="expiry_date" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="offense_type" class="form-label">Gosa Badii (Offense Type)</label>
+                                    <input type="text" class="form-control" id="offense_type" name="offense_type" placeholder="Fkn. Haala hojii irratti argamuu dhabuu" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="penalty_type" class="form-label">Gosa Adabbii (Penalty Type)</label>
+                                    <input type="text" class="form-control" id="penalty_type" name="penalty_type" placeholder="Fkn. Akeekkachiisa Barreeffamaa" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="approved_by" class="form-label">Qaama Murteesse / Abbootii Murtee</label>
+                                    <input type="text" class="form-control" id="approved_by" name="approved_by" placeholder="Maqaa Gumii ykn Abbaa Taayitaa" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="appeal_status" class="form-label">Haala Apiiwii (Appeal Status)</label>
+                                <select class="form-select" id="appeal_status" name="appeal_status">
+                                    <option value="Hin Gaafatamne">Hin Gaafatamne</option>
+                                    <option value="Dhiyaateera">Dhiyaateera</option>
+                                    <option value="Fooyya'eera">Fooyya'eera</option>
+                                    <option value="Jijjiirameera">Jijjiirameera</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Ibsa Gabaabaa Badiichaa</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Haala badiichi itti raawwatame ibsi..."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="evidence_details" class="form-label">Odeeffannoo Ragaalee (Evidence Details)</label>
+                                <textarea class="form-control" id="evidence_details" name="evidence_details" rows="2" placeholder="Ragaalee ragaa bahumsaas ta'e kan biroo..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('employees') }}" class="btn btn-secondary">Duubatti Deebi'i</a>
+                                <button type="submit" class="btn btn-primary">Galmee Galchi</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

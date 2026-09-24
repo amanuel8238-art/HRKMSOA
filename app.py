@@ -5,7 +5,7 @@ from datetime import datetime, date
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Employee, Branch, Rank, Transfer
+from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
 from functools import wraps
 import pandas as pd
 
@@ -327,11 +327,9 @@ def add_employee():
     else:
         branch_id = current_user.branch_id
 
-    # Rank sirriitti fiduuf (Foomii irraa rank_id ykn rank dhufe qabachuun)
     rank_input = request.form.get('rank_id') or request.form.get('rank')
     rank_id = resolve_rank_id(rank_input)
     if not rank_id:
-        # Yoo rank hin filatamne rank jalqabaa jiru ykn None akka hin taane godhuuf
         first_rank = Rank.query.first()
         rank_id = first_rank.id if first_rank else None
 
@@ -622,6 +620,42 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
+# --- KUTAA HAARAA: Galmee Badii Naamusaa (Discipline Records) ---
+@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
+@login_required
+def add_discipline(employee_id):
+    employee = Employee.query.get_or_404(employee_id)
+    
+    if request.method == 'POST':
+        try:
+            new_record = DisciplineRecord(
+                employee_id=employee_id,
+                offense_date=datetime.strptime(request.form['offense_date'], '%Y-%m-%d').date(),
+                reporting_date=datetime.strptime(request.form['reporting_date'], '%Y-%m-%d').date(),
+                decision_date=datetime.strptime(request.form['decision_date'], '%Y-%m-%d').date(),
+                effective_date=datetime.strptime(request.form['effective_date'], '%Y-%m-%d').date(),
+                expiry_date=datetime.strptime(request.form['expiry_date'], '%Y-%m-%d').date(),
+                offense_type=request.form['offense_type'],
+                penalty_type=request.form['penalty_type'],
+                description=request.form.get('description'),
+                evidence_details=request.form.get('evidence_details'),
+                approved_by=request.form['approved_by'],
+                appeal_status=request.form.get('appeal_status', 'Hin Gaafatamne')
+            )
+            
+            db.session.add(new_record)
+            db.session.commit()
+            flash('Galmeen Badii Naamusaa milkaa’inaan galmeeffameera!', 'success')
+            return redirect(url_for('employees'))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+            
+    return render_template('add_discipline.html', employee=employee)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

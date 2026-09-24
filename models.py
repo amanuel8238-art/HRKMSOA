@@ -85,3 +85,29 @@ class Transfer(db.Model):
     employee = db.relationship('Employee', backref=db.backref('transfers', lazy=True))
     from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref=db.backref('outgoing_transfers', lazy=True))
     to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref=db.backref('incoming_transfers', lazy=True))
+
+# 6. Galmee Badii Naamusaa (Discipline Records) - HAARAA
+class DisciplineRecord(db.Model):
+    __tablename__ = 'discipline_record'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    
+    offense_date = db.Column(db.Date, nullable=False)        # Guyyaa Badii Raawwatame
+    reporting_date = db.Column(db.Date, nullable=False)      # Guyyaa Gabaafame
+    decision_date = db.Column(db.Date, nullable=False)      # Guyyaa Koreen Murteesse
+    effective_date = db.Column(db.Date, nullable=False)     # Guyyaa Adabiin Irraa Eegalu
+    expiry_date = db.Column(db.Date, nullable=False)        # Guyyaa Adabiin Xumuramuu
+    
+    offense_type = db.Column(db.String(150), nullable=False)  # Gosa Badiichaa
+    penalty_type = db.Column(db.String(100), nullable=False)  # Gosa Adabii (Fkn: Mindaa irraa hir'isuu, kkf)
+    description = db.Column(db.Text, nullable=True)          # Ibsa Bal'aa Badiichaa
+    
+    evidence_details = db.Column(db.String(255), nullable=True) # Ragaalee Deeggaran
+    approved_by = db.Column(db.String(150), nullable=False)     # Namni/Koreen Murteesse
+    appeal_status = db.Column(db.String(50), default='Hin Gaafatamne') # Haala Ol-iyyannoo
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Walitti-dhufeenya Employee wajjin qabu (Fkn: employee.disciplines jechuun fiduuf)
+    employee = db.relationship('Employee', backref=db.backref('disciplines', lazy=True))
