@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
 from functools import wraps
 import pandas as pd
+from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
@@ -105,6 +106,13 @@ with app.app_context():
 @login_required
 def dashboard():
     today = date.today()
+    
+    # Guyyaa har'aa gara Kaandara Itiyoophiyaatti jijjiiruuf
+    try:
+        ethiopian_today = to_ethiopian(today.strftime('%Y-%m-%d'))
+    except Exception:
+        ethiopian_today = None
+
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
         branch_count = Branch.query.count()
@@ -176,7 +184,8 @@ def dashboard():
                            warning_count=warning_count,
                            penalty_count=penalty_count,
                            reward_count=reward_count,
-                           clean_count=clean_count)
+                           clean_count=clean_count,
+                           ethiopian_today=ethiopian_today)
 
 @app.route('/retired_employees')
 @login_required
