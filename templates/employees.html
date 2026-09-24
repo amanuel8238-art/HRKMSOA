@@ -130,7 +130,7 @@
 
 <!-- Add Employee Modal -->
 <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content border-0 shadow-lg">
             <form action="{{ url_for('add_employee') }}" method="POST">
                 <div class="modal-header bg-success text-white">
@@ -139,14 +139,17 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <!-- Maqaa Guutuu -->
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Maqaa Guutuu</label>
                             <input type="text" name="full_name" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
+                        <!-- ID Addaa (Unique ID) -->
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">ID Addaa (Unique ID)</label>
                             <input type="text" name="unique_id" class="form-control" required>
                         </div>
+                        <!-- Saala -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Saala</label>
                             <select name="gender" class="form-select" required>
@@ -154,6 +157,8 @@
                                 <option value="Dhalaa">Dhalaa</option>
                             </select>
                         </div>
+
+                        <!-- Damee (Branch) -->
                         {% if current_user.role == 'admin' %}
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Damee (Branch)</label>
@@ -164,6 +169,8 @@
                             </select>
                         </div>
                         {% endif %}
+
+                        <!-- Gulantaa (Rank) -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Gulantaa (Rank)</label>
                             <select name="rank_id" class="form-select" required>
@@ -172,21 +179,59 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Gita Hojii -->
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Gita Hojii</label>
                             <input type="text" name="job_position" class="form-control">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Sadarkaa Barumsaa -->
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Sadarkaa Barumsaa</label>
                             <input type="text" name="education_level" class="form-control">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Gosa Barumsaa (Field of Study) -->
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Gosa Barumsaa (Field of Study)</label>
                             <input type="text" name="field_of_study" class="form-control">
                         </div>
-                        <div class="col-md-6">
+
+                        <!-- Mindaa Gulantaa -->
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Mindaa Gulantaa</label>
                             <input type="number" step="0.01" name="rank_salary" class="form-control" value="0.0">
+                        </div>
+
+                        <!-- Durgoo Bakkaa (Location Allowance) -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Durgoo Bakkaa (Location Allowance)</label>
+                            <input type="number" step="0.01" name="location_allowance" class="form-control" value="0.0">
+                        </div>
+
+                        <!-- Durgoo Nyaataa (Food Allowance) -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Durgoo Nyaataa (Food Allowance)</label>
+                            <input type="number" step="0.01" name="food_allowance" class="form-control" value="0.0">
+                        </div>
+
+                        <!-- Guyyaa Qacaramuu (Hire Date) -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Guyyaa Qacaramuu (Hire Date)</label>
+                            <input type="date" name="hire_date" class="form-control">
+                        </div>
+
+                        <!-- Guyyaa Dhalootaa (Birth Date) -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Guyyaa Dhalootaa (Birth Date)</label>
+                            <input type="date" name="birth_date" class="form-control">
+                        </div>
+
+                        <!-- Guyyaa Gulantaa (Rank Date) -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Guyyaa Gulantaa (Rank Date)</label>
+                            <input type="date" name="rank_date" class="form-control">
                         </div>
                     </div>
                 </div>
