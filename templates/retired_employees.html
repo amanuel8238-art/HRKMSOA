@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Hojjettoota Umrii 55+ (Retired) - HRKMSO{% endblock %}
+{% block title %}Hojjettoota Hojii Gadhiisan (Resigned/Terminated) - HRKMSO{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto py-6 px-4 space-y-6">
@@ -11,8 +11,8 @@
                 &larr; Deebi'i
             </a>
             <div>
-                <h2 class="text-xl font-bold text-slate-800">Hojjettoota Umrii 55+ Geenyee Pensiyoonaaf Gahani (Retired)</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Tarreeffama hojjettoota umriin isaanii waggaa 55 fi ol ta'ee hojii irra jiran</p>
+                <h2 class="text-xl font-bold text-slate-800">Hojjettoota Hojii Gadhiisan / Baatan (Resigned & Terminated)</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Tarreeffama hojjettoota hojii irraa gaggeeffaman, fedhiitiin ykn sababa addaddaandhaanaddan gargar baatan</p>
             </div>
         </div>
     </div>
@@ -22,14 +22,14 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-indigo-900 text-white text-xs uppercase tracking-wider">
+                    <tr class="bg-rose-900 text-white text-xs uppercase tracking-wider">
                         <th class="py-3 px-4 font-semibold">#</th>
                         <th class="py-3 px-4 font-semibold">ID Addaa</th>
                         <th class="py-3 px-4 font-semibold">Maqaa Guutuu</th>
                         <th class="py-3 px-4 font-semibold">Saala</th>
                         <th class="py-3 px-4 font-semibold">Damee (Branch)</th>
                         <th class="py-3 px-4 font-semibold">Gulantaa / Rank</th>
-                        <th class="py-3 px-4 font-semibold">Guyyaa Dhalootaa</th>
+                        <th class="py-3 px-4 font-semibold">Sababa Hojii Gadhiisuu</th>
                         <th class="py-3 px-4 text-center font-semibold">Status</th>
                     </tr>
                 </thead>
@@ -43,13 +43,19 @@
                                     {{ emp.unique_id if emp.unique_id else '-' }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 font-bold text-indigo-900">{{ emp.full_name }}</td>
+                            <td class="py-3 px-4 font-bold text-slate-800">{{ emp.full_name }}</td>
                             <td class="py-3 px-4 text-slate-600">{{ emp.gender if emp.gender else '-' }}</td>
                             <td class="py-3 px-4 text-slate-600">{{ emp.branch.name if emp.branch else '-' }}</td>
                             <td class="py-3 px-4 text-slate-600">{{ emp.rank.name if emp.rank and emp.rank.name else (emp.rank if emp.rank else '-') }}</td>
-                            <td class="py-3 px-4 text-slate-600">{{ emp.birth_date if emp.birth_date else '-' }}</td>
+                            <td class="py-3 px-4 text-slate-600">
+                                <span class="text-xs italic text-slate-500">
+                                    {{ emp.resignation_reason if emp.resignation_reason else 'Hin ibsamne' }}
+                                </span>
+                            </td>
                             <td class="py-3 px-4 text-center">
-                                <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full">Umrii 55+</span>
+                                <span class="bg-rose-100 text-rose-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+                                    {{ emp.status }}
+                                </span>
                             </td>
                         </tr>
                         {% endfor %}
@@ -57,8 +63,8 @@
                         <tr>
                             <td colspan="8" class="text-center py-12 text-slate-500">
                                 <div class="flex flex-col items-center justify-center space-y-2">
-                                    <span class="text-3xl">📋</span>
-                                    <p class="text-sm font-medium">Hojjetaan umrii 55 olii argame hin jiru.</p>
+                                    <span class="text-3xl">📭</span>
+                                    <p class="text-sm font-medium">Hojjetaan hojii gadhiise / kan hin jirre argame hin jiru.</p>
                                 </div>
                             </td>
                         </tr>

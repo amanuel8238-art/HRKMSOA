@@ -153,11 +153,18 @@ def dashboard():
             except:
                 pass
 
-    # Discipline / Ethics counts for Dashboard cards
     warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
     penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
-    reward_count = 0  # Yoo badhaasni qabate asirratti herreguu dandeessa
-    clean_count = emp_count - DisciplineRecord.query.with_disposing().count() if hasattr(DisciplineRecord, 'with_disposing') else emp_count
+    reward_count = 0 
+    
+    # Safely calculate clean count without breaking if method doesn't exist
+    if hasattr(DisciplineRecord, 'with_disposing'):
+        try:
+            clean_count = emp_count - DisciplineRecord.query.with_disposing().count()
+        except:
+            clean_count = emp_count
+    else:
+        clean_count = emp_count
 
     return render_template('dashboard.html', 
                            emp_count=emp_count, 
@@ -172,7 +179,6 @@ def dashboard():
                            reward_count=reward_count,
                            clean_count=clean_count)
 
-# --- KUTAA HAARAA: Hojjettoota Umrii 55+ Eenyuufa akka ta'an Agarsiisuuf ---
 @app.route('/retired_employees')
 @login_required
 def retired_employees():
@@ -197,7 +203,6 @@ def retired_employees():
                 
     return render_template('retired_employees.html', employees=retired_list)
 
-# --- KUTAA HAARAA: Hojjettoota Hojii Gadhiisan (Resigned Employees) Eenyuufa akka ta'an ---
 @app.route('/resigned_employees')
 @login_required
 def resigned_employees():
