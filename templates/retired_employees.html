@@ -1,77 +1,53 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <title>Hojjettoota Umrii Pansiyoona (Retired)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Hojjettoota Umrii Pansiyoona Geetan (Retired Employees - 55+)</h2>
+            <a href="/" class="btn btn-secondary">Gara Dashboard Deebi'i</a>
+        </div>
 
-{% block title %}Hojjettoota Hojii Gadhiisan (Resigned/Terminated) - HRKMSO{% endblock %}
-
-{% block content %}
-<div class="max-w-7xl mx-auto py-6 px-4 space-y-6">
-    <!-- Header Section -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <div class="flex items-center gap-3">
-            <a href="{{ url_for('dashboard') }}" class="inline-flex items-center justify-center bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow-sm">
-                &larr; Deebi'i
-            </a>
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">Hojjettoota Hojii Gadhiisan / Baatan (Resigned & Terminated)</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Tarreeffama hojjettoota hojii irraa gaggeeffaman, fedhiitiin ykn sababa addaddaandhaanaddan gargar baatan</p>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID Addaa</th>
+                            <th>Maqaa Guutuu</th>
+                            <th>Saala</th>
+                            <th>Damee (Branch)</th>
+                            <th>Gita Hojii</th>
+                            <th>Umrii</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if retired_list %}
+                            {% for emp, age in retired_list %}
+                            <tr>
+                                <td>{{ emp.unique_id }}</td>
+                                <td>{{ emp.full_name }}</td>
+                                <td>{{ emp.gender }}</td>
+                                <td>{{ emp.branch.name if emp.branch else 'H/Hin qabne' }}</td>
+                                <td>{{ emp.job_position }}</td>
+                                <td><span class="badge bg-warning text-dark">{{ age }} Waggaa</span></td>
+                                <td><span class="badge bg-info text-dark">Pansiyoona (Retired)</span></td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Hojjetaan umriin isaa 55 gahe hin argamne.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-
-    <!-- Table Section -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-rose-900 text-white text-xs uppercase tracking-wider">
-                        <th class="py-3 px-4 font-semibold">#</th>
-                        <th class="py-3 px-4 font-semibold">ID Addaa</th>
-                        <th class="py-3 px-4 font-semibold">Maqaa Guutuu</th>
-                        <th class="py-3 px-4 font-semibold">Saala</th>
-                        <th class="py-3 px-4 font-semibold">Damee (Branch)</th>
-                        <th class="py-3 px-4 font-semibold">Gulantaa / Rank</th>
-                        <th class="py-3 px-4 font-semibold">Sababa Hojii Gadhiisuu</th>
-                        <th class="py-3 px-4 text-center font-semibold">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 text-sm">
-                    {% if employees %}
-                        {% for emp in employees %}
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="py-3 px-4 text-slate-600">{{ loop.index }}</td>
-                            <td class="py-3 px-4">
-                                <span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded border border-slate-200 text-xs font-mono">
-                                    {{ emp.unique_id if emp.unique_id else '-' }}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 font-bold text-slate-800">{{ emp.full_name }}</td>
-                            <td class="py-3 px-4 text-slate-600">{{ emp.gender if emp.gender else '-' }}</td>
-                            <td class="py-3 px-4 text-slate-600">{{ emp.branch.name if emp.branch else '-' }}</td>
-                            <td class="py-3 px-4 text-slate-600">{{ emp.rank.name if emp.rank and emp.rank.name else (emp.rank if emp.rank else '-') }}</td>
-                            <td class="py-3 px-4 text-slate-600">
-                                <span class="text-xs italic text-slate-500">
-                                    {{ emp.resignation_reason if emp.resignation_reason else 'Hin ibsamne' }}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-center">
-                                <span class="bg-rose-100 text-rose-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    {{ emp.status }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center py-12 text-slate-500">
-                                <div class="flex flex-col items-center justify-center space-y-2">
-                                    <span class="text-3xl">📭</span>
-                                    <p class="text-sm font-medium">Hojjetaan hojii gadhiise / kan hin jirre argame hin jiru.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% endblock %}
+</body>
+</html>
