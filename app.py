@@ -157,7 +157,6 @@ def dashboard():
     penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
     reward_count = 0 
     
-    # Safely calculate clean count without breaking if method doesn't exist
     if hasattr(DisciplineRecord, 'with_disposing'):
         try:
             clean_count = emp_count - DisciplineRecord.query.with_disposing().count()
