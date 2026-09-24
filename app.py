@@ -116,18 +116,28 @@ def get_retired_employees_list(active_employees):
         if e.birth_date:
             try:
                 b_str = str(e.birth_date).strip().split()[0]
+                b_date = None
+                
                 if '-' in b_str:
                     parts = b_str.split('-')
-                    b_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
+                    if len(parts[0]) == 4:
+                        b_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
+                    else:
+                        b_date = date(int(parts[2]), int(parts[1]), int(parts[0]))
                 elif '/' in b_str:
                     parts = b_str.split('/')
-                    b_date = date(int(parts[2]), int(parts[1]), int(parts[0]))
-                else:
-                    continue
-
-                age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
-                if age >= 55:
-                    retired_list.append(e)
+                    if len(parts) == 3:
+                        year = int(parts[2]) if len(parts[2]) == 4 else int(parts[0])
+                        month = int(parts[0]) if len(parts[2]) == 4 else int(parts[1])
+                        day = int(parts[1]) if len(parts[2]) == 4 else int(parts[2])
+                        if year < 100:
+                            year += 1900 if year > 30 else 2000
+                        b_date = date(year, month, day)
+                
+                if b_date:
+                    age = today.year - b_date.year - ((today.month, today.day) < (b_date.month, b_date.day))
+                    if age >= 55:
+                        retired_list.append((e, age))
             except Exception:
                 pass
     return retired_list
@@ -223,7 +233,8 @@ def retired_employees():
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
         
-    retired_list = get_retired_employees_list(all_active)
+    retired_tuples = get_retired_employees_list(all_active)
+    retired_list = [emp for emp, age in retired_tuples]
     return render_template('retired_employees.html', employees=retired_list)
 
 @app.route('/resigned_employees')
