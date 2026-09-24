@@ -118,7 +118,7 @@
                                 <td><strong class="text-primary">{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
                                 <td>{{ emp.branch.name if emp.branch else '-' }}</td>
-                                <td>{{ emp.rank if emp.rank else '-' }}</td>
+                                <td>{{ emp.rank.name if emp.rank and emp.rank.name else (emp.rank if emp.rank else '-') }}</td>
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td>
                                     <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} px-2 py-1">
@@ -131,6 +131,10 @@
                                         <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ emp.id }}" title="Gulaali">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        <!-- Namusaa Galmeessi Button (HAARAA) -->
+                                        <a href="{{ url_for('add_discipline', employee_id=emp.id) }}" class="btn btn-sm btn-outline-danger" title="Namusaa Galmeessi">
+                                            <i class="fas fa-gavel"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -321,7 +325,7 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">Gulaantaa Gonfoo (Rank) *</label>
                                 <select class="form-select" name="rank" required>
-                                    {% set current_rank = emp.rank %}
+                                    {% set current_rank = emp.rank.name if emp.rank and emp.rank.name else emp.rank %}
                                     <option value="Konstaabilii" {% if current_rank == 'Konstaabilii' %}selected{% endif %}>Konstaabilii</option>
                                     <option value="Gar/Sajjiin" {% if current_rank == 'Gar/Sajjiin' %}selected{% endif %}>Gar/Sajjiin</option>
                                     <option value="It/A/Sajjiin" {% if current_rank == 'It/A/Sajjiin' %}selected{% endif %}>It/A/Sajjiin</option>
@@ -344,30 +348,30 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Guyyaa Gulaantaa Gonfoo Argate *</label>
-                                <input type="text" class="form-control" name="rank_date" value="{{ emp.rank_date }}" placeholder="DD/MM/YYYY" required>
+                                <input type="text" class="form-control" name="rank_date" value="{{ emp.rank_date if emp.rank_date else '' }}" placeholder="DD/MM/YYYY" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Guyyaa Qacarichaa *</label>
-                                <input type="text" class="form-control" name="hire_date" value="{{ emp.hire_date }}" placeholder="DD/MM/YYYY" required>
+                                <input type="text" class="form-control" name="hire_date" value="{{ emp.hire_date if emp.hire_date else '' }}" placeholder="DD/MM/YYYY" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Guyyaa Dhalootaa *</label>
-                                <input type="text" class="form-control" name="birth_date" value="{{ emp.birth_date }}" placeholder="DD/MM/YYYY" required>
+                                <input type="text" class="form-control" name="birth_date" value="{{ emp.birth_date if emp.birth_date else '' }}" placeholder="DD/MM/YYYY" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Mindaa Gulaantaa Gonfoo *</label>
-                                <input type="number" step="0.01" class="form-control" name="rank_salary" value="{{ emp.rank_salary }}" required>
+                                <input type="number" step="0.01" class="form-control" name="rank_salary" value="{{ emp.rank_salary if emp.rank_salary else 0 }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Mindaa Kaffaltii Idoo</label>
-                                <input type="number" step="0.01" class="form-control" name="location_allowance" value="{{ emp.location_allowance }}">
+                                <input type="number" step="0.01" class="form-control" name="location_allowance" value="{{ emp.location_allowance if emp.location_allowance else 0 }}">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Durgoo Nyaataa</label>
-                                <input type="number" step="0.01" class="form-control" name="food_allowance" value="{{ emp.food_allowance }}">
+                                <input type="number" step="0.01" class="form-control" name="food_allowance" value="{{ emp.food_allowance if emp.food_allowance else 0 }}">
                             </div>
                         </div>
 
@@ -396,11 +400,11 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Gosa Barumsaa (Field of Study)</label>
-                                <input type="text" class="form-control" name="field_of_study" value="{{ emp.field_of_study }}">
+                                <input type="text" class="form-control" name="field_of_study" value="{{ emp.field_of_study if emp.field_of_study else '' }}">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Gita Hojii Irratti Ramadame *</label>
-                                <input type="text" class="form-control" name="job_position" value="{{ emp.job_position }}" required>
+                                <input type="text" class="form-control" name="job_position" value="{{ emp.job_position if emp.job_position else '' }}" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-bold">Haala / Status *</label>

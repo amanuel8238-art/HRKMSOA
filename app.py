@@ -112,7 +112,7 @@ def dashboard():
         
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
-        resigned_count = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', 'Du\'aan', 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count()
+        resigned_count = Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count()
         
         all_emps = Employee.query.filter_by(status='Active').all()
     else:
@@ -123,7 +123,7 @@ def dashboard():
         
         male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
         female_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
-        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated', 'Du\'aan', 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count() if user_b else 0
+        resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count() if user_b else 0
         
         all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
 
@@ -153,6 +153,12 @@ def dashboard():
             except:
                 pass
 
+    # Discipline / Ethics counts for Dashboard cards
+    warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
+    penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
+    reward_count = 0  # Yoo badhaasni qabate asirratti herreguu dandeessa
+    clean_count = emp_count - DisciplineRecord.query.with_disposing().count() if hasattr(DisciplineRecord, 'with_disposing') else emp_count
+
     return render_template('dashboard.html', 
                            emp_count=emp_count, 
                            branch_count=branch_count, 
@@ -160,7 +166,11 @@ def dashboard():
                            male_count=male_count,
                            female_count=female_count,
                            retired_count=retired_count,
-                           resigned_count=resigned_count)
+                           resigned_count=resigned_count,
+                           warning_count=warning_count,
+                           penalty_count=penalty_count,
+                           reward_count=reward_count,
+                           clean_count=clean_count)
 
 @app.route('/employees')
 @login_required
@@ -333,26 +343,31 @@ def add_employee():
         first_rank = Rank.query.first()
         rank_id = first_rank.id if first_rank else None
 
-    new_emp = Employee(
-        full_name=full_name,
-        unique_id=unique_id,
-        gender=gender,
-        branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
-        rank_id=rank_id,
-        rank_date=request.form.get('rank_date') or None,
-        hire_date=request.form.get('hire_date') or None,
-        birth_date=request.form.get('birth_date') or None,
-        rank_salary=float(request.form.get('rank_salary') or 0.0),
-        location_allowance=float(request.form.get('location_allowance') or 0.0),
-        food_allowance=float(request.form.get('food_allowance') or 0.0),
-        education_level=request.form.get('education_level'),
-        field_of_study=request.form.get('field_of_study'),
-        job_position=request.form.get('job_position'),
-        status=request.form.get('status', 'Active')
-    )
-    db.session.add(new_emp)
-    db.session.commit()
-    flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
+    try:
+        new_emp = Employee(
+            full_name=full_name,
+            unique_id=unique_id,
+            gender=gender,
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
+            rank_id=rank_id,
+            rank_date=request.form.get('rank_date') or None,
+            hire_date=request.form.get('hire_date') or None,
+            birth_date=request.form.get('birth_date') or None,
+            rank_salary=float(request.form.get('rank_salary') or 0.0),
+            location_allowance=float(request.form.get('location_allowance') or 0.0),
+            food_allowance=float(request.form.get('food_allowance') or 0.0),
+            education_level=request.form.get('education_level'),
+            field_of_study=request.form.get('field_of_study'),
+            job_position=request.form.get('job_position'),
+            status=request.form.get('status', 'Active')
+        )
+        db.session.add(new_emp)
+        db.session.commit()
+        flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera (ID addaa wajjin walqabachuu danda’a): {str(e)}', 'danger')
+        
     return redirect(url_for('employees'))
 
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
@@ -621,7 +636,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
 # --- KUTAA HAARAA: Galmee Badii Naamusaa (Discipline Records) ---
 @app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
@@ -655,7 +669,6 @@ def add_discipline(employee_id):
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
             
     return render_template('add_discipline.html', employee=employee)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
