@@ -308,7 +308,6 @@ def employees():
             )
         )
 
-    # Sorting A-Z ykn Z-A
     if sort_order == 'za':
         query = query.order_by(Employee.full_name.desc())
     else:
@@ -522,6 +521,34 @@ def edit_employee(id):
         
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
+
+# --- ADD DISCIPLINE ROUTE ---
+@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
+@login_required
+def add_discipline(employee_id):
+    emp = Employee.query.get_or_404(employee_id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        penalty_type = request.form.get('penalty_type')
+        reason = request.form.get('reason')
+        record_date = request.form.get('record_date')
+        
+        new_record = DisciplineRecord(
+            employee_id=emp.id,
+            penalty_type=penalty_type,
+            reason=reason,
+            record_date=record_date or datetime.utcnow().strftime('%Y-%m-%d')
+        )
+        db.session.add(new_record)
+        db.session.commit()
+        flash('Galmeen naamusaa milkaa\'inaan galmaa\'eera!', 'success')
+        return redirect(url_for('employees'))
+        
+    return render_template('add_discipline.html', employee=emp)
 
 @app.route('/branches')
 @login_required
