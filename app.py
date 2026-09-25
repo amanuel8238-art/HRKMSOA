@@ -266,6 +266,7 @@ def employees():
     education_level = request.args.get('education_level', '')
     field_of_study = request.args.get('field_of_study', '')
     status_filter = request.args.get('status', 'Active')
+    sort_order = request.args.get('sort', 'az')
 
     query = Employee.query
 
@@ -306,6 +307,12 @@ def employees():
                 Employee.job_position.ilike(f'%{search_query}%')
             )
         )
+
+    # Sorting A-Z ykn Z-A
+    if sort_order == 'za':
+        query = query.order_by(Employee.full_name.desc())
+    else:
+        query = query.order_by(Employee.full_name.asc())
 
     all_employees = query.all()
     
@@ -329,6 +336,7 @@ def export_employees_excel():
     education_level = request.args.get('education_level', '')
     field_of_study = request.args.get('field_of_study', '')
     status_filter = request.args.get('status', 'Active')
+    sort_order = request.args.get('sort', 'az')
 
     query = Employee.query
     if status_filter != 'All':
@@ -368,6 +376,11 @@ def export_employees_excel():
                 Employee.job_position.ilike(f'%{search_query}%')
             )
         )
+
+    if sort_order == 'za':
+        query = query.order_by(Employee.full_name.desc())
+    else:
+        query = query.order_by(Employee.full_name.asc())
 
     emps = query.all()
     data = []
@@ -756,36 +769,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-# --- KUTAA GALMEE BADII NAAMUSAA (Discipline Records) ---
-@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
-@login_required
-def add_discipline(employee_id):
-    employee = Employee.query.get_or_404(employee_id)
-    
-    if request.method == 'POST':
-        try:
-            new_record = DisciplineRecord(
-                employee_id=employee_id,
-                offense_date=datetime.strptime(request.form['offense_date'], '%Y-%m-%d').date() if request.form.get('offense_date') else None,
-                reporting_date=datetime.strptime(request.form['reporting_date'], '%Y-%m-%d').date() if request.form.get('reporting_date') else None,
-                decision_date=datetime.strptime(request.form['decision_date'], '%Y-%m-%d').date() if request.form.get('decision_date') else None,
-                effective_date=datetime.strptime(request.form['effective_date'], '%Y-%m-%d').date() if request.form.get('effective_date') else datetime.utcnow().date(),
-                expiry_date=datetime.strptime(request.form['expiry_date'], '%Y-%m-%d').date() if request.form.get('expiry_date') else None,
-                offense_type=request.form.get('offense_type'),
-                penalty_type=request.form.get('penalty_type'),
-                description=request.form.get('description'),
-                evidence_details=request.form.get('evidence_details')
-            )
-            db.session.add(new_record)
-            db.session.commit()
-            flash('Galmeen naamusaa milkaa\'inaan galmaa\'eera!', 'success')
-            return redirect(url_for('employees'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-            
-    return render_template('add_discipline.html', employee=employee)
 
 if __name__ == '__main__':
     app.run(debug=True)
