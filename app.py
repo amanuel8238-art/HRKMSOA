@@ -704,7 +704,7 @@ def calendar_events():
             events.append({'title': f"Qacaramuu: {emp.full_name}", 'start': str(emp.hire_date).split()[0], 'color': '#28a745'})
         if emp.birth_date:
             events.append({'title': f"Dhalootaa: {emp.full_name}", 'start': str(emp.birth_date).split()[0], 'color': '#17a2b8'})
-        return jsonify(events)
+    return jsonify(events)
 
 @app.route('/settings')
 @admin_required
@@ -750,40 +750,6 @@ def reset_password(user_id):
     db.session.commit()
     flash(f'Jechi iccitii (Password) fayyadamaa {user.username} milkaa\'inaan jijjiirameera! (Password haaraan: {new_password})', 'success')
     return redirect(url_for('settings'))
-
-@app.route('/delete_user/<int:id>', methods=['POST'])
-@admin_required
-def delete_user(id):
-    user = User.query.get_or_404(id)
-    if user.username == 'admin':
-        flash('Admin guddaa haqchuun hin danda\'amu!', 'danger')
-        return redirect(url_for('settings'))
-    
-    db.session.delete(user)
-    db.session.commit()
-    flash('Fayyadamaan milkaa\'inaan haqameera!', 'success')
-    return redirect(url_for('settings'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            flash('Baga nagaan dhuftan!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Maqaa fayyadamaa ykn jecha iccitii dogoggorri jira.', 'danger')
-    return render_template('login.html')
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('Nagaan baateetta!', 'info')
-    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)
