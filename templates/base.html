@@ -31,8 +31,14 @@
                         <span class="text-light small"><i class="fas fa-user-shield me-1"></i> {{ current_user.username if current_user.username else current_user.role }}</span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3 active" href="{{ url_for('dashboard') }}">
+                        <a class="nav-link px-3" href="{{ url_for('dashboard') }}">
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboordii
+                        </a>
+                    </li>
+                    <!-- Bakka itti Galmee Jijjiirraa fi Gonfoo dabalamhe -->
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('transfers') }}">
+                            <i class="fas fa-exchange-alt me-1"></i> Jijjiirraa & Gonfoo
                         </a>
                     </li>
                     <li class="nav-item">
