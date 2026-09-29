@@ -49,9 +49,19 @@
                                     </td>
                                     <td>{{ emp.resignation_reason if emp.resignation_reason else '-' }}</td>
                                     <td class="text-center">
-                                        <a href="{{ url_for('edit_employee', id=emp.id) }}" class="btn btn-sm btn-outline-primary" title="Status sirreessuuf">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <!-- Status sirreessuuf (Edit) -->
+                                            <a href="{{ url_for('edit_employee', id=emp.id) }}" class="btn btn-sm btn-outline-primary" title="Status sirreessuuf">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            
+                                            <!-- Battalumatti gara Active deebisuuf (Activate Button) -->
+                                            <form action="{{ url_for('activate_employee', id=emp.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-success" title="Gara Hojii (Active)tti Deebisuuf" onclick="return confirm('Hojjetaa kana deebistee gara Active (Hojii irraatti) galchuu barbaaddaa?');">
+                                                    <i class="fas fa-user-check"></i> Active
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endif %}

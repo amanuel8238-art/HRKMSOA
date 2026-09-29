@@ -65,19 +65,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Ida'ama Miseensotaa (Total)</p>
-                        <h3 class="text-2xl font-bold text-indigo-900 mt-1">{{ emp_count }}</h3>
+                        <h3 class="text-2xl font-bold text-indigo-900 mt-1">{{ emp_count if emp_count is defined else 0 }}</h3>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Miseensota Hojii Irra Jiran (Active)</p>
-                        <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ emp_count }}</h3>
+                        <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Baay'ina Dameewwanii</p>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-1">{{ branch_count }}</h3>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">{{ branch_count if branch_count is defined else 0 }}</h3>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Galmee Jijjiirraa (Transfers)</p>
-                        <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ transfer_count }}</h3>
+                        <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ transfer_count if transfer_count is defined else 0 }}</h3>
                     </div>
                 </div>
 
@@ -86,14 +86,14 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhiira</p>
-                            <h3 class="text-xl font-bold text-blue-600 mt-1">{{ male_count }}</h3>
+                            <h3 class="text-xl font-bold text-blue-600 mt-1">{{ male_count if male_count is defined else 0 }}</h3>
                         </div>
                         <span class="p-3 bg-blue-50 text-blue-600 rounded-lg text-lg">👨</span>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhalaa</p>
-                            <h3 class="text-xl font-bold text-pink-600 mt-1">{{ female_count }}</h3>
+                            <h3 class="text-xl font-bold text-pink-600 mt-1">{{ female_count if female_count is defined else 0 }}</h3>
                         </div>
                         <span class="p-3 bg-pink-50 text-pink-600 rounded-lg text-lg">👩</span>
                     </div>
@@ -102,16 +102,18 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Retired)</p>
-                            <h3 class="text-xl font-bold text-amber-600 mt-1">{{ retired_count }}</h3>
+                            <h3 class="text-xl font-bold text-amber-600 mt-1">{{ retired_count if retired_count is defined else 0 }}</h3>
                             <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">Eenyuu fa'a? Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
                     </div>
 
+                    <!-- Resigned Card connected to resigned_employees route -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
-                            <h3 class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count else 0 }}</h3>
+                            <h3 class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count is defined else 0 }}</h3>
+                            <a href="{{ url_for('resigned_employees') }}" class="text-xs text-red-600 hover:underline mt-1 inline-block font-semibold">Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-red-50 text-red-600 rounded-lg text-lg">🚪</span>
                     </div>
@@ -126,7 +128,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Of-eeggannoo (Warning)</p>
-                                    <h3 class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count else 0 }}</h3>
+                                    <h3 class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠️</span>
                             </div>
@@ -142,7 +144,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Adabbii (Penalties)</p>
-                                    <h3 class="text-xl font-bold text-rose-600 mt-1">{{ penalty_count if penalty_count else 0 }}</h3>
+                                    <h3 class="text-xl font-bold text-rose-600 mt-1">{{ penalty_count if penalty_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-rose-50 text-rose-600 rounded-lg text-lg">⚖️</span>
                             </div>
@@ -158,7 +160,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Badhaasa / Galataa (Rewards)</p>
-                                    <h3 class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count else 0 }}</h3>
+                                    <h3 class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">🏆</span>
                             </div>
@@ -174,7 +176,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Galmee Qulqulluu (Clean)</p>
-                                    <h3 class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count else emp_count }}</h3>
+                                    <h3 class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
                                 </div>
                                 <span class="p-3 bg-sky-50 text-sky-600 rounded-lg text-lg">✨</span>
                             </div>
@@ -191,7 +193,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 lg:col-span-2 flex flex-col justify-between">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-800">Baga nagaan dhufte, {{ current_user.username }}!</h2>
+                            <h2 class="text-lg font-bold text-slate-800">Baga nagaan dhufte, {{ current_user.username if current_user and current_user.username is defined else 'Admin' }}!</h2>
                             <p class="text-xs text-slate-600 mt-2">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa fayyadamuun hojjettoota galmeessuu, dameewwan bulchuu, akkasumas gabaasa ilaaluu ni dandeessa.</p>
                         </div>
                         <div class="flex flex-wrap gap-3 pt-2">
@@ -222,7 +224,11 @@
             data: {
                 labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
                 datasets: [{
-                    data: [{{ male_count }}, {{ female_count }}, {{ retired_count }}],
+                    data: [
+                        {{ male_count if male_count is defined else 0 }}, 
+                        {{ female_count if female_count is defined else 0 }}, 
+                        {{ retired_count if retired_count is defined else 0 }}
+                    ],
                     backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
                     borderWidth: 1
                 }]
