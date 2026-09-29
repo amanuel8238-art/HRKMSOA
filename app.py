@@ -479,6 +479,42 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
+# --- HEAD OFFICE: QABXII HERREGUU FI GONFOO ITTI AANU (NEXT RANK) MURTEESSUU ---
+@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def evaluate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    if request.method == 'POST':
+        try:
+            # Qabxiilee Head Office irraa dhiyaatan (fakkeenyaaf qabxii 100 keessaa ykn weighted)
+            # Fkn: Qabxii barumsaa, qabxii hojii, qabxii namusaa, fi k.k.f fudhachuu
+            criteria_1 = float(request.form.get('criteria_1') or 0.0) # Fkn: Raawwii Hojii (Performance)
+            criteria_2 = float(request.form.get('criteria_2') or 0.0) # Fkn: Qormaata / Dandeettii
+            criteria_3 = float(request.form.get('criteria_3') or 0.0) # Fkn: Amala / Naamusaa
+            
+            # Dhibbeentaadhaan herreguu (Weight herregaa: fkn C1=50%, C2=30%, C3=20% ykn akka barbaadetti)
+            # As irratti waliigala qabxii 100% irratti hundaa'ee herregama:
+            total_score = (criteria_1 * 0.5) + (criteria_2 * 0.3) + (criteria_3 * 0.2)
+            
+            # Gonfoo itti aanu / Guddina sadarkaa (Next Rank) murteessuu
+            next_rank_name = "Sadarkaa Hin Jijjiiramne"
+            if total_score >= 85:
+                next_rank_name = "Senior / Rank Olaanaa"
+            elif total_score >= 70:
+                next_rank_name = "Mid-Level / Rank Giddu-galeessaa"
+            elif total_score >= 50:
+                next_rank_name = "Junior / Sadarkaa Jalqabaa"
+            else:
+                next_rank_name = "Qabxiin Gahaa Mitิ (Retrain/Review)"
+
+            flash(f'Hojjetaaf: {emp.full_name} | Ida\'amni Qabxii (Total Score): {total_score:.2f}% | Gonfoo Itti Aanu: {next_rank_name}', 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            flash(f'Herrega qabxii irratti dogoggorri uumameera: {str(e)}', 'danger')
+
+    return render_template('evaluate_employee.html', employee=emp)
+
 # --- MISEENSA HAQUU (DELETE EMPLOYEE ROUTE) ---
 @app.route('/delete_employee/<int:id>', methods=['POST'])
 @login_required

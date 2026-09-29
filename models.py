@@ -86,7 +86,7 @@ class Transfer(db.Model):
     from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref=db.backref('outgoing_transfers', lazy=True))
     to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref=db.backref('incoming_transfers', lazy=True))
 
-# 6. Galmee Badii Naamusaa (Discipline Records) - HAARAA
+# 6. Galmee Badii Naamusaa (Discipline Records)
 class DisciplineRecord(db.Model):
     __tablename__ = 'discipline_record'
     
@@ -109,5 +109,30 @@ class DisciplineRecord(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Walitti-dhufeenya Employee wajjin qabu (Fkn: employee.disciplines jechuun fiduuf)
     employee = db.relationship('Employee', backref=db.backref('disciplines', lazy=True))
+
+# 7. Gamaaggama Guddina Gonfoo (Promotion Assessment) - DABALATA HAARAA
+class PromotionAssessment(db.Model):
+    __tablename__ = 'promotion_assessment'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    
+    # Qabxiilee Dhibbeentaadhaan (Criteria Breakdown)
+    performance_score = db.Column(db.Float, default=0.0)      # Bu'uura Rawwii Hojii 25%
+    education_score = db.Column(db.Float, default=0.0)        # Sadarkaa Barumsaa 20%
+    discipline_score = db.Column(db.Float, default=0.0)       # Namusaa poolisii 20%
+    law_compliance_score = db.Column(db.Float, default=0.0)   # Seera fi Heeraa 10%
+    experience_score = db.Column(db.Float, default=0.0)       # Muxaanoo Hojii 10%
+    service_spirit_score = db.Column(db.Float, default=0.0)   # Miraa tajaajiltummaa 10%
+    
+    total_score = db.Column(db.Float, default=0.0)            # Ida'ama (Total 100%)
+    
+    current_rank_id = db.Column(db.Integer, nullable=True)    # Gonfoo Ammaa
+    next_rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True) # Gonfoo itti aanu (Gonfoo itti guddatu)
+    
+    status = db.Column(db.String(50), default='Approved by Head Office') # Haala Mirkaneessuu
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    employee = db.relationship('Employee', backref=db.backref('promotions_assessment', lazy=True))
+    next_rank = db.relationship('Rank', foreign_keys=[next_rank_id], backref=db.backref('scheduled_promotions', lazy=True))

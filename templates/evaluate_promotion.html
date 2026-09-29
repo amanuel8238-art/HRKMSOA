@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Gamaaggama Guddina Gonfoo (Promotion) - Head Office</h2>
+    <div class="card p-4 shadow-sm mb-4">
+        <h5>Odeeffannoo Hojjetaa:</h5>
+        <p><b>Maqaa Guutuu:</b> {{ employee.full_name }}</p>
+        <p><b>Bakka Hojii (Branch):</b> {{ employee.branch.name if employee.branch else 'N/A' }}</p>
+        <p><b>Gahee Hojii (Job Position):</b> {{ employee.job_position or 'N/A' }}</p>
+        <p><b>Saala:</b> {{ employee.gender or 'N/A' }}</p>
+        <p><b>Gonfoo Ammaa:</b> {{ employee.rank.name if employee.rank else 'N/A' }}</p>
+        <p><b>Sadarkaa & Gosa Barumsaa:</b> {{ employee.education_level or 'N/A' }} - {{ employee.field_of_study or 'N/A' }}</p>
+    </div>
+
+    <form method="POST" class="card p-4 shadow-sm">
+        <h4>Galtee Qabxii Gamaaggamaa (Gama Head Office)</h4>
+        
+        <div class="mb-3">
+            <label class="form-label">Bu'uura Rawwii Hojii (Max 25%):</label>
+            <input type="number" step="0.01" max="25" name="performance_score" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Sadarkaa Barumsaa (Max 20%):</label>
+            <input type="number" step="0.01" max="20" name="education_score" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Namusaa Poolisii (Max 20%):</label>
+            <input type="number" step="0.01" max="20" name="discipline_score" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Seera fi Heeraa (Max 10%):</label>
+            <input type="number" step="0.01" max="10" name="law_compliance_score" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Muxaanoo Hojii (Max 10%):</label>
+            <input type="number" step="0.01" max="10" name="experience_score" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Mira Tajaajiltummaa (Max 10%):</label>
+            <input type="number" step="0.01" max="10" name="service_spirit_score" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-primary fw-bold">Gonfoo Itti Aanu (Next Rank):</label>
+            <select name="next_rank_id" class="form-control" required>
+                {% for r in ranks %}
+                <option value="{{ r.id }}">{{ r.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Qabxii Galmeessi & Gonfoo Mirkaneessi</button>
+        <a href="{{ url_for('employees') }}" class="btn btn-secondary">Deebi'i</a>
+    </form>
+</div>
+{% endblock %}
