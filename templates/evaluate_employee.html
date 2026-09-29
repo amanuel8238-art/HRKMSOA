@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-indigo-900 text-white py-3">
+            <h4 class="mb-0"><i class="fas fa-award me-2"></i> Gamaaggama Guddina Gonfoo (Promotion) - Head Office</h4>
+        </div>
+        <div class="card-body p-4">
+            
+            <!-- Odeeffannoo Hojjetaa -->
+            <div class="alert alert-secondary mb-4">
+                <h5 class="fw-bold text-indigo-900 mb-3"><i class="fas fa-user-circle me-1"></i> Odeeffannoo Hojjetaa:</h5>
+                <div class="row g-2 text-sm">
+                    <div class="col-md-4"><b>Maqaa Miseensa/Guutuu:</b> {{ employee.full_name }}</div>
+                    <div class="col-md-4"><b>ID Addaa:</b> {{ employee.unique_id or 'N/A' }}</div>
+                    <div class="col-md-4"><b>Bakka Hojii (Damee):</b> {{ employee.branch.name if employee.branch else 'N/A' }}</div>
+                    <div class="col-md-4"><b>Gahee Hojii (Job Position):</b> {{ employee.job_position or 'N/A' }}</div>
+                    <div class="col-md-4"><b>Saala:</b> {{ employee.gender or 'N/A' }}</div>
+                    <div class="col-md-4"><b>Umrii:</b> {{ employee.age if employee.age else 'N/A' }}</div>
+                    <div class="col-md-4"><b>Gonfoo Ammaa:</b> {{ employee.rank.name if employee.rank else 'N/A' }}</div>
+                    <div class="col-md-4"><b>Bara Gonfoo Dura yeroo itti argate:</b> {{ employee.rank_date or 'N/A' }}</div>
+                    <div class="col-md-4"><b>Sadarkaa Barumsaa:</b> {{ employee.education_level or 'N/A' }}</div>
+                    <div class="col-md-4"><b>Gosa Barumsaa:</b> {{ employee.field_of_study or 'N/A' }}</div>
+                </div>
+            </div>
+
+            <!-- Form Madaallii fi Galtee Qabxii -->
+            <form method="POST" id="evaluationForm" class="needs-validation" novalidate>
+                <h5 class="fw-bold text-dark mb-3">Galtee Qabxii Gamaaggamaa (Gama Head Office)</h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
+                        <input type="number" step="0.01" max="25" min="0" name="performance_score" id="perf" class="form-control score-input" required placeholder="0 - 25">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Sadarkaa Barumsaa (Max 20%):</label>
+                        <input type="number" step="0.01" max="20" min="0" name="education_score" id="edu" class="form-control score-input" required placeholder="0 - 20">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Namusaa Poolisii (Max 20%):</label>
+                        <input type="number" step="0.01" max="20" min="0" name="discipline_score" id="disc" class="form-control score-input" required placeholder="0 - 20">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Seera fi Heeraa (Max 10%):</label>
+                        <input type="number" step="0.01" max="10" min="0" name="law_compliance_score" id="law" class="form-control score-input" required placeholder="0 - 10">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Muuxannoo Hojii (Max 10%):</label>
+                        <input type="number" step="0.01" max="10" min="0" name="experience_score" id="exp" class="form-control score-input" required placeholder="0 - 10">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 10%):</label>
+                        <input type="number" step="0.01" max="10" min="0" name="service_spirit_score" id="serv" class="form-control score-input" required placeholder="0 - 10">
+                    </div>
+                </div>
+
+                <!-- Ida'ama Qabxii fi Filannoo Gonfoo Itti Aanu -->
+                <div class="row mt-4 p-3 bg-light rounded-3 border align-items-center">
+                    <div class="col-md-6">
+                        <h4 class="mb-0 text-primary">Ida'ama Qabxii Waliigalaa: <span id="totalScoreDisplay" class="fw-bold">0.00</span> / 100%</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-primary fw-bold">Gonfoo itti Guddatuu (Next Rank):</label>
+                        <select name="next_rank_id" class="form-select" required>
+                            <option value="">-- Gonfoo Filadhu --</option>
+                            {% for r in ranks %}
+                            <option value="{{ r.id }}">{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <a href="{{ url_for('employees') }}" class="btn btn-secondary me-2"><i class="fas fa-arrow-left me-1"></i> Deebi'i</a>
+                    <button type="submit" class="btn btn-success px-4"><i class="fas fa-check-circle me-1"></i> Qabxii Galmeessi & Gonfoo Mirkaneessi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputs = document.querySelectorAll('.score-input');
+        const totalDisplay = document.getElementById('totalScoreDisplay');
+
+        function calculateTotal() {
+            let total = 0;
+            inputs.forEach(input => {
+                let val = parseFloat(input.value) || 0;
+                total += val;
+            });
+            totalDisplay.textContent = total.toFixed(2);
+            if(total > 100) {
+                totalDisplay.classList.add('text-danger');
+            } else {
+                totalDisplay.classList.remove('text-danger');
+            }
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+    });
+</script>
+{% endblock %}
