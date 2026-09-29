@@ -478,11 +478,17 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
+# --- PROMOTION & EVALUATION WORKFLOW (DAMEE IRRAA GARA HEAD OFFICE-TTI) ---
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
-@admin_required
 def evaluate_employee(id):
     emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    
+    # Damee ofii qofa ykn Admin ta'uu isaa mirkaneessuu
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
     all_ranks = Rank.query.all()
     
     if request.method == 'POST':
@@ -497,13 +503,26 @@ def evaluate_employee(id):
             total_score = perf + edu + disc + law + exp + serv
             next_rank_id = request.form.get('next_rank_id')
             
-            if next_rank_id:
-                emp.rank_id = int(next_rank_id)
-                db.session.commit()
+            # Gaaffiin gonfoo akka Transfer/Request fakkii ta'ee gara Head Office (Admin)-tti akka deemu godhama
+            transfer_data = {
+                'employee_id': emp.id,
+                'reason': f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Gulantaa Barbaadame (Rank ID): {next_rank_id}",
+                'transfer_date': datetime.utcnow(),
+                'status': 'Pending'
+            }
+            if hasattr(Transfer, 'to_branch_id'):
+                transfer_data['to_branch_id'] = emp.branch_id
+            if hasattr(Transfer, 'from_branch_id'):
+                transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
 
-            flash(f'Hojjetaaf: {emp.full_name} | Ida\'amni Qabxii (Total Score): {total_score:.2f}% milkaa\'inaan galmaa\'eera!', 'success')
+            new_transfer = Transfer(**transfer_data)
+            db.session.add(new_transfer)
+            db.session.commit()
+            
+            flash(f'Madaalliin hojjetaa {emp.full_name} (Qabxii: {total_score:.2f}) milkaa\'inaan guutamee gara Head Office-tti ergameera! Admin-ni yeroo mirkaneesse (Approved) hojiirra oola.', 'success')
             return redirect(url_for('employees'))
         except Exception as e:
+            db.session.rollback()
             flash(f'Herrega qabxii irratti dogoggorri uumameera: {str(e)}', 'danger')
 
     return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
@@ -628,13 +647,26 @@ def update_transfer_status(id):
     tr.status = status
     
     target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-    if status == 'Approved' and target_branch is not None:
+    if status == 'Approved':
         emp = Employee.query.get(tr.employee_id)
         if emp:
-            emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
+            # 1. Yoo jijjiirraa damee (Branch Transfer) ta'e
+            if target_branch is not None and str(target_branch) != str(emp.branch_id):
+                emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
             
+            # 2. Yoo Gaaffii Gonfoo / Promotion Evaluation ta'e (Reason keessatti sakatta'amee hojiirra oola)
+            if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
+                try:
+                    parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
+                    if len(parts) > 1:
+                        r_id = int(parts[1].strip().split()[0])
+                        if r_id:
+                            emp.rank_id = r_id
+                except Exception:
+                    pass
+
     db.session.commit()
-    flash('Murteen jijjiirraa milkaa\'inaan galmaa\'eera!', 'success')
+    flash('Murteen jijjiirraa / gonfoo milkaa\'inaan galmaa\'eera!', 'success')
     return redirect(url_for('transfers'))
 
 @app.route('/ranks', methods=['GET', 'POST'])
@@ -672,7 +704,7 @@ def calendar_events():
             events.append({'title': f"Qacaramuu: {emp.full_name}", 'start': str(emp.hire_date).split()[0], 'color': '#28a745'})
         if emp.birth_date:
             events.append({'title': f"Dhalootaa: {emp.full_name}", 'start': str(emp.birth_date).split()[0], 'color': '#17a2b8'})
-    return jsonify(events)
+        return jsonify(events)
 
 @app.route('/settings')
 @admin_required
