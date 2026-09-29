@@ -115,7 +115,7 @@ with app.app_context():
             
     db.session.commit()
 
-# --- HELPER FUNCTION FOR RETIRED AGE CALCULATION (Fixed to 2019 Baseline) ---
+# --- HELPER FUNCTION FOR RETIRED AGE CALCULATION ---
 def get_retired_employees_list(active_employees):
     retired_list = []
     for e in active_employees:
@@ -483,30 +483,30 @@ def edit_employee(id):
 @admin_required
 def evaluate_employee(id):
     emp = Employee.query.get_or_404(id)
+    all_ranks = Rank.query.all()
+    
     if request.method == 'POST':
         try:
-            criteria_1 = float(request.form.get('criteria_1') or 0.0)
-            criteria_2 = float(request.form.get('criteria_2') or 0.0)
-            criteria_3 = float(request.form.get('criteria_3') or 0.0)
+            perf = float(request.form.get('performance_score') or 0.0)
+            edu = float(request.form.get('education_score') or 0.0)
+            disc = float(request.form.get('discipline_score') or 0.0)
+            law = float(request.form.get('law_compliance_score') or 0.0)
+            exp = float(request.form.get('experience_score') or 0.0)
+            serv = float(request.form.get('service_spirit_score') or 0.0)
             
-            total_score = (criteria_1 * 0.5) + (criteria_2 * 0.3) + (criteria_3 * 0.2)
+            total_score = perf + edu + disc + law + exp + serv
+            next_rank_id = request.form.get('next_rank_id')
             
-            next_rank_name = "Sadarkaa Hin Jijjiiramne"
-            if total_score >= 85:
-                next_rank_name = "Senior / Rank Olaanaa"
-            elif total_score >= 70:
-                next_rank_name = "Mid-Level / Rank Giddu-galeessaa"
-            elif total_score >= 50:
-                next_rank_name = "Junior / Sadarkaa Jalqabaa"
-            else:
-                next_rank_name = "Qabxiin Gahaa Miti (Retrain/Review)"
+            if next_rank_id:
+                emp.rank_id = int(next_rank_id)
+                db.session.commit()
 
-            flash(f'Hojjetaaf: {emp.full_name} | Ida\'amni Qabxii (Total Score): {total_score:.2f}% | Gonfoo Itti Aanu: {next_rank_name}', 'success')
+            flash(f'Hojjetaaf: {emp.full_name} | Ida\'amni Qabxii (Total Score): {total_score:.2f}% milkaa\'inaan galmaa\'eera!', 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             flash(f'Herrega qabxii irratti dogoggorri uumameera: {str(e)}', 'danger')
 
-    return render_template('evaluate_employee.html', employee=emp)
+    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
 
 @app.route('/delete_employee/<int:id>', methods=['POST'])
 @login_required
@@ -705,7 +705,7 @@ def add_user():
         db.session.commit()
         flash('Fayyadamaan (User) haaraan milkaa’inaan uumameera!', 'success')
     else:
-        flash('Maqaa fayyadamaa fi jecha iccitii guutuu qabda.', 'warning')
+        flash('Maqaa fayyadamaa ykn jecha iccitii guutuu qabda.', 'warning')
         
     return redirect(url_for('settings'))
 
