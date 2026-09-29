@@ -6,6 +6,8 @@
     <title>HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN for Statistics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -98,7 +100,7 @@
                         <span class="p-3 bg-pink-50 text-pink-600 rounded-lg text-lg">👩</span>
                     </div>
                     
-                    <!-- Umrii 55+ (Retired) Card connected to retired_employees route -->
+                    <!-- Umrii 55+ (Retired) Card -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Retired)</p>
@@ -108,7 +110,7 @@
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
                     </div>
 
-                    <!-- Resigned Card connected to resigned_employees route -->
+                    <!-- Resigned Card -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
@@ -123,7 +125,6 @@
                 <div>
                     <h3 class="text-sm font-bold text-slate-700 mb-3">Gosa Namusaa & Galmee Hojjettootaa (Ethics & Discipline Records)</h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <!-- Card 1: Of-eeggannoo (Warning) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
@@ -133,13 +134,10 @@
                                 <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠️</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-                                    Ilaali / Galmeessi &rarr;
-                                </a>
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
-                        <!-- Card 2: Adabbii (Penalty/Discipline) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
@@ -149,13 +147,10 @@
                                 <span class="p-3 bg-rose-50 text-rose-600 rounded-lg text-lg">⚖️</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-                                    Ilaali / Galmeessi &rarr;
-                                </a>
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
-                        <!-- Card 3: Badhaasa / Galataa (Rewards/Appreciation) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
@@ -165,41 +160,37 @@
                                 <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">🏆</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-                                    Ilaali / Galmeessi &rarr;
-                                </a>
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
-                        <!-- Card 4: Galmee Qulqulluu (Clean Records) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Galmee Qulqulluu (Clean)</p>
-                                    <h3 class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
+                                    <h3 class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-sky-50 text-sky-600 rounded-lg text-lg">✨</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
-                                    Gabaasa Ilaali &rarr;
-                                </a>
+                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Gabaasa Ilaali &rarr;</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions / Welcome Card & Chart Section -->
+                <!-- Quick Actions & Evaluation Link Card -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 lg:col-span-2 flex flex-col justify-between">
                         <div>
                             <h2 class="text-lg font-bold text-slate-800">Baga nagaan dhufte, {{ current_user.username if current_user and current_user.username is defined else 'Admin' }}!</h2>
-                            <p class="text-xs text-slate-600 mt-2">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa fayyadamuun hojjettoota galmeessuu, dameewwan bulchuu, akkasumas gabaasa ilaaluu ni dandeessa.</p>
+                            <p class="text-xs text-slate-600 mt-2">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa fayyadamuun hojjettoota galmeessuu, dameewwan bulchuu, madaallii raawwii gaggeessuu, akkasumas gabaasa ilaaluu ni dandeessa.</p>
                         </div>
                         <div class="flex flex-wrap gap-3 pt-2">
-                            <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Miseensota Ilaali</a>
-                            <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Dameewwan Ilaali</a>
-                            <a href="{{ url_for('export_employees_excel') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">Excel-tti Buufadhu</a>
+                            <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-users mr-1"></i> Miseensota Ilaali</a>
+                            <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-building mr-1"></i> Dameewwan Ilaali</a>
+                            <a href="{{ url_for('ranks') }}" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gulaataa Gonfoo (Evaluation)</a>
+                            <a href="{{ url_for('export_employees_excel') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-file-excel mr-1"></i> Excel-tti Buufadhu</a>
                         </div>
                     </div>
 
