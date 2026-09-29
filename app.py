@@ -150,6 +150,35 @@ def get_retired_employees_list(active_employees):
                 pass
     return retired_list
 
+# --- AUTH ROUTES (LOGIN & LOGOUT) ---
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash('Milkaa\'inaan seenteetta!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
+        else:
+            flash('Maqaa fayyadamaa ykn jecha iccitii dogoggortee jirta.', 'danger')
+            
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Milkaa\'inaan baateetta!', 'info')
+    return redirect(url_for('login'))
+
 # --- ROUTES ---
 
 @app.route('/')
