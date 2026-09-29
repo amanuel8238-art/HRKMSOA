@@ -20,7 +20,13 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///hrkmso.db')
+
+# Dataan akka hin badneef instance folder jiraachuu isaa mirkaneessuu
+instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
+if not os.path.exists(instance_dir):
+    os.makedirs(instance_dir)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(instance_dir, "hrkmso.db")}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -57,7 +63,7 @@ def resolve_rank_id(rank_input):
 # --- AUTOMATIC DATABASE BACKUP FUNCTION (DATAAN AKKA HIN BADNEF) ---
 def create_local_backup():
     try:
-        db_path = os.path.join('instance', 'hrkmso.db')
+        db_path = os.path.join(instance_dir, 'hrkmso.db')
         backup_dir = 'backups'
         
         if not os.path.exists(backup_dir):
@@ -73,6 +79,7 @@ def create_local_backup():
         print(f"[ERR] Backup godhuu irratti rakkoon uumame: {e}")
 
 with app.app_context():
+    # Database yoo hin jirree qofa uuma, dataan jiru akka hin banneef
     db.create_all()
     
     # App-ichi yeroo ka'u automatic backup akka godhu
@@ -648,7 +655,7 @@ def settings():
     branches = Branch.query.all()
     return render_template('settings.html', users=users, branches=branches)
 
-# --- USER HAARAAN AKKA UUMAMUUF ROUTE (RAKKOO HIICHE) ---
+# --- USER HAARAAN AKKA UUMAMUUF ROUTE ---
 @app.route('/add_user', methods=['POST'])
 @admin_required
 def add_user():
@@ -677,7 +684,18 @@ def add_user():
         
     return redirect(url_for('settings'))
 
-# --- USER HAQUUF ROUTE (SETTINGS KEESSATTI YOO BARBAACHISE) ---
+# --- PASSWORD RESET ROUTE (BuildError dhowwuuf kan dabalamu) ---
+@app.route('/reset_password/<int:user_id>', methods=['POST'])
+@admin_required
+def reset_password(user_id):
+    user = User.query.get_or_404(user_id)
+    new_password = request.form.get('new_password', 'admin123')
+    user.password = generate_password_hash(new_password)
+    db.session.commit()
+    flash(f'Jechi iccitii (Password) fayyadamaa {user.username} milkaa\'inaan jijjiirameera! (Password haaraan: {new_password})', 'success')
+    return redirect(url_for('settings'))
+
+# --- USER HAQUUF ROUTE ---
 @app.route('/delete_user/<int:id>', methods=['POST'])
 @admin_required
 def delete_user(id):
