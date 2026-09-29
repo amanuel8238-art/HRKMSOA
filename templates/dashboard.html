@@ -207,8 +207,19 @@
         </main>
     </div>
 
-    <!-- Chart Script -->
+    <!-- Chart Script & State Persistence to Prevent Data Loss -->
     <script>
+        // Datawwan Server irraa dhufan qabachuun LocalStorage keessa akka tursiifaman taasisuu
+        const dashboardData = {
+            male: {{ male_count if male_count is defined else 0 }},
+            female: {{ female_count if female_count is defined else 0 }},
+            retired: {{ retired_count if retired_count is defined else 0 }},
+            timestamp: new Date().getTime()
+        };
+
+        // Data yeroo jalqabaaf ykn yeroo haaromfametti bakka qabachuuf
+        localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(dashboardData));
+
         const ctx = document.getElementById('genderChart').getContext('2d');
         const genderChart = new Chart(ctx, {
             type: 'doughnut',
@@ -216,9 +227,9 @@
                 labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
                 datasets: [{
                     data: [
-                        {{ male_count if male_count is defined else 0 }}, 
-                        {{ female_count if female_count is defined else 0 }}, 
-                        {{ retired_count if retired_count is defined else 0 }}
+                        dashboardData.male, 
+                        dashboardData.female, 
+                        dashboardData.retired
                     ],
                     backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
                     borderWidth: 1
