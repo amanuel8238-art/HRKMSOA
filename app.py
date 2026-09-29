@@ -252,7 +252,6 @@ def resigned_employees():
     resigned_list = query.all()
     return render_template('resigned_employees.html', employees=resigned_list)
 
-# --- HOJJETAA INACTIVE / RESIGNED TA'E GARAA ACTIVE GOCHUUSUUF ---
 @app.route('/activate_employee/<int:id>', methods=['POST'])
 @login_required
 def activate_employee(id):
@@ -479,7 +478,6 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-# --- HEAD OFFICE: QABXII HERREGUU FI GONFOO ITTI AANU (NEXT RANK) MURTEESSUU ---
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -487,17 +485,12 @@ def evaluate_employee(id):
     emp = Employee.query.get_or_404(id)
     if request.method == 'POST':
         try:
-            # Qabxiilee Head Office irraa dhiyaatan (fakkeenyaaf qabxii 100 keessaa ykn weighted)
-            # Fkn: Qabxii barumsaa, qabxii hojii, qabxii namusaa, fi k.k.f fudhachuu
-            criteria_1 = float(request.form.get('criteria_1') or 0.0) # Fkn: Raawwii Hojii (Performance)
-            criteria_2 = float(request.form.get('criteria_2') or 0.0) # Fkn: Qormaata / Dandeettii
-            criteria_3 = float(request.form.get('criteria_3') or 0.0) # Fkn: Amala / Naamusaa
+            criteria_1 = float(request.form.get('criteria_1') or 0.0)
+            criteria_2 = float(request.form.get('criteria_2') or 0.0)
+            criteria_3 = float(request.form.get('criteria_3') or 0.0)
             
-            # Dhibbeentaadhaan herreguu (Weight herregaa: fkn C1=50%, C2=30%, C3=20% ykn akka barbaadetti)
-            # As irratti waliigala qabxii 100% irratti hundaa'ee herregama:
             total_score = (criteria_1 * 0.5) + (criteria_2 * 0.3) + (criteria_3 * 0.2)
             
-            # Gonfoo itti aanu / Guddina sadarkaa (Next Rank) murteessuu
             next_rank_name = "Sadarkaa Hin Jijjiiramne"
             if total_score >= 85:
                 next_rank_name = "Senior / Rank Olaanaa"
@@ -506,7 +499,7 @@ def evaluate_employee(id):
             elif total_score >= 50:
                 next_rank_name = "Junior / Sadarkaa Jalqabaa"
             else:
-                next_rank_name = "Qabxiin Gahaa Mitิ (Retrain/Review)"
+                next_rank_name = "Qabxiin Gahaa Miti (Retrain/Review)"
 
             flash(f'Hojjetaaf: {emp.full_name} | Ida\'amni Qabxii (Total Score): {total_score:.2f}% | Gonfoo Itti Aanu: {next_rank_name}', 'success')
             return redirect(url_for('employees'))
@@ -515,7 +508,6 @@ def evaluate_employee(id):
 
     return render_template('evaluate_employee.html', employee=emp)
 
-# --- MISEENSA HAQUU (DELETE EMPLOYEE ROUTE) ---
 @app.route('/delete_employee/<int:id>', methods=['POST'])
 @login_required
 def delete_employee(id):
@@ -527,17 +519,15 @@ def delete_employee(id):
         
     try:
         create_local_backup()
-        
         db.session.delete(emp)
         db.session.commit()
         flash(f'Hojjetaan {emp.full_name} milkaa\'inaan haqameera!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Hojjetaan kun walitti dhufeenya table biroo (fkn Adabbii ykn Jijjiirraa) qabaachuu danda\'a; hin haqamu: {str(e)}', 'danger')
+        flash(f'Hojjetaan kun walitti dhufeenya table biroo qabaachuu danda\'a; hin haqamu: {str(e)}', 'danger')
         
     return redirect(url_for('employees'))
 
-# --- DISCIPLINE / ADABBII & AKEEKKACHIISA ROUTES ---
 @app.route('/employee/<int:employee_id>/discipline/add', methods=['GET', 'POST'])
 @login_required
 def add_discipline(employee_id):
@@ -691,7 +681,6 @@ def settings():
     branches = Branch.query.all()
     return render_template('settings.html', users=users, branches=branches)
 
-# --- USER HAARAAN AKKA UUMAMUUF ROUTE ---
 @app.route('/add_user', methods=['POST'])
 @admin_required
 def add_user():
@@ -720,7 +709,6 @@ def add_user():
         
     return redirect(url_for('settings'))
 
-# --- PASSWORD RESET ROUTE (BuildError dhowwuuf kan dabalamu) ---
 @app.route('/reset_password/<int:user_id>', methods=['POST'])
 @admin_required
 def reset_password(user_id):
@@ -731,7 +719,6 @@ def reset_password(user_id):
     flash(f'Jechi iccitii (Password) fayyadamaa {user.username} milkaa\'inaan jijjiirameera! (Password haaraan: {new_password})', 'success')
     return redirect(url_for('settings'))
 
-# --- USER HAQUUF ROUTE ---
 @app.route('/delete_user/<int:id>', methods=['POST'])
 @admin_required
 def delete_user(id):
@@ -756,14 +743,14 @@ def login():
             flash('Baga nagaan dhuftan!', 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash('Maqaan fayyadamaa ykn jechi iccitii sirrii miti.', 'danger')
+            flash('Maqaa fayyadamaa ykn jecha iccitii dogoggorri jira.', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('Nagaan deebitan!', 'info')
+    flash('Nagaan baateetta!', 'info')
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
