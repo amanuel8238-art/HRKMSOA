@@ -472,7 +472,31 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-# --- DISCIPLINE / ADABBII & A KEEKKACHIISA ROUTES (ASITI DABALAMEERA) ---
+# --- MISEENSA HAQUU (DELETE EMPLOYEE ROUTE) ---
+@app.route('/delete_employee/<int:id>', methods=['POST'])
+@login_required
+def delete_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    
+    # Namni haquu barbaadu Admin ykn damee sana keessaa ta'uu isaa mirkaneessuuf
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+        
+    try:
+        # Jalqaba backup ofeeraachuuf yeroo kana database irratti action godhamuuf jiruuf
+        create_local_backup()
+        
+        db.session.delete(emp)
+        db.session.commit()
+        flash(f'Hojjetaan {emp.full_name} milkaa\'inaan haqameera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Hojjetaan kun walitti dhufeenya table biroo (fkn Adabbii ykn Jijjiirraa) qabaachuu danda\'a; hin haqamu: {str(e)}', 'danger')
+        
+    return redirect(url_for('employees'))
+
+# --- DISCIPLINE / ADABBII & A KEEKKACHIISA ROUTES ---
 @app.route('/employee/<int:employee_id>/discipline/add', methods=['GET', 'POST'])
 @login_required
 def add_discipline(employee_id):
