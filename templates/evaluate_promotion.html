@@ -1,56 +1,41 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-    <h2>Gamaaggama Guddina Gonfoo (Promotion) - Head Office</h2>
-    <div class="card p-4 shadow-sm mb-4">
-        <h5>Odeeffannoo Hojjetaa:</h5>
-        <p><b>Maqaa Guutuu:</b> {{ employee.full_name }}</p>
-        <p><b>Bakka Hojii (Branch):</b> {{ employee.branch.name if employee.branch else 'N/A' }}</p>
-        <p><b>Gahee Hojii (Job Position):</b> {{ employee.job_position or 'N/A' }}</p>
-        <p><b>Saala:</b> {{ employee.gender or 'N/A' }}</p>
-        <p><b>Gonfoo Ammaa:</b> {{ employee.rank.name if employee.rank else 'N/A' }}</p>
-        <p><b>Sadarkaa & Gosa Barumsaa:</b> {{ employee.education_level or 'N/A' }} - {{ employee.field_of_study or 'N/A' }}</p>
-    </div>
+@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def evaluate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            # Qabxiilee HTML irraa dhufan fudhachuu
+            perf = float(request.form.get('performance_score') or 0.0)
+            edu = float(request.form.get('education_score') or 0.0)
+            disc = float(request.form.get('discipline_score') or 0.0)
+            law = float(request.form.get('law_compliance_score') or 0.0)
+            exp = float(request.form.get('experience_score') or 0.0)
+            serv = float(request.form.get('service_spirit_score') or 0.0)
+            
+            next_rank_id = request.form.get('next_rank_id')
+            
+            # Ida'ama qabxii guutuu (Total Score out of 100)
+            total_score = perf + edu + disc + law + exp + serv
+            
+            # Gonfoo filatame argachuu
+            rank_obj = Rank.query.get(int(next_rank_id)) if next_rank_id and str(next_rank_id).isdigit() else None
+            rank_name = rank_obj.name if rank_obj else "Sadarkaa Hin Beekamne"
+            
+            # (Optional) Yoo barbaadde rank hojjetaas achumaan jijjiiruu dandeessa:
+            if rank_obj:
+                emp.rank_id = rank_obj.id
+                
+            db.session.commit()
 
-    <form method="POST" class="card p-4 shadow-sm">
-        <h4>Galtee Qabxii Gamaaggamaa (Gama Head Office)</h4>
-        
-        <div class="mb-3">
-            <label class="form-label">Bu'uura Rawwii Hojii (Max 25%):</label>
-            <input type="number" step="0.01" max="25" name="performance_score" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Sadarkaa Barumsaa (Max 20%):</label>
-            <input type="number" step="0.01" max="20" name="education_score" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Namusaa Poolisii (Max 20%):</label>
-            <input type="number" step="0.01" max="20" name="discipline_score" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Seera fi Heeraa (Max 10%):</label>
-            <input type="number" step="0.01" max="10" name="law_compliance_score" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Muxaanoo Hojii (Max 10%):</label>
-            <input type="number" step="0.01" max="10" name="experience_score" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Mira Tajaajiltummaa (Max 10%):</label>
-            <input type="number" step="0.01" max="10" name="service_spirit_score" class="form-control" required>
-        </div>
+            flash(f'Hojjetaaf: {emp.full_name} | Qabxii Ida\'amaa (Total Score): {total_score:.2f}% | Gonfoo Itti Aanu: {rank_name} milkaa\'inaan galmaa\'eera!', 'success')
+            return redirect(url_for('employees'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Herrega qabxii yaalii irratti dogoggorri uumameera: {str(e)}', 'danger')
 
-        <div class="mb-3">
-            <label class="form-label text-primary fw-bold">Gonfoo Itti Aanu (Next Rank):</label>
-            <select name="next_rank_id" class="form-control" required>
-                {% for r in ranks %}
-                <option value="{{ r.id }}">{{ r.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-success">Qabxii Galmeessi & Gonfoo Mirkaneessi</button>
-        <a href="{{ url_for('employees') }}" class="btn btn-secondary">Deebi'i</a>
-    </form>
-</div>
-{% endblock %}
+    # `ranks` fuula HTML fufsiisuuf akka dhiyaatuuf ni dabalamre
+    all_ranks = Rank.query.all()
+    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
