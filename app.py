@@ -79,10 +79,7 @@ def create_local_backup():
         print(f"[ERR] Backup godhuu irratti rakkoon uumame: {e}")
 
 with app.app_context():
-    # Database yoo hin jirree qofa uuma, dataan jiru akka hin banneef
     db.create_all()
-    
-    # App-ichi yeroo ka'u automatic backup akka godhu
     create_local_backup()
     
     # 1. Admin Jalqabaa Uumuu
@@ -91,12 +88,12 @@ with app.app_context():
         admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
         db.session.add(admin_user)
 
-    # 2. Sadarkaa (Rank) Jalqabaa akka hin dhabamne uumuu
+    # 2. Sadarkaa (Rank) Jalqabaa uumuu
     if not Rank.query.first():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda ofumaan database keessatti galchuuf (Dadar corrected)
+    # 3. Dameewwan 39an hunda database keessatti galchuuf
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -150,7 +147,7 @@ def get_retired_employees_list(active_employees):
                 pass
     return retired_list
 
-# --- AUTH ROUTES (LOGIN & LOGOUT) ---
+# --- AUTH ROUTES ---
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -434,6 +431,7 @@ def add_employee():
     rank_id = resolve_rank_id(rank_input)
 
     try:
+        create_local_backup()
         new_emp = Employee(
             full_name=full_name,
             unique_id=unique_id,
@@ -470,51 +468,55 @@ def edit_employee(id):
         abort(403)
 
     if request.method == 'POST':
-        emp.full_name = request.form.get('full_name')
-        emp.unique_id = request.form.get('unique_id')
-        emp.gender = request.form.get('gender')
-        
-        if current_user.role == 'admin':
-            branch_id = request.form.get('branch_id')
-            emp.branch_id = int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
+        try:
+            create_local_backup()
+            emp.full_name = request.form.get('full_name')
+            emp.unique_id = request.form.get('unique_id')
+            emp.gender = request.form.get('gender')
+            
+            if current_user.role == 'admin':
+                branch_id = request.form.get('branch_id')
+                emp.branch_id = int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
 
-        rank_input = request.form.get('rank_id') or request.form.get('rank')
-        if rank_input:
-            resolved_rank_id = resolve_rank_id(rank_input)
-            if resolved_rank_id:
-                emp.rank_id = resolved_rank_id
-        
-        emp.rank_date = request.form.get('rank_date') or None
-        emp.hire_date = request.form.get('hire_date') or None
-        emp.birth_date = request.form.get('birth_date') or None
-        
-        emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
-        emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
-        emp.food_allowance = float(request.form.get('food_allowance') or 0.0)
-        
-        emp.education_level = request.form.get('education_level')
-        emp.field_of_study = request.form.get('field_of_study')
-        emp.job_position = request.form.get('job_position')
-        
-        new_status = request.form.get('status', emp.status)
-        emp.status = new_status
-        
-        db.session.commit()
-        flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
-        return redirect(url_for('employees'))
+            rank_input = request.form.get('rank_id') or request.form.get('rank')
+            if rank_input:
+                resolved_rank_id = resolve_rank_id(rank_input)
+                if resolved_rank_id:
+                    emp.rank_id = resolved_rank_id
+            
+            emp.rank_date = request.form.get('rank_date') or None
+            emp.hire_date = request.form.get('hire_date') or None
+            emp.birth_date = request.form.get('birth_date') or None
+            
+            emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
+            emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
+            emp.food_allowance = float(request.form.get('food_allowance') or 0.0)
+            
+            emp.education_level = request.form.get('education_level')
+            emp.field_of_study = request.form.get('field_of_study')
+            emp.job_position = request.form.get('job_position')
+            
+            new_status = request.form.get('status', emp.status)
+            emp.status = new_status
+            
+            db.session.commit()
+            flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     all_branches = Branch.query.all() if current_user.role == 'admin' else Branch.query.filter_by(id=user_b_val).all()
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-# --- PROMOTION & EVALUATION WORKFLOW (DAMEE IRRAA GARA HEAD OFFICE-TTI) ---
+# --- PROMOTION & EVALUATION WORKFLOW ---
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def evaluate_employee(id):
     emp = Employee.query.get_or_404(id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     
-    # Damee ofii qofa ykn Admin ta'uu isaa mirkaneessuu
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
 
@@ -532,7 +534,6 @@ def evaluate_employee(id):
             total_score = perf + edu + disc + law + exp + serv
             next_rank_id = request.form.get('next_rank_id')
             
-            # Gaaffiin gonfoo akka Transfer/Request fakkii ta'ee gara Head Office (Admin)-tti akka deemu godhama
             transfer_data = {
                 'employee_id': emp.id,
                 'reason': f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Gulantaa Barbaadame (Rank ID): {next_rank_id}",
@@ -544,11 +545,12 @@ def evaluate_employee(id):
             if hasattr(Transfer, 'from_branch_id'):
                 transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
 
+            create_local_backup()
             new_transfer = Transfer(**transfer_data)
             db.session.add(new_transfer)
             db.session.commit()
             
-            flash(f'Madaalliin hojjetaa {emp.full_name} (Qabxii: {total_score:.2f}) milkaa\'inaan guutamee gara Head Office-tti ergameera! Admin-ni yeroo mirkaneesse (Approved) hojiirra oola.', 'success')
+            flash(f'Madaalliin hojjetaa {emp.full_name} (Qabxii: {total_score:.2f}) milkaa\'inaan guutamee gara Head Office-tti ergameera!', 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
@@ -586,20 +588,25 @@ def add_discipline(employee_id):
         abort(403)
 
     if request.method == 'POST':
-        penalty_type = request.form.get('penalty_type')
-        reason = request.form.get('reason')
-        date_given = request.form.get('date_given') or date.today()
-        
-        new_record = DisciplineRecord(
-            employee_id=emp.id,
-            penalty_type=penalty_type,
-            reason=reason,
-            date_given=date_given
-        )
-        db.session.add(new_record)
-        db.session.commit()
-        flash('Galmeen namusaa/adabbii milkaa\'inaan galmaa\'eera!', 'success')
-        return redirect(url_for('employees'))
+        try:
+            create_local_backup()
+            penalty_type = request.form.get('penalty_type')
+            reason = request.form.get('reason')
+            date_given = request.form.get('date_given') or date.today()
+            
+            new_record = DisciplineRecord(
+                employee_id=emp.id,
+                penalty_type=penalty_type,
+                reason=reason,
+                date_given=date_given
+            )
+            db.session.add(new_record)
+            db.session.commit()
+            flash('Galmeen namusaa/adabbii milkaa\'inaan galmaa\'eera!', 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
         
     return render_template('add_discipline.html', employee=emp)
 
@@ -662,28 +669,35 @@ def add_transfer():
     if hasattr(Transfer, 'from_branch_id'):
         transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
 
-    new_transfer = Transfer(**transfer_data)
-    db.session.add(new_transfer)
-    db.session.commit()
-    flash('Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!', 'success')
+    try:
+        create_local_backup()
+        new_transfer = Transfer(**transfer_data)
+        db.session.add(new_transfer)
+        db.session.commit()
+        flash('Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
     return redirect(url_for('transfers'))
 
+# --- INDIVIDUAL TRANSFER / PROMOTION APPROVAL (KOPHA KOPHAATI MURTEESSUU) ---
 @app.route('/update_transfer_status/<int:id>', methods=['POST'])
 @admin_required
 def update_transfer_status(id):
     tr = Transfer.query.get_or_404(id)
-    status = request.form.get('status')
+    status = request.form.get('status') # 'Approved' ykn 'Rejected'
     tr.status = status
     
     target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
     if status == 'Approved':
         emp = Employee.query.get(tr.employee_id)
         if emp:
-            # 1. Yoo jijjiirraa damee (Branch Transfer) ta'e
+            # 1. Yoo Jijjiirraa Damee (Branch Transfer) ta'e
             if target_branch is not None and str(target_branch) != str(emp.branch_id):
                 emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
             
-            # 2. Yoo Gaaffii Gonfoo / Promotion Evaluation ta'e (Reason keessatti sakatta'amee hojiirra oola)
+            # 2. Yoo Gaaffii Gonfoo / Promotion Evaluation ta'e
             if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
                 try:
                     parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
@@ -694,9 +708,67 @@ def update_transfer_status(id):
                 except Exception:
                     pass
 
-    db.session.commit()
-    flash('Murteen jijjiirraa / gonfoo milkaa\'inaan galmaa\'eera!', 'success')
+    try:
+        create_local_backup()
+        db.session.commit()
+        flash('Murteen jijjiirraa / gonfoo dhuunfaadhaan milkaa\'inaan galmaa\'eera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
     return redirect(url_for('transfers'))
+
+# --- EXPORT TRANSFERS & PROMOTIONS TO EXCEL ---
+@app.route('/export_transfers_excel')
+@login_required
+def export_transfers_excel():
+    if current_user.role == 'admin':
+        all_transfers = Transfer.query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_str = str(user_b)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            conditions = []
+            if from_col is not None:
+                conditions.append(db.cast(from_col, db.String) == b_str)
+            if to_col is not None:
+                conditions.append(db.cast(to_col, db.String) == b_str)
+            all_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+        else:
+            all_transfers = []
+
+    data = []
+    for idx, tr in enumerate(all_transfers, start=1):
+        emp = Employee.query.get(tr.employee_id)
+        emp_name = emp.full_name if emp else 'N/A'
+        
+        from_branch = getattr(tr, 'from_branch_id', 'N/A')
+        to_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
+        
+        from_branch_name = emp.branch.name if (emp and emp.branch) else str(from_branch)
+        
+        target_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
+        to_branch_name = target_branch_obj.name if target_branch_obj else str(to_branch)
+
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Hojjetaa': emp_name,
+            'Damee Duraanii': from_branch_name,
+            'Damee Haaraa / Gosa Gaaffii': to_branch_name,
+            'Sababa / Haala Gonfoo': tr.reason if tr.reason else '-',
+            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
+            'Haala (Status)': tr.status if tr.status else '-'
+        })
+
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Gaaffiiwwan_Jijjiirraa_Gonfoo')
+    output.seek(0)
+
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 @app.route('/ranks', methods=['GET', 'POST'])
 @login_required
@@ -705,6 +777,7 @@ def ranks():
         name = request.form.get('name')
         description = request.form.get('description')
         if name:
+            create_local_backup()
             new_rank = Rank(name=name, description=description)
             db.session.add(new_rank)
             db.session.commit()
@@ -755,29 +828,38 @@ def add_user():
         return redirect(url_for('settings'))
         
     if username and password:
-        hashed_pw = generate_password_hash(password)
-        new_user = User(
-            username=username,
-            password=hashed_pw,
-            role=role,
-            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Fayyadamaan (User) haaraan milkaa’inaan uumameera!', 'success')
-    else:
-        flash('Maqaa fayyadamaa ykn jecha iccitii guutuu qabda.', 'warning')
-        
+        try:
+            create_local_backup()
+            hashed_pw = generate_password_hash(password)
+            new_user = User(
+                username=username,
+                password=hashed_pw,
+                role=role,
+                branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Fayyadamaan haaraan milkaa\'inaan uumameera!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('settings'))
 
-@app.route('/reset_password/<int:user_id>', methods=['POST'])
+@app.route('/delete_user/<int:id>', methods=['POST'])
 @admin_required
-def reset_password(user_id):
-    user = User.query.get_or_404(user_id)
-    new_password = request.form.get('new_password', 'admin123')
-    user.password = generate_password_hash(new_password)
-    db.session.commit()
-    flash(f'Jechi iccitii (Password) fayyadamaa {user.username} milkaa\'inaan jijjiirameera! (Password haaraan: {new_password})', 'success')
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    if user.username == 'admin':
+        flash('Admin guddaan (Main Admin) haqamuu hin danda\'u!', 'danger')
+        return redirect(url_for('settings'))
+    try:
+        create_local_backup()
+        db.session.delete(user)
+        db.session.commit()
+        flash('Fayyadamaan milkaa\'inaan haqameera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('settings'))
 
 if __name__ == '__main__':
