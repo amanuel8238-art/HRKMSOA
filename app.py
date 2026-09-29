@@ -648,6 +648,49 @@ def settings():
     branches = Branch.query.all()
     return render_template('settings.html', users=users, branches=branches)
 
+# --- USER HAARAAN AKKA UUMAMUUF ROUTE (RAKKOO HIICHE) ---
+@app.route('/add_user', methods=['POST'])
+@admin_required
+def add_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    role = request.form.get('role', 'branch_admin')
+    branch_id = request.form.get('branch_id')
+    
+    if User.query.filter_by(username=username).first():
+        flash('Maqaan fayyadamaa kun kanaan dura jira; maaloo maqaa biraa fayyadami.', 'danger')
+        return redirect(url_for('settings'))
+        
+    if username and password:
+        hashed_pw = generate_password_hash(password)
+        new_user = User(
+            username=username,
+            password=hashed_pw,
+            role=role,
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Fayyadamaan (User) haaraan milkaa’inaan uumameera!', 'success')
+    else:
+        flash('Maqaa fayyadamaa fi jecha iccitii guutuu qabda.', 'warning')
+        
+    return redirect(url_for('settings'))
+
+# --- USER HAQUUF ROUTE (SETTINGS KEESSATTI YOO BARBAACHISE) ---
+@app.route('/delete_user/<int:id>', methods=['POST'])
+@admin_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    if user.username == 'admin':
+        flash('Admin guddaa haqchuun hin danda\'amu!', 'danger')
+        return redirect(url_for('settings'))
+    
+    db.session.delete(user)
+    db.session.commit()
+    flash('Fayyadamaan milkaa\'inaan haqameera!', 'success')
+    return redirect(url_for('settings'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
