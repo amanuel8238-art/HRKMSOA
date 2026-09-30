@@ -104,7 +104,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda database keessatti galchuuf (Komishinii Manneen Sirreessaa Oromiyaa)
+    # 3. Dameewwan 39an hunda database keessatti galchuuf
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -382,7 +382,6 @@ def employees():
     all_ranks = Rank.query.all()
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
-# --- RANKS ROUTE ---
 @app.route('/ranks')
 @login_required
 def ranks():
@@ -551,9 +550,10 @@ def evaluate_employee(id):
             disc = float(request.form.get('discipline_score') or 0.0)
             law = float(request.form.get('law_compliance_score') or 0.0)
             exp = float(request.form.get('experience_score') or 0.0)
+            age = float(request.form.get('age_score') or 0.0)
             serv = float(request.form.get('service_spirit_score') or 0.0)
             
-            total_score = perf + edu + disc + law + exp + serv
+            total_score = perf + edu + disc + law + exp + age + serv
             next_rank_id = request.form.get('next_rank_id')
             
             transfer_data = {
@@ -772,7 +772,7 @@ def export_transfers_excel():
         to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
         to_b_name = 'N/A'
         if to_b_val:
-            tb = Branch.query.get(int(to_b_val)) folder if str(to_b_val).isdigit() else None
+            tb = Branch.query.get(int(to_b_val)) if str(to_b_val).isdigit() else None
             to_b_name = tb.name if tb else str(to_b_val)
 
         data.append({
