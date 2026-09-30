@@ -1,115 +1,3 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container mt-4">
-    <div class="card shadow-lg border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i> Gamaaggama Guddina Gonfoo (Promotion Evaluation)</h4>
-            <a href="{{ url_for('employees') }}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left me-1"></i> Duubatti Deebi'i</a>
-        </div>
-        <div class="card-body bg-light">
-            
-            <!-- Odeeffannoo Hojjetaa fi Umurii -->
-            <div class="card mb-4 border-info shadow-sm">
-                <div class="card-header bg-info text-dark fw-bold">
-                    <i class="fas fa-user-circle me-1"></i> Odeeffannoo Hojjetaa fi Ulaagaa:
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4"><strong>Maqaa Miseensa/Guutuu:</strong> {{ employee.full_name }}</div>
-                        <div class="col-md-4"><strong>ID Addaa:</strong> {{ employee.unique_id or '-' }}</div>
-                        <div class="col-md-4"><strong>Bakka Hojii (Damee):</strong> {{ employee.branch.name if employee.branch else '-' }}</div>
-                        <div class="col-md-4"><strong>Gahee Hojii (Job Position):</strong> {{ employee.job_position or '-' }}</div>
-                        <div class="col-md-4"><strong>Saala:</strong> {{ employee.gender or '-' }}</div>
-                        <div class="col-md-4"><strong>Gonfoo Ammaa:</strong> {{ employee.rank.name if employee.rank else '-' }}</div>
-                        <div class="col-md-4"><strong>Guyyaa Gonfoo Argate:</strong> {{ employee.rank_date or '-' }}</div>
-                        <div class="col-md-4" id="employeeBirthDate" data-birth="{{ employee.birth_date }}"><strong>Guyyaa Dhalootaa:</strong> {{ employee.birth_date or '-' }}</div>
-                        <div class="col-md-4"><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level or '-' }}</div>
-                        <div class="col-md-4"><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study or '-' }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Galtee Qabxii Gamaaggamaa -->
-            <form method="POST" id="evalForm">
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header bg-secondary text-white fw-bold">
-                        <i class="fas fa-edit me-1"></i> Galtee Qabxii Gamaaggamaa (Gama Branch)
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
-                                <input type="number" step="0.01" max="25" name="performance_score" id="perf" class="form-control score-input" required placeholder="0 - 25">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Sadarkaa Barumsaa (Max 20%):</label>
-                                <input type="number" step="0.01" max="20" name="education_score" id="edu" class="form-control score-input" required placeholder="0 - 20">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Namusaa Poolisii (Max 20%):</label>
-                                <input type="number" step="0.01" max="20" name="discipline_score" id="disc" class="form-control score-input" required placeholder="0 - 20">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Seera fi Heeraa (Max 10%):</label>
-                                <input type="number" step="0.01" max="10" name="law_compliance_score" id="law" class="form-control score-input" required placeholder="0 - 10">
-                            </div>
-                            
-                            <!-- Muuxannoo Hojii (Max 10%) -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Muuxannoo Hojii (Max 10%):</label>
-                                <input type="number" step="0.01" max="10" name="experience_score" id="exp" class="form-control score-input" required placeholder="0 - 10">
-                                <small class="text-muted">Qabxii muxxannoo hojii waggaatiin kennamu.</small>
-                            </div>
-
-                            <!-- Ulaagaa Umurii (Shallaggii Ofiisaa) -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-info">Ulaagaa Umurii:</label>
-                                <div class="p-2 bg-white border rounded text-secondary fw-bold" id="autoAgeDisplay">
-                                    Umrii shallagamaa jira...
-                                </div>
-                                <input type="hidden" name="age_score" id="age" value="0">
-                            </div>
-
-                            <!-- Mira Tajaajiltummaa (Max 15%) -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-success">Mira Tajaajiltummaa (Max 15%):</label>
-                                <input type="number" step="0.01" max="15" name="service_spirit_score" id="serv" class="form-control score-input" required placeholder="0 - 15">
-                                <small class="text-muted">Qabxii mira tajaajiltummaa (Hanga 15%).</small>
-                            </div>
-
-                            <div class="col-md-12 mt-4">
-                                <label class="form-label fw-bold text-primary">Gonfoo itti Guddatuu (Next Rank):</label>
-                                <select name="next_rank_id" class="form-select" required>
-                                    <option value="">-- Gulantaa Filadhu --</option>
-                                    {% for r in ranks %}
-                                    <option value="{{ r.id }}">{{ r.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <!-- Ida'ama Qabxii Waliigalaa -->
-                            <div class="col-md-12 mt-4">
-                                <div class="p-3 bg-white border rounded shadow-sm text-center">
-                                    <h5 class="text-muted mb-1">Ida'ama Qabxii Waliigalaa:</h5>
-                                    <h3 class="text-success fw-bold" id="totalScoreDisplay">0.00 / 100%</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success btn-lg px-5">
-                        <i class="fas fa-paper-plane me-2"></i> Gamaaggama Ergi (Galmeessi)
-                    </button>
-                </div>
-            </form>
-
-        </div>
-    </div>
-</div>
-
 <!-- JavaScript for Automatic Age Calculation & Total Score -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -143,7 +31,6 @@
             }
         }
 
-        // Akkaataa barbaaddetti "Max 4%" fi barreeffamni dabalataa haquun umrii qofa akka argisiisu godhameera
         document.getElementById('autoAgeDisplay').innerText = "Umrii Shallagame: " + ageText;
         document.getElementById('age').value = calculatedAgeScore;
 
@@ -156,7 +43,21 @@
             let age = parseFloat(document.getElementById('age').value) || 0;
             let serv = parseFloat(document.getElementById('serv').value) || 0;
 
-            let total = perf + edu + disc + law + exp + age + serv;
+            // Yoo input-ileen biroo hundi duwwaa ta'an 0.00 ta'ee akka eegalu godhameera
+            let total = 0;
+            let hasInput = (document.getElementById('perf').value !== '' || 
+                            document.getElementById('edu').value !== '' || 
+                            document.getElementById('disc').value !== '' || 
+                            document.getElementById('law').value !== '' || 
+                            document.getElementById('exp').value !== '' || 
+                            document.getElementById('serv').value !== '');
+
+            if (hasInput) {
+                total = perf + edu + disc + law + exp + age + serv;
+            } else {
+                total = 0.00;
+            }
+
             document.getElementById('totalScoreDisplay').innerText = total.toFixed(2) + " / 100%";
         }
 
@@ -167,4 +68,3 @@
         calculateTotal();
     });
 </script>
-{% endblock %}
