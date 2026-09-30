@@ -1,20 +1,4 @@
 import os
-<<<<<<< HEAD
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from datetime import datetime
-
-# Flask App Initialization
-app = Flask(__name__)
-
-# Configuration (Supabase PostgreSQL ykn SQLite)
-database_url = os.environ.get('DATABASE_URL')
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///hrkmso.db'
-=======
 import io
 import shutil
 from datetime import datetime, date
@@ -25,7 +9,6 @@ from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
 from functools import wraps
 import pandas as pd
 
-# Guyyaa Itoophiyaatti jijjiiruuf (Safuu fi Error dhowwuuf try-except godhameera)
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 except ImportError:
@@ -37,7 +20,6 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
-# --- JINJA GLOBAL FUNCTION FOR ENDPOINT CHECKING ---
 @app.context_processor
 def utility_processor():
     def endpoint_exists(endpoint):
@@ -48,122 +30,68 @@ def utility_processor():
             return False
     return dict(endpoint_exists=endpoint_exists)
 
-# Dataan akka hin badneef instance folder jiraachuu isaa mirkaneessuu
 instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
 if not os.path.exists(instance_dir):
     os.makedirs(instance_dir)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(instance_dir, "hrkmso.db")}')
->>>>>>> 35cb923 (Fix complete app.py routes and syntax)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
-# Database Initialization
-db = SQLAlchemy(app)
+db.init_app(app)
 
-# 1. To'annoo Fayyadamtootaa (User & Admin Role)
-class User(UserMixin, db.Model):
-    __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='user')
-    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
-    branch = db.relationship('Branch', backref=db.backref('users', lazy=True))
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
 
-# 2. Dameewwan (Branches)
-class Branch(db.Model):
-    __tablename__ = 'branch'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150), nullable=False)
-    location = db.Column(db.String(150))
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
 
-# 3. Sadarkaa (Ranks)
-class Rank(db.Model):
-    __tablename__ = 'rank'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+def resolve_rank_id(rank_input):
+    if not rank_input:
+        return None
+    if str(rank_input).isdigit():
+        return int(rank_input)
+    else:
+        r_obj = Rank.query.filter_by(name=rank_input).first()
+        if not r_obj:
+            r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
+        return r_obj.id if r_obj else None
 
-<<<<<<< HEAD
-# 4. Hojjettoota (Employees)
-class Employee(db.Model):
-    __tablename__ = 'employee'
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(150), nullable=False)
-    unique_id = db.Column(db.String(50), unique=True, nullable=True)
-    gender = db.Column(db.String(20), nullable=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
-    rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=False)
-    rank_date = db.Column(db.String(50), nullable=True)
-    hire_date = db.Column(db.String(50), nullable=True)
-    birth_date = db.Column(db.String(50), nullable=True)
-    rank_salary = db.Column(db.Float, nullable=True, default=0.0)
-    location_allowance = db.Column(db.Float, nullable=True, default=0.0)
-    food_allowance = db.Column(db.Float, nullable=True, default=0.0)
-    education_level = db.Column(db.String(100), nullable=True)
-    field_of_study = db.Column(db.String(150), nullable=True)
-    job_position = db.Column(db.String(150), nullable=True)
-    
-    status = db.Column(db.String(50), default='Active')
-    resignation_reason = db.Column(db.Text, nullable=True)
-    resignation_date = db.Column(db.DateTime, nullable=True)
-    retirement_age = db.Column(db.Integer, default=55)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
-    rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
-
-# 5. Jijjiirraa (Transfers)
-class Transfer(db.Model):
-    __tablename__ = 'transfer'
-    id = db.Column(db.Integer, primary_key=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
-    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
-    reason = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(50), default='Pending')
-    approval_reason = db.Column(db.Text, nullable=True)
-    transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
-=======
-# --- AUTOMATIC DATABASE BACKUP FUNCTION (DATAAN AKKA HIN BADNEF) ---
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
         backup_dir = 'backups'
-        
         if not os.path.exists(backup_dir):
             os.makedirs(backup_dir)
-            
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_file = os.path.join(backup_dir, f'hrkmso_backup_{timestamp}.db')
-        
         if os.path.exists(db_path):
             shutil.copy(db_path, backup_file)
-            print(f"[MILKAA'E] Database backup ta'eera: {backup_file}")
     except Exception as e:
-        print(f"[ERR] Backup godhuu irratti rakkoon uumame: {e}")
+        print(f"[ERR] Backup error: {e}")
 
 with app.app_context():
     db.create_all()
     create_local_backup()
->>>>>>> 35cb923 (Fix complete app.py routes and syntax)
     
-    employee = db.relationship('Employee', backref=db.backref('transfers', lazy=True))
-    from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref=db.backref('outgoing_transfers', lazy=True))
-    to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref=db.backref('incoming_transfers', lazy=True))
+    if not User.query.filter_by(username='admin').first():
+        hashed_pw = generate_password_hash('admin123')
+        admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
+        db.session.add(admin_user)
 
-<<<<<<< HEAD
-# Gunicorn kanaan akka argatuuf
-application = app
-=======
-    # 2. Sadarkaa (Rank) Jalqabaa uumuu
     if not Rank.query.first():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda database keessatti galchuuf
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -182,7 +110,6 @@ application = app
             
     db.session.commit()
 
-# --- HELPER FUNCTION FOR RETIRED AGE CALCULATION ---
 def get_retired_employees_list(active_employees):
     retired_list = []
     for e in active_employees:
@@ -190,7 +117,6 @@ def get_retired_employees_list(active_employees):
             try:
                 b_str = str(e.birth_date).strip().split()[0]
                 b_date = None
-                
                 if '-' in b_str:
                     parts = b_str.split('-')
                     if len(parts[0]) == 4:
@@ -206,7 +132,6 @@ def get_retired_employees_list(active_employees):
                         if year < 100:
                             year += 1900 if year > 30 else 2000
                         b_date = date(year, month, day)
-                
                 if b_date:
                     birth_year = b_date.year
                     if birth_year <= 2019:
@@ -217,18 +142,14 @@ def get_retired_employees_list(active_employees):
                 pass
     return retired_list
 
-# --- AUTH ROUTES ---
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
-        
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash("Milkaa'inaan seenteetta!", 'success')
@@ -236,7 +157,6 @@ def login():
             return redirect(next_page or url_for('dashboard'))
         else:
             flash('Maqaa fayyadamaa ykn jecha iccitii dogoggortee jirta.', 'danger')
-            
     return render_template('login.html')
 
 @app.route('/logout')
@@ -245,8 +165,6 @@ def logout():
     logout_user()
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
-
-# --- ROUTES ---
 
 @app.route('/')
 @login_required
@@ -261,39 +179,30 @@ def dashboard():
         emp_count = Employee.query.filter_by(status='Active').count()
         branch_count = Branch.query.count()
         transfer_count = Transfer.query.count()
-        
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
-        
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
         resigned_count = Employee.query.filter(Employee.status.in_(inactive_statuses)).count()
-        
         all_emps = Employee.query.filter_by(status='Active').all()
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         emp_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').count() if user_b else 0
         branch_count = 1
-        
         male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
         female_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count() if user_b else 0
-        
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
         resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(inactive_statuses)).count() if user_b else 0
-        
         all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
-
         if user_b:
             b_str = str(user_b)
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
             from_col = getattr(Transfer, 'from_branch_id', None)
-            
             conditions = []
             if from_col is not None:
                 conditions.append(db.cast(from_col, db.String) == b_str)
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
-                
             transfer_count = Transfer.query.filter(db.or_(*conditions)).count() if conditions else 0
         else:
             transfer_count = 0
@@ -327,24 +236,18 @@ def retired_employees():
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
-        
     retired_list = get_retired_employees_list(all_active)
     return render_template('retired_employees.html', retired_list=retired_list)
 
 @app.route('/resigned_employees')
 @login_required
 def resigned_employees():
-    inactive_statuses = [
-        'Resigned', 'Terminated', "Du'aan", 
-        'Fedhiitiin', 'Dhukkubaan', 'Dismissed'
-    ]
+    inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
     query = Employee.query.filter(Employee.status.in_(inactive_statuses))
-    
     if current_user.role != 'admin':
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         query = query.filter_by(branch_id=branch_id_val) if user_b else query.filter(False)
-        
     resigned_list = query.all()
     return render_template('resigned_employees.html', employees=resigned_list)
 
@@ -353,10 +256,8 @@ def resigned_employees():
 def activate_employee(id):
     emp = Employee.query.get_or_404(id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
-
     try:
         create_local_backup()
         emp.status = 'Active'
@@ -364,13 +265,11 @@ def activate_employee(id):
             emp.resignation_reason = None
         if hasattr(emp, 'resignation_date'):
             emp.resignation_date = None
-            
         db.session.commit()
-        flash(f'Hojjetaan {emp.full_name} ammaa jalqabee deebi\'ee gara "Active" (Hojii irraa)tti galfameera!', 'success')
+        flash(f'Hojjetaan {emp.full_name} ammaa jalqabee deebi\'ee gara "Active"tti galfameera!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
     return redirect(request.referrer or url_for('employees'))
 
 @app.route('/employees')
@@ -386,7 +285,6 @@ def employees():
     sort_order = request.args.get('sort', 'az')
 
     query = Employee.query
-
     if status_filter != 'All':
         query = query.filter_by(status=status_filter)
 
@@ -431,7 +329,6 @@ def employees():
         query = query.order_by(Employee.full_name.asc())
 
     all_employees = query.all()
-    
     if current_user.role == 'admin':
         all_branches = Branch.query.all()
     else:
@@ -469,11 +366,9 @@ def export_employees_excel():
 
     emps = query.all()
     data = []
-    
     for idx, e in enumerate(emps, start=1):
         branch_name = e.branch.name if e.branch else 'N/A'
         rank_name = e.rank.name if e.rank else 'N/A'
-        
         data.append({
             'Lakk.': idx,
             'ID Addaa': e.unique_id if e.unique_id else '-',
@@ -492,7 +387,6 @@ def export_employees_excel():
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Miseensota')
     output.seek(0)
-    
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Report.xlsx')
 
 @app.route('/add_employee', methods=['POST'])
@@ -501,7 +395,6 @@ def add_employee():
     full_name = request.form.get('full_name')
     unique_id = request.form.get('unique_id')
     gender = request.form.get('gender')
-    
     if current_user.role == 'admin':
         branch_id = request.form.get('branch_id')
     else:
@@ -535,7 +428,6 @@ def add_employee():
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-        
     return redirect(url_for('employees'))
 
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
@@ -543,7 +435,6 @@ def add_employee():
 def edit_employee(id):
     emp = Employee.query.get_or_404(id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
 
@@ -553,7 +444,6 @@ def edit_employee(id):
             emp.full_name = request.form.get('full_name')
             emp.unique_id = request.form.get('unique_id')
             emp.gender = request.form.get('gender')
-            
             if current_user.role == 'admin':
                 branch_id = request.form.get('branch_id')
                 emp.branch_id = int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
@@ -567,17 +457,13 @@ def edit_employee(id):
             emp.rank_date = request.form.get('rank_date') or None
             emp.hire_date = request.form.get('hire_date') or None
             emp.birth_date = request.form.get('birth_date') or None
-            
             emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
             emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
             emp.food_allowance = float(request.form.get('food_allowance') or 0.0)
-            
             emp.education_level = request.form.get('education_level')
             emp.field_of_study = request.form.get('field_of_study')
             emp.job_position = request.form.get('job_position')
-            
-            new_status = request.form.get('status', emp.status)
-            emp.status = new_status
+            emp.status = request.form.get('status', emp.status)
             
             db.session.commit()
             flash("Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!", 'success')
@@ -590,18 +476,15 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-# --- PROMOTION & EVALUATION WORKFLOW ---
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def evaluate_employee(id):
     emp = Employee.query.get_or_404(id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
 
     all_ranks = Rank.query.all()
-    
     if request.method == 'POST':
         try:
             perf = float(request.form.get('performance_score') or 0.0)
@@ -631,7 +514,7 @@ def evaluate_employee(id):
             db.session.add(new_transfer)
             db.session.commit()
             
-            flash(f"Madaalliin hojjetaa {emp.full_name} (Qabxii: {total_score:.2f}) milkaa\'inaan guutamee gara Head Office-tti ergameera!", 'success')
+            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan guutamee gara Head Office-tti ergameera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
@@ -644,7 +527,6 @@ def evaluate_employee(id):
 def delete_employee(id):
     emp = Employee.query.get_or_404(id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
         
@@ -655,7 +537,7 @@ def delete_employee(id):
         flash(f"Hojjetaan {emp.full_name} milkaa\'inaan haqameera!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Hojjetaan kun walitti dhufeenya table biroo qabaachuu danda\'a; hin haqamu: {str(e)}", 'danger')
+        flash(f"Hojjetaan kun walitti dhufeenya table biroo qabaachuu danda\'a: {str(e)}", 'danger')
         
     return redirect(url_for('employees'))
 
@@ -664,22 +546,17 @@ def delete_employee(id):
 def add_discipline(employee_id):
     emp = Employee.query.get_or_404(employee_id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
 
     if request.method == 'POST':
         try:
             create_local_backup()
-            penalty_type = request.form.get('penalty_type')
-            reason = request.form.get('reason')
-            date_given = request.form.get('date_given') or date.today()
-            
             new_record = DisciplineRecord(
                 employee_id=emp.id,
-                penalty_type=penalty_type,
-                reason=reason,
-                date_given=date_given
+                penalty_type=request.form.get('penalty_type'),
+                reason=request.form.get('reason'),
+                date_given=request.form.get('date_given') or date.today()
             )
             db.session.add(new_record)
             db.session.commit()
@@ -701,12 +578,11 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
-# --- TRANSFERS & PROMOTION EVALUATIONS WITH BRANCH FILTERING ---
 @app.route('/transfers')
 @login_required
 def transfers():
     branch_id_filter = request.args.get('branch_id')
-    type_filter = request.args.get('type') # 'promotion' ykn 'transfer' akka addaan baasuuf
+    type_filter = request.args.get('type')
     
     if current_user.role == 'admin':
         query = Transfer.query
@@ -787,7 +663,6 @@ def add_transfer():
         
     return redirect(url_for('transfers'))
 
-# --- INDIVIDUAL TRANSFER / PROMOTION APPROVAL ---
 @app.route('/update_transfer_status/<int:id>', methods=['POST'])
 @admin_required
 def update_transfer_status(id):
@@ -801,7 +676,6 @@ def update_transfer_status(id):
         if emp:
             if target_branch is not None and str(target_branch) != str(emp.branch_id):
                 emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
-            
             if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
                 try:
                     parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
@@ -821,7 +695,6 @@ def update_transfer_status(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     return redirect(url_for('transfers'))
->>>>>>> 35cb923 (Fix complete app.py routes and syntax)
 
 if __name__ == '__main__':
     app.run(debug=True)
