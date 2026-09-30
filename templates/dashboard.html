@@ -27,7 +27,7 @@
                 </div>
                 <div class="flex items-center gap-4 text-sm">
                     <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b>{{ current_user.username }}</b></span>
-                    {% if current_user.role == 'admin' %}
+                    {% if current_user.role == 'admin' and 'settings' in url_for.__globals__.get('view_functions', {}) %}
                     <a href="{{ url_for('settings') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded transition text-white">Manage Users</a>
                     {% endif %}
                     <a href="{{ url_for('logout') }}" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition text-white">Bahi (Logout)</a>
@@ -44,8 +44,15 @@
                 <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
                 <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
                 <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
-                <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
-                {% if current_user.role == 'admin' %}
+                
+                <!-- Check if 'ranks' endpoint exists, otherwise fallback to 'evaluation' or hide if missing -->
+                {% if endpoint_exists('ranks') %}
+                    <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+                {% elif endpoint_exists('rank') %}
+                    <a href="{{ url_for('rank') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+                {% endif %}
+
+                {% if current_user.role == 'admin' and endpoint_exists('settings') %}
                 <a href="{{ url_for('settings') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Useroota (Users)</a>
                 {% endif %}
             </div>
@@ -105,7 +112,9 @@
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Retired)</p>
                             <h3 id="statRetired" class="text-xl font-bold text-amber-600 mt-1">{{ retired_count if retired_count is defined else 0 }}</h3>
+                            {% if endpoint_exists('retired_employees') %}
                             <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">Eenyuu fa'a? Ilaali &rarr;</a>
+                            {% endif %}
                         </div>
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
                     </div>
@@ -115,7 +124,9 @@
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
                             <h3 id="statResigned" class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count is defined else 0 }}</h3>
+                            {% if endpoint_exists('resigned_employees') %}
                             <a href="{{ url_for('resigned_employees') }}" class="text-xs text-red-600 hover:underline mt-1 inline-block font-semibold">Ilaali &rarr;</a>
+                            {% endif %}
                         </div>
                         <span class="p-3 bg-red-50 text-red-600 rounded-lg text-lg">🚪</span>
                     </div>
@@ -189,8 +200,16 @@
                         <div class="flex flex-wrap gap-3 pt-2">
                             <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-users mr-1"></i> Miseensota Ilaali</a>
                             <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-building mr-1"></i> Dameewwan Ilaali</a>
+                            
+                            {% if endpoint_exists('ranks') %}
                             <a href="{{ url_for('ranks') }}" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gulaataa Gonfoo (Evaluation)</a>
+                            {% elif endpoint_exists('rank') %}
+                            <a href="{{ url_for('rank') }}" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gulaataa Gonfoo (Evaluation)</a>
+                            {% endif %}
+
+                            {% if endpoint_exists('export_employees_excel') %}
                             <a href="{{ url_for('export_employees_excel') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-file-excel mr-1"></i> Excel-tti Buufadhu</a>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -234,7 +253,6 @@
             if (cachedDataString) {
                 try {
                     const cachedData = JSON.parse(cachedDataString);
-                    // Yoo lakkoofsi server irraa dhufe tasa 0 ta'ee garuu kan duraa keessa kan jiru ta'e akka hin haqamne of eeggannoo
                     if (liveData.emp_count === 0 && cachedData.emp_count > 0) {
                         dashboardData = cachedData;
                     } else {

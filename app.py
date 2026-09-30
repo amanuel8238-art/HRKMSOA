@@ -752,23 +752,23 @@ def export_transfers_excel():
         
         to_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
         to_branch_name = to_branch_obj.name if to_branch_obj else str(to_branch)
-        
+
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa': from_branch_name,
-            'Damee Gara': to_branch_name,
+            'Irraa (From Branch)': from_branch_name,
+            'Gara (To Branch)': to_branch_name,
             'Sababa / Ibsa': tr.reason if tr.reason else '-',
             'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
         })
-
+        
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
     output.seek(0)
-
+    
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
