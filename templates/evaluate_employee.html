@@ -1,13 +1,13 @@
-<!-- JavaScript for Automatic Age Calculation & Total Score -->
+<!-- JavaScript for Safe Automatic Age Calculation & Total Score -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        let bDateEl = document.getElementById('employeeBirthDate');
-        let bStr = bDateEl ? bDateEl.getAttribute('data-birth') : '';
-        let calculatedAgeScore = 0;
-        let ageText = "Hin beekamu";
+        try {
+            let bDateEl = document.getElementById('employeeBirthDate');
+            let bStr = bDateEl ? bDateEl.getAttribute('data-birth') : '';
+            let calculatedAgeScore = 0;
+            let ageText = "Hin beekamu";
 
-        if (bStr && bStr.trim() !== "" && bStr !== "None" && bStr !== "None") {
-            try {
+            if (bStr && bStr.trim() !== "" && bStr !== "None" && bStr !== "null") {
                 let parts = bStr.split(/[-/]/);
                 if (parts.length > 0) {
                     let birthYear = parseInt(parts[0].length === 4 ? parts[0] : parts[parts.length - 1]);
@@ -28,56 +28,56 @@
                         }
                     }
                 }
-            } catch(e) {
-                console.log("Error calculating age:", e);
-            }
-        }
-
-        let ageDisplay = document.getElementById('autoAgeDisplay');
-        if(ageDisplay) {
-            ageDisplay.innerText = "Umrii Shallagame: " + ageText;
-        }
-        
-        let ageInput = document.getElementById('age');
-        if(ageInput) {
-            ageInput.value = calculatedAgeScore;
-        }
-
-        function calculateTotal() {
-            let perf = parseFloat(document.getElementById('perf')?.value) || 0;
-            let edu = parseFloat(document.getElementById('edu')?.value) || 0;
-            let disc = parseFloat(document.getElementById('disc')?.value) || 0;
-            let law = parseFloat(document.getElementById('law')?.value) || 0;
-            let exp = parseFloat(document.getElementById('exp')?.value) || 0;
-            let age = parseFloat(document.getElementById('age')?.value) || 0;
-            let serv = parseFloat(document.getElementById('serv')?.value) || 0;
-
-            let total = 0;
-            let hasInput = (
-                document.getElementById('perf')?.value !== '' || 
-                document.getElementById('edu')?.value !== '' || 
-                document.getElementById('disc')?.value !== '' || 
-                document.getElementById('law')?.value !== '' || 
-                document.getElementById('exp')?.value !== '' || 
-                document.getElementById('serv')?.value !== ''
-            );
-
-            if (hasInput) {
-                total = perf + edu + disc + law + exp + age + serv;
-            } else {
-                total = 0.00;
             }
 
-            let totalDisplay = document.getElementById('totalScoreDisplay');
-            if(totalDisplay) {
-                totalDisplay.innerText = total.toFixed(2) + " / 100%";
+            let ageDisplay = document.getElementById('autoAgeDisplay');
+            if (ageDisplay) {
+                ageDisplay.innerText = "Umrii Shallagame: " + ageText;
             }
-        }
+            
+            let ageInput = document.getElementById('age');
+            if (ageInput) {
+                ageInput.value = calculatedAgeScore;
+            }
 
-        document.querySelectorAll('.score-input').forEach(input => {
-            input.addEventListener('input', calculateTotal);
-        });
-        
-        calculateTotal();
+            function calculateTotal() {
+                let perf = parseFloat(document.getElementById('perf')?.value) || 0;
+                let edu = parseFloat(document.getElementById('edu')?.value) || 0;
+                let disc = parseFloat(document.getElementById('disc')?.value) || 0;
+                let law = parseFloat(document.getElementById('law')?.value) || 0;
+                let exp = parseFloat(document.getElementById('exp')?.value) || 0;
+                let age = parseFloat(document.getElementById('age')?.value) || 0;
+                let serv = parseFloat(document.getElementById('serv')?.value) || 0;
+
+                let total = 0;
+                let hasInput = (
+                    (document.getElementById('perf')?.value ?? '') !== '' || 
+                    (document.getElementById('edu')?.value ?? '') !== '' || 
+                    (document.getElementById('disc')?.value ?? '') !== '' || 
+                    (document.getElementById('law')?.value ?? '') !== '' || 
+                    (document.getElementById('exp')?.value ?? '') !== '' || 
+                    (document.getElementById('serv')?.value ?? '') !== ''
+                );
+
+                if (hasInput) {
+                    total = perf + edu + disc + law + exp + age + serv;
+                } else {
+                    total = 0.00;
+                }
+
+                let totalDisplay = document.getElementById('totalScoreDisplay');
+                if (totalDisplay) {
+                    totalDisplay.innerText = total.toFixed(2) + " / 100%";
+                }
+            }
+
+            document.querySelectorAll('.score-input').forEach(input => {
+                input.addEventListener('input', calculateTotal);
+            });
+            
+            calculateTotal();
+        } catch (err) {
+            console.log("JS Error caught safely: ", err);
+        }
     });
 </script>
