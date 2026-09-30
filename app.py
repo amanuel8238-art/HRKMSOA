@@ -298,14 +298,20 @@ def activate_employee(id):
     if current_user.role != 'admin' and emp.branch_id != user_b_val:
         abort(403)
 
-    emp.status = 'Active'
-    if hasattr(emp, 'resignation_reason'):
-        emp.resignation_reason = None
-    if hasattr(emp, 'resignation_date'):
-        emp.resignation_date = None
-        
-    db.session.commit()
-    flash(f'Hojjetaan {emp.full_name} ammaa jalqabee deebi\'ee gara "Active" (Hojii irraa)tti galfameera!', 'success')
+    try:
+        create_local_backup()
+        emp.status = 'Active'
+        if hasattr(emp, 'resignation_reason'):
+            emp.resignation_reason = None
+        if hasattr(emp, 'resignation_date'):
+            emp.resignation_date = None
+            
+        db.session.commit()
+        flash(f'Hojjetaan {emp.full_name} ammaa jalqabee deebi\'ee gara "Active" (Hojii irraa)tti galfameera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
     return redirect(request.referrer or url_for('employees'))
 
 @app.route('/employees')
@@ -376,7 +382,7 @@ def employees():
     all_ranks = Rank.query.all()
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
-# --- RANKS ROUTE (Error-Free Fix) ---
+# --- RANKS ROUTE ---
 @app.route('/ranks')
 @login_required
 def ranks():
@@ -387,8 +393,6 @@ def ranks():
 @login_required
 def export_employees_excel():
     branch_id = request.args.get('branch_id')
-    rank = request.args.get('rank')
-    gender = request.args.get('gender')
     search_query = request.args.get('search', '')
     status_filter = request.args.get('status', 'Active')
 
@@ -760,26 +764,22 @@ def export_transfers_excel():
         emp = Employee.query.get(tr.employee_id)
         emp_name = emp.full_name if emp else 'N/A'
         
-        from_b_val = getattr(tr, 'from_branch_id', None)
-        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-        
         from_b_name = 'N/A'
-        if from_b_val:
-            fb = Branch.query.get(int(from_b_val)) if str(from_b_val).isdigit() else Branch.query.filter_by(name=str(from_b_val)).first()
-            if fb:
-                from_b_name = fb.name
-                
+        if hasattr(tr, 'from_branch_id') and tr.from_branch_id:
+            fb = Branch.query.get(int(tr.from_branch_id)) if str(tr.from_branch_id).isdigit() else None
+            from_b_name = fb.name if fb else str(tr.from_branch_id)
+            
+        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
         to_b_name = 'N/A'
         if to_b_val:
-            tb = Branch.query.get(int(to_b_val)) if str(to_b_val).isdigit() else Branch.query.filter_by(name=str(to_b_val)).first()
-            if tb:
-                to_b_name = tb.name
+            tb = Branch.query.get(int(to_b_val)) folder if str(to_b_val).isdigit() else None
+            to_b_name = tb.name if tb else str(to_b_val)
 
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa (From)': from_b_name,
-            'Damee Itti (To)': to_b_name,
+            'Damee Irraa': from_b_name,
+            'Damee Gara': to_b_name,
             'Sababii / Gaaffii': tr.reason if tr.reason else '-',
             'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
@@ -788,10 +788,10 @@ def export_transfers_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Gudina')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
     output.seek(0)
     
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)
