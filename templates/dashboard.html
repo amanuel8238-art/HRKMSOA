@@ -67,19 +67,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Ida'ama Miseensotaa (Total)</p>
-                        <h3 class="text-2xl font-bold text-indigo-900 mt-1">{{ emp_count if emp_count is defined else 0 }}</h3>
+                        <h3 id="statEmpCount" class="text-2xl font-bold text-indigo-900 mt-1">{{ emp_count if emp_count is defined else 0 }}</h3>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Miseensota Hojii Irra Jiran (Active)</p>
-                        <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
+                        <h3 id="statActiveEmp" class="text-2xl font-bold text-emerald-600 mt-1">{{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Baay'ina Dameewwanii</p>
-                        <h3 class="text-2xl font-bold text-slate-800 mt-1">{{ branch_count if branch_count is defined else 0 }}</h3>
+                        <h3 id="statBranchCount" class="text-2xl font-bold text-slate-800 mt-1">{{ branch_count if branch_count is defined else 0 }}</h3>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-xs text-slate-500 font-medium">Galmee Jijjiirraa (Transfers)</p>
-                        <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ transfer_count if transfer_count is defined else 0 }}</h3>
+                        <h3 id="statTransferCount" class="text-2xl font-bold text-amber-600 mt-1">{{ transfer_count if transfer_count is defined else 0 }}</h3>
                     </div>
                 </div>
 
@@ -88,14 +88,14 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhiira</p>
-                            <h3 class="text-xl font-bold text-blue-600 mt-1">{{ male_count if male_count is defined else 0 }}</h3>
+                            <h3 id="statMale" class="text-xl font-bold text-blue-600 mt-1">{{ male_count if male_count is defined else 0 }}</h3>
                         </div>
                         <span class="p-3 bg-blue-50 text-blue-600 rounded-lg text-lg">👨</span>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhalaa</p>
-                            <h3 class="text-xl font-bold text-pink-600 mt-1">{{ female_count if female_count is defined else 0 }}</h3>
+                            <h3 id="statFemale" class="text-xl font-bold text-pink-600 mt-1">{{ female_count if female_count is defined else 0 }}</h3>
                         </div>
                         <span class="p-3 bg-pink-50 text-pink-600 rounded-lg text-lg">👩</span>
                     </div>
@@ -104,7 +104,7 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Retired)</p>
-                            <h3 class="text-xl font-bold text-amber-600 mt-1">{{ retired_count if retired_count is defined else 0 }}</h3>
+                            <h3 id="statRetired" class="text-xl font-bold text-amber-600 mt-1">{{ retired_count if retired_count is defined else 0 }}</h3>
                             <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">Eenyuu fa'a? Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
@@ -114,7 +114,7 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
-                            <h3 class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count is defined else 0 }}</h3>
+                            <h3 id="statResigned" class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count is defined else 0 }}</h3>
                             <a href="{{ url_for('resigned_employees') }}" class="text-xs text-red-600 hover:underline mt-1 inline-block font-semibold">Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-red-50 text-red-600 rounded-lg text-lg">🚪</span>
@@ -129,9 +129,9 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Of-eeggannoo (Warning)</p>
-                                    <h3 class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count is defined else 0 }}</h3>
+                                    <h3 id="statWarning" class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠️</span>
+                                <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠️️</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
                                 <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
@@ -142,7 +142,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Adabbii (Penalties)</p>
-                                    <h3 class="text-xl font-bold text-rose-600 mt-1">{{ penalty_count if penalty_count is defined else 0 }}</h3>
+                                    <h3 id="statPenalty" class="text-xl font-bold text-rose-600 mt-1">{{ penalty_count if penalty_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-rose-50 text-rose-600 rounded-lg text-lg">⚖️</span>
                             </div>
@@ -155,7 +155,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Badhaasa / Galataa (Rewards)</p>
-                                    <h3 class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count is defined else 0 }}</h3>
+                                    <h3 id="statReward" class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">🏆</span>
                             </div>
@@ -168,7 +168,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">Galmee Qulqulluu (Clean)</p>
-                                    <h3 class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count is defined else 0 }}</h3>
+                                    <h3 id="statClean" class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-sky-50 text-sky-600 rounded-lg text-lg">✨</span>
                             </div>
@@ -209,42 +209,92 @@
 
     <!-- Chart Script & State Persistence to Prevent Data Loss -->
     <script>
-        // Datawwan Server irraa dhufan qabachuun LocalStorage keessa akka tursiifaman taasisuu
-        const dashboardData = {
-            male: {{ male_count if male_count is defined else 0 }},
-            female: {{ female_count if female_count is defined else 0 }},
-            retired: {{ retired_count if retired_count is defined else 0 }},
-            timestamp: new Date().getTime()
-        };
+        document.addEventListener("DOMContentLoaded", function() {
+            // 1. Lakkoofsota Server irraa dhufan qabachuun Object qopheessuu
+            const liveData = {
+                emp_count: {{ emp_count if emp_count is defined else 0 }},
+                active_emp_count: {{ active_emp_count if active_emp_count is defined else 0 }},
+                branch_count: {{ branch_count if branch_count is defined else 0 }},
+                transfer_count: {{ transfer_count if transfer_count is defined else 0 }},
+                male_count: {{ male_count if male_count is defined else 0 }},
+                female_count: {{ female_count if female_count is defined else 0 }},
+                retired_count: {{ retired_count if retired_count is defined else 0 }},
+                resigned_count: {{ resigned_count if resigned_count is defined else 0 }},
+                warning_count: {{ warning_count if warning_count is defined else 0 }},
+                penalty_count: {{ penalty_count if penalty_count is defined else 0 }},
+                reward_count: {{ reward_count if reward_count is defined else 0 }},
+                clean_count: {{ clean_count if clean_count is defined else 0 }},
+                timestamp: new Date().getTime()
+            };
 
-        // Data yeroo jalqabaaf ykn yeroo haaromfametti bakka qabachuuf
-        localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(dashboardData));
+            // 2. Yoo Server-irraa dataan guutuu ta'ee (0 hin taane ykn caalaa yoo argame) Cache keessatti haaromsuu
+            // Yoo Internet ykn Server hiri'ate garuu dataa duraanii (LocalStorage) irraa deebisuun akka hin badne taasisuu.
+            let dashboardData = liveData;
+            const cachedDataString = localStorage.getItem('hrkmso_dashboard_cache');
+            
+            if (cachedDataString) {
+                try {
+                    const cachedData = JSON.parse(cachedDataString);
+                    // Yoo lakkoofsi server irraa dhufe tasa 0 ta'ee garuu kan duraa keessa kan jiru ta'e akka hin haqamne of eeggannoo
+                    if (liveData.emp_count === 0 && cachedData.emp_count > 0) {
+                        dashboardData = cachedData;
+                    } else {
+                        localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
+                    }
+                } catch (e) {
+                    localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
+                }
+            } else {
+                localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
+            }
 
-        const ctx = document.getElementById('genderChart').getContext('2d');
-        const genderChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
-                datasets: [{
-                    data: [
-                        dashboardData.male, 
-                        dashboardData.female, 
-                        dashboardData.retired
-                    ],
-                    backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 12, font: { size: 10 } }
+            // 3. UI irra elementoota ID qaban irratti deebisee uwwisuu (Data Loss irraa eeguuf)
+            document.getElementById('statEmpCount').innerText = dashboardData.emp_count;
+            document.getElementById('statActiveEmp').innerText = dashboardData.active_emp_count;
+            document.getElementById('statBranchCount').innerText = dashboardData.branch_count;
+            document.getElementById('statTransferCount').innerText = dashboardData.transfer_count;
+            document.getElementById('statMale').innerText = dashboardData.male_count;
+            document.getElementById('statFemale').innerText = dashboardData.female_count;
+            document.getElementById('statRetired').innerText = dashboardData.retired_count;
+            document.getElementById('statResigned').innerText = dashboardData.resigned_count;
+            document.getElementById('statWarning').innerText = dashboardData.warning_count;
+            document.getElementById.apply ? null : null; // Safe check
+            const warningEl = document.getElementById('statWarning');
+            if(warningEl) warningEl.innerText = dashboardData.warning_count;
+            const penaltyEl = document.getElementById('statPenalty');
+            if(penaltyEl) penaltyEl.innerText = dashboardData.penalty_count;
+            const rewardEl = document.getElementById('statReward');
+            if(rewardEl) rewardEl.innerText = dashboardData.reward_count;
+            const cleanEl = document.getElementById('statClean');
+            if(cleanEl) cleanEl.innerText = dashboardData.clean_count;
+
+            // 4. Chart.js render godhuu
+            const ctx = document.getElementById('genderChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
+                    datasets: [{
+                        data: [
+                            dashboardData.male_count, 
+                            dashboardData.female_count, 
+                            dashboardData.retired_count
+                        ],
+                        backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 10 } }
+                        }
                     }
                 }
-            }
+            });
         });
     </script>
 </body>

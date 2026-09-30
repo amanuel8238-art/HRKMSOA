@@ -161,7 +161,7 @@ def login():
         
         if user and check_password_hash(user.password, password):
             login_user(user)
-            flash('Milkaa\'inaan seenteetta!', 'success')
+            flash("Milkaa'inaan seenteetta!", 'success')
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
@@ -173,7 +173,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Milkaa\'inaan baateetta!', 'info')
+    flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
 
 # --- ROUTES ---
@@ -451,7 +451,7 @@ def add_employee():
         )
         db.session.add(new_emp)
         db.session.commit()
-        flash('Hojjetaan haaraan milkaa’inaan galmaa’eera!', 'success')
+        flash("Hojjetaan haaraan milkaa’inaan galmaa’eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -500,7 +500,7 @@ def edit_employee(id):
             emp.status = new_status
             
             db.session.commit()
-            flash('Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!', 'success')
+            flash("Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
@@ -550,7 +550,7 @@ def evaluate_employee(id):
             db.session.add(new_transfer)
             db.session.commit()
             
-            flash(f'Madaalliin hojjetaa {emp.full_name} (Qabxii: {total_score:.2f}) milkaa\'inaan guutamee gara Head Office-tti ergameera!', 'success')
+            flash(f"Madaalliin hojjetaa {emp.full_name} (Qabxii: {total_score:.2f}) milkaa\'inaan guutamee gara Head Office-tti ergameera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
@@ -571,10 +571,10 @@ def delete_employee(id):
         create_local_backup()
         db.session.delete(emp)
         db.session.commit()
-        flash(f'Hojjetaan {emp.full_name} milkaa\'inaan haqameera!', 'success')
+        flash(f"Hojjetaan {emp.full_name} milkaa\'inaan haqameera!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Hojjetaan kun walitti dhufeenya table biroo qabaachuu danda\'a; hin haqamu: {str(e)}', 'danger')
+        flash(f"Hojjetaan kun walitti dhufeenya table biroo qabaachuu danda\'a; hin haqamu: {str(e)}", 'danger')
         
     return redirect(url_for('employees'))
 
@@ -602,7 +602,7 @@ def add_discipline(employee_id):
             )
             db.session.add(new_record)
             db.session.commit()
-            flash('Galmeen namusaa/adabbii milkaa\'inaan galmaa\'eera!', 'success')
+            flash("Galmeen namusaa/adabbii milkaa\'inaan galmaa\'eera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
@@ -674,7 +674,7 @@ def add_transfer():
         new_transfer = Transfer(**transfer_data)
         db.session.add(new_transfer)
         db.session.commit()
-        flash('Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!', 'success')
+        flash("Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -711,7 +711,7 @@ def update_transfer_status(id):
     try:
         create_local_backup()
         db.session.commit()
-        flash('Murteen jijjiirraa / gonfoo dhuunfaadhaan milkaa\'inaan galmaa\'eera!', 'success')
+        flash("Murteen jijjiirraa / gonfoo dhuunfaadhaan milkaa\'inaan galmaa\'eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -748,27 +748,27 @@ def export_transfers_excel():
         to_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
         
         from_branch_obj = Branch.query.get(int(from_branch)) if str(from_branch).isdigit() else None
-        from_branch_name = from_branch_obj.name if from_branch_obj else (emp.branch.name if (emp and emp.branch) else str(from_branch))
+        from_branch_name = from_branch_obj.name if from_branch_obj else (emp.branch.name if emp and emp.branch else 'N/A')
         
-        target_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
-        to_branch_name = target_branch_obj.name if target_branch_obj else str(to_branch)
-        
+        to_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
+        to_branch_name = to_branch_obj.name if to_branch_obj else 'N/A'
+
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa': from_branch_name,
-            'Damee Itti Fufu': to_branch_name,
-            'Sababa / Ibsa': tr.reason if tr.reason else '-',
+            'Damee Irraa (From)': from_branch_name,
+            'Damee Itti (To)': to_branch_name,
+            'Sababa / Haala': tr.reason if tr.reason else '-',
             'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
-            'Haala (Status)': tr.status if tr.status else '-'
+            'Status': tr.status if tr.status else '-'
         })
-        
+
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
     output.seek(0)
-    
+
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
