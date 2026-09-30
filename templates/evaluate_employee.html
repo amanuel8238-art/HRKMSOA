@@ -71,9 +71,11 @@
                                 <small class="text-muted">Umrii hojjetaa ragaa dhalootaa irraa ofumaan shallagama.</small>
                             </div>
 
+                            <!-- Mira Tajaajiltummaa (Max 15%) -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 10%):</label>
-                                <input type="number" step="0.01" max="10" name="service_spirit_score" id="serv" class="form-control score-input" required placeholder="0 - 10">
+                                <label class="form-label fw-bold text-success">Mira Tajaajiltummaa (Max 15%):</label>
+                                <input type="number" step="0.01" max="15" name="service_spirit_score" id="serv" class="form-control score-input" required placeholder="0 - 15">
+                                <small class="text-muted">Qabxii mira tajaajiltummaa (Hanga 15%).</small>
                             </div>
 
                             <div class="col-md-12 mt-4">
@@ -112,7 +114,6 @@
 <!-- JavaScript for Automatic Age Calculation & Total Score -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Umrii shallaguuf fi qabxii umurii kennuuf
         let bDateEl = document.getElementById('employeeBirthDate');
         let bStr = bDateEl ? bDateEl.getAttribute('data-birth') : '';
         let calculatedAgeScore = 0;
@@ -125,13 +126,11 @@
                 if (!isNaN(birthYear)) {
                     if (birthYear < 100) birthYear += (birthYear > 30 ? 1900 : 2000);
                     let currentYear = new Date().getFullYear();
-                    // Yoo Ethio-calendar ta'e ykn Gregorian ta'e tilmaamaan 
                     let age = currentYear - birthYear;
                     ageText = age + " Waggaa";
                     
-                    // Fakkeenya: Ulaagaan umurii akkaataa waggaatiin hanga 4% kenna (umrii dargaggoo/giddu-galeessaa jajjabeessuuf)
                     if (age >= 20 && age <= 40) {
-                        calculatedAgeScore = 4.0; // Guutuu
+                        calculatedAgeScore = 4.0;
                     } else if (age > 40 && age <= 50) {
                         calculatedAgeScore = 3.0;
                     } else if (age > 50) {
@@ -148,7 +147,6 @@
         document.getElementById('autoAgeDisplay').innerText = "Umrii: " + ageText + " (Qabxii Kenname: " + calculatedAgeScore + " / 4%)";
         document.getElementById('age').value = calculatedAgeScore;
 
-        // Herreega waliigalaa yeroo jijjiiramu
         function calculateTotal() {
             let perf = parseFloat(document.getElementById('perf').value) || 0;
             let edu = parseFloat(document.getElementById('edu').value) || 0;
@@ -159,14 +157,13 @@
             let serv = parseFloat(document.getElementById('serv').value) || 0;
 
             let total = perf + edu + disc + law + exp + age + serv;
-            document.getElementById('totalScoreDivider' || 'totalScoreDisplay').innerText = total.toFixed(2) + " / 100%";
+            document.getElementById('totalScoreDisplay').innerText = total.toFixed(2) + " / 100%";
         }
 
         document.querySelectorAll('.score-input').forEach(input => {
             input.addEventListener('input', calculateTotal);
         });
         
-        // Initial call
         calculateTotal();
     });
 </script>
