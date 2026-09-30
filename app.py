@@ -764,22 +764,20 @@ def export_transfers_excel():
         emp = Employee.query.get(tr.employee_id)
         emp_name = emp.full_name if emp else 'N/A'
         
-        from_b_name = 'N/A'
-        if hasattr(tr, 'from_branch_id') and tr.from_branch_id:
-            fb = Branch.query.get(int(tr.from_branch_id)) if str(tr.from_branch_id).isdigit() else None
-            from_b_name = fb.name if fb else str(tr.from_branch_id)
-            
-        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-        to_b_name = 'N/A'
-        if to_b_val:
-            tb = Branch.query.get(int(to_b_val)) if str(to_b_val).isdigit() else None
-            to_b_name = tb.name if tb else str(to_b_val)
+        from_b_id = getattr(tr, 'from_branch_id', None)
+        to_b_id = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
+        
+        from_branch_obj = Branch.query.get(int(from_b_id)) if from_b_id and str(from_b_id).isdigit() else None
+        to_branch_obj = Branch.query.get(int(to_b_id)) if to_b_id and str(to_b_id).isdigit() else None
+        
+        from_name = from_branch_obj.name if from_branch_obj else (str(from_b_id) if from_b_id else '-')
+        to_name = to_branch_obj.name if to_branch_obj else (str(to_b_id) if to_b_id else '-')
 
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa': from_b_name,
-            'Damee Gara': to_b_name,
+            'Damee Irraa': from_name,
+            'Damee Gara': to_name,
             'Sababii / Gaaffii': tr.reason if tr.reason else '-',
             'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'

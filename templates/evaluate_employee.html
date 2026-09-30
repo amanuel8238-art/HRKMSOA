@@ -22,18 +22,18 @@
                         <div class="col-md-4"><strong>Saala:</strong> {{ employee.gender or '-' }}</div>
                         <div class="col-md-4"><strong>Gonfoo Ammaa:</strong> {{ employee.rank.name if employee.rank else '-' }}</div>
                         <div class="col-md-4"><strong>Guyyaa Gonfoo Argate:</strong> {{ employee.rank_date or '-' }}</div>
-                        <div class="col-md-4"><strong>Guyyaa Dhalootaa:</strong> {{ employee.birth_date or '-' }}</div>
+                        <div class="col-md-4" id="employeeBirthDate" data-birth="{{ employee.birth_date }}"><strong>Guyyaa Dhalootaa:</strong> {{ employee.birth_date or '-' }}</div>
                         <div class="col-md-4"><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level or '-' }}</div>
                         <div class="col-md-4"><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study or '-' }}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Galtee Qabxii Gamaaggamaa fi Ulaagaa Umurii -->
+            <!-- Galtee Qabxii Gamaaggamaa -->
             <form method="POST" id="evalForm">
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-secondary text-white fw-bold">
-                        <i class="fas fa-edit me-1"></i> Galtee Qabxii Gamaaggamaa fi Ulaagaa (Gama Branch)
+                        <i class="fas fa-edit me-1"></i> Galtee Qabxii Gamaaggamaa (Gama Branch)
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -54,16 +54,21 @@
                                 <input type="number" step="0.01" max="10" name="law_compliance_score" id="law" class="form-control score-input" required placeholder="0 - 10">
                             </div>
                             
-                            <!-- Fooyya'iinsi Muxxannoo Hojii fi Umurii -->
+                            <!-- Muuxannoo Hojii (Max 10%) -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Muuxannoo Hojii (Max 6%):</label>
-                                <input type="number" step="0.01" max="6" name="experience_score" id="exp" class="form-control score-input" required placeholder="0 - 6">
-                                <small class="text-muted">Qabxii muxxannoo hojii waggaatiin herreeffamu.</small>
+                                <label class="form-label fw-bold">Muuxannoo Hojii (Max 10%):</label>
+                                <input type="number" step="0.01" max="10" name="experience_score" id="exp" class="form-control score-input" required placeholder="0 - 10">
+                                <small class="text-muted">Qabxii muxxannoo hojii waggaatiin kennamu.</small>
                             </div>
+
+                            <!-- Ulaagaa Umurii (Shallaggii Ofiisaa - Max 4%) -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Ulaagaa Umurii (Max 4%):</label>
-                                <input type="number" step="0.01" max="4" name="age_score" id="age" class="form-control score-input" required placeholder="0 - 4">
-                                <small class="text-muted">Qabxii ulaagaa umuriif kennamu.</small>
+                                <label class="form-label fw-bold text-info">Ulaagaa Umurii (Shallaggii Ofiisaa - Max 4%):</label>
+                                <div class="p-2 bg-white border rounded text-secondary" id="autoAgeDisplay">
+                                    Umrii shallagamaa jira...
+                                </div>
+                                <input type="hidden" name="age_score" id="age" value="0">
+                                <small class="text-muted">Umrii hojjetaa ragaa dhalootaa irraa ofumaan shallagama.</small>
                             </div>
 
                             <div class="col-md-6">
@@ -81,7 +86,7 @@
                                 </select>
                             </div>
 
-                            <!-- Ida'ama Qabxii Waliigalaa (Read-only / Qofaa Mulisaa) -->
+                            <!-- Ida'ama Qabxii Waliigalaa -->
                             <div class="col-md-12 mt-4">
                                 <div class="p-3 bg-white border rounded shadow-sm text-center">
                                     <h5 class="text-muted mb-1">Ida'ama Qabxii Waliigalaa:</h5>
@@ -92,7 +97,7 @@
                     </div>
                 </div>
 
-                <!-- Ergaa / Submit Button -->
+                <!-- Submit Button -->
                 <div class="text-end">
                     <button type="submit" class="btn btn-success btn-lg px-5">
                         <i class="fas fa-paper-plane me-2"></i> Gamaaggama Ergi (Galmeessi)
@@ -104,10 +109,47 @@
     </div>
 </div>
 
-<!-- JavaScript to calculate total score dynamically -->
+<!-- JavaScript for Automatic Age Calculation & Total Score -->
 <script>
-    document.querySelectorAll('.score-input').forEach(input => {
-        input.addEventListener('input', function() {
+    document.addEventListener("DOMContentLoaded", function() {
+        // Umrii shallaguuf fi qabxii umurii kennuuf
+        let bDateEl = document.getElementById('employeeBirthDate');
+        let bStr = bDateEl ? bDateEl.getAttribute('data-birth') : '';
+        let calculatedAgeScore = 0;
+        let ageText = "Hin beekamu";
+
+        if (bStr && bStr.trim() !== "" && bStr !== "None") {
+            try {
+                let parts = bStr.split(/[-/]/);
+                let birthYear = parseInt(parts[0].length === 4 ? parts[0] : parts[parts.length - 1]);
+                if (!isNaN(birthYear)) {
+                    if (birthYear < 100) birthYear += (birthYear > 30 ? 1900 : 2000);
+                    let currentYear = new Date().getFullYear();
+                    // Yoo Ethio-calendar ta'e ykn Gregorian ta'e tilmaamaan 
+                    let age = currentYear - birthYear;
+                    ageText = age + " Waggaa";
+                    
+                    // Fakkeenya: Ulaagaan umurii akkaataa waggaatiin hanga 4% kenna (umrii dargaggoo/giddu-galeessaa jajjabeessuuf)
+                    if (age >= 20 && age <= 40) {
+                        calculatedAgeScore = 4.0; // Guutuu
+                    } else if (age > 40 && age <= 50) {
+                        calculatedAgeScore = 3.0;
+                    } else if (age > 50) {
+                        calculatedAgeScore = 2.0;
+                    } else {
+                        calculatedAgeScore = 1.0;
+                    }
+                }
+            } catch(e) {
+                console.log("Error calculating age:", e);
+            }
+        }
+
+        document.getElementById('autoAgeDisplay').innerText = "Umrii: " + ageText + " (Qabxii Kenname: " + calculatedAgeScore + " / 4%)";
+        document.getElementById('age').value = calculatedAgeScore;
+
+        // Herreega waliigalaa yeroo jijjiiramu
+        function calculateTotal() {
             let perf = parseFloat(document.getElementById('perf').value) || 0;
             let edu = parseFloat(document.getElementById('edu').value) || 0;
             let disc = parseFloat(document.getElementById('disc').value) || 0;
@@ -117,8 +159,15 @@
             let serv = parseFloat(document.getElementById('serv').value) || 0;
 
             let total = perf + edu + disc + law + exp + age + serv;
-            document.getElementById('totalScoreDisplay').innerText = total.toFixed(2) + " / 100%";
+            document.getElementById('totalScoreDivider' || 'totalScoreDisplay').innerText = total.toFixed(2) + " / 100%";
+        }
+
+        document.querySelectorAll('.score-input').forEach(input => {
+            input.addEventListener('input', calculateTotal);
         });
+        
+        // Initial call
+        calculateTotal();
     });
 </script>
 {% endblock %}
