@@ -669,7 +669,6 @@ def transfers():
         else:
             all_transfers = []
             
-    # Asitti Promotions (Gonfoo) fi Transfers (Jijjiirraa) addaan qooduun barbaachisaa yoo ta'e:
     promotions_list = [t for t in all_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
     transfers_list = [t for t in all_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
 
@@ -757,59 +756,12 @@ def update_transfer_status(id):
     try:
         create_local_backup()
         db.session.commit()
-        flash("Murteen jijjiirraa / gonfoo dhuunfaadhaan milkaa\'inaan galmaa\'eera!", 'success')
+        flash("Haalli gaaffichaa milkaa'inaan haaromfameera!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        flash(f"Dogoggorri uumameera: {str(e)}", 'danger')
 
     return redirect(url_for('transfers'))
-
-# --- EXPORT TRANSFERS & PROMOTIONS TO EXCEL (WITH BRANCH FILTERING) ---
-@app.route('/export_transfers_excel')
-@login_required
-def export_transfers_excel():
-    branch_id_filter = request.args.get('branch_id')
-
-    if current_user.role == 'admin':
-        query = Transfer.query
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == int(branch_id_filter))
-        all_transfers = query.all()
-    else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_str = str(user_b)
-            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
-            from_col = getattr(Transfer, 'from_branch_id', None)
-            conditions = []
-            if from_col is not None:
-                conditions.append(db.cast(from_col, db.String) == b_str)
-            if to_col is not None:
-                conditions.append(db.cast(to_col, db.String) == b_str)
-            all_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
-        else:
-            all_transfers = []
-
-    data = []
-    for idx, t in enumerate(all_transfers, start=1):
-        emp_name = t.employee.full_name if t.employee else 'N/A'
-        branch_name = t.employee.branch.name if t.employee and t.employee.branch else 'N/A'
-        data.append({
-            'Lakk.': idx,
-            'Maqaa Hojjetaa': emp_name,
-            'Damee': branch_name,
-            'Sababa/Gosa': t.reason if t.reason else '-',
-            'Guyyaa': str(t.transfer_date) if t.transfer_date else '-',
-            'Haala (Status)': t.status if t.status else '-'
-        })
-
-    df = pd.DataFrame(data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_fi_Gonfoo')
-    output.seek(0)
-    
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
     app.run(debug=True)
