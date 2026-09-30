@@ -131,7 +131,7 @@
                                     <p class="text-xs text-slate-500 font-medium">Of-eeggannoo (Warning)</p>
                                     <h3 id="statWarning" class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠️️</span>
+                                <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
                                 <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
@@ -228,7 +228,6 @@
             };
 
             // 2. Yoo Server-irraa dataan guutuu ta'ee (0 hin taane ykn caalaa yoo argame) Cache keessatti haaromsuu
-            // Yoo Internet ykn Server hiri'ate garuu dataa duraanii (LocalStorage) irraa deebisuun akka hin badne taasisuu.
             let dashboardData = liveData;
             const cachedDataString = localStorage.getItem('hrkmso_dashboard_cache');
             
@@ -249,52 +248,54 @@
             }
 
             // 3. UI irra elementoota ID qaban irratti deebisee uwwisuu (Data Loss irraa eeguuf)
-            document.getElementById('statEmpCount').innerText = dashboardData.emp_count;
-            document.getElementById('statActiveEmp').innerText = dashboardData.active_emp_count;
-            document.getElementById('statBranchCount').innerText = dashboardData.branch_count;
-            document.getElementById('statTransferCount').innerText = dashboardData.transfer_count;
-            document.getElementById('statMale').innerText = dashboardData.male_count;
-            document.getElementById('statFemale').innerText = dashboardData.female_count;
-            document.getElementById('statRetired').innerText = dashboardData.retired_count;
-            document.getElementById('statResigned').innerText = dashboardData.resigned_count;
-            document.getElementById('statWarning').innerText = dashboardData.warning_count;
-            document.getElementById.apply ? null : null; // Safe check
-            const warningEl = document.getElementById('statWarning');
-            if(warningEl) warningEl.innerText = dashboardData.warning_count;
-            const penaltyEl = document.getElementById('statPenalty');
-            if(penaltyEl) penaltyEl.innerText = dashboardData.penalty_count;
-            const rewardEl = document.getElementById('statReward');
-            if(rewardEl) rewardEl.innerText = dashboardData.reward_count;
-            const cleanEl = document.getElementById('statClean');
-            if(cleanEl) cleanEl.innerText = dashboardData.clean_count;
+            const updateElementText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val;
+            };
+
+            updateElementText('statEmpCount', dashboardData.emp_count);
+            updateElementText('statActiveEmp', dashboardData.active_emp_count);
+            updateElementText('statBranchCount', dashboardData.branch_count);
+            updateElementText('statTransferCount', dashboardData.transfer_count);
+            updateElementText('statMale', dashboardData.male_count);
+            updateElementText('statFemale', dashboardData.female_count);
+            updateElementText('statRetired', dashboardData.retired_count);
+            updateElementText('statResigned', dashboardData.resigned_count);
+            updateElementText('statWarning', dashboardData.warning_count);
+            updateElementText('statPenalty', dashboardData.penalty_count);
+            updateElementText('statReward', dashboardData.reward_count);
+            updateElementText('statClean', dashboardData.clean_count);
 
             // 4. Chart.js render godhuu
-            const ctx = document.getElementById('genderChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
-                    datasets: [{
-                        data: [
-                            dashboardData.male_count, 
-                            dashboardData.female_count, 
-                            dashboardData.retired_count
-                        ],
-                        backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { boxWidth: 12, font: { size: 10 } }
+            const canvasEl = document.getElementById('genderChart');
+            if (canvasEl) {
+                const ctx = canvasEl.getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
+                        datasets: [{
+                            data: [
+                                dashboardData.male_count, 
+                                dashboardData.female_count, 
+                                dashboardData.retired_count
+                            ],
+                            backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 12, font: { size: 10 } }
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         });
     </script>
 </body>
