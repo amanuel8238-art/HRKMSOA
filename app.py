@@ -1,154 +1,82 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, Response
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, Branch, Rank, Employee, Transfer, DisciplineRecord, PromotionAssessment
-import csv
-import io
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from datetime import datetime
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'hrkmso_secure_secret_key_2026'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hrkmso.db' 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy()
 
-db.init_app(app)
+# 1. To'annoo Fayyadamtootaa (User & Admin Role)
+class User(UserMixin, db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(50), nullable=False, default='user')
+    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+    branch = db.relationship('Branch', backref=db.backref('users', lazy=True))
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+# 2. Dameewwan (Branches)
+class Branch(db.Model):
+    __tablename__ = 'branch'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    location = db.Column(db.String(150))
 
-with app.app_context():
-    db.create_all()
+# 3. Sadarkaa (Ranks)
+class Rank(db.Model):
+    __tablename__ = 'rank'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
 
-# --- ROUTES ---
-
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user and user.password == password:
-            login_user(user)
-            if user.role == 'head_office':
-                return redirect(url_for('head_office_dashboard'))
-            else:
-                return redirect(url_for('branch_dashboard'))
-        flash('Maqaa fayyadamaa ykn jecha icciti Dogoggoraadha!', 'danger')
-    return render_template('login.html')
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-@app.route('/branch/dashboard')
-@login_required
-def branch_dashboard():
-    branch_id = current_user.branch_id
-    employees = Employee.query.filter_by(branch_id=branch_id).all()
-    ranks = Rank.query.all()
-    return render_template('branch_dashboard.html', employees=employees, ranks=ranks)
-
-@app.route('/evaluate/<int:employee_id>', methods=['POST'])
-@login_required
-def evaluate_employee(employee_id):
-    employee = Employee.query.get_or_404(employee_id)
+# 4. Hojjettoota (Employees)
+class Employee(db.Model):
+    __tablename__ = 'employee'
+    id = db.Column(db.Integer, primary_key=True)
+    full_name = db.Column(db.String(150), nullable=False)
+    unique_id = db.Column(db.String(50), unique=True, nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
+    rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=False)
+    rank_date = db.Column(db.String(50), nullable=True)
+    hire_date = db.Column(db.String(50), nullable=True)
+    birth_date = db.Column(db.String(50), nullable=True)
+    rank_salary = db.Column(db.Float, nullable=True, default=0.0)
+    location_allowance = db.Column(db.Float, nullable=True, default=0.0)
+    food_allowance = db.Column(db.Float, nullable=True, default=0.0)
+    education_level = db.Column(db.String(100), nullable=True)
+    field_of_study = db.Column(db.String(150), nullable=True)
+    job_position = db.Column(db.String(150), nullable=True)
     
-    perf = float(request.form.get('performance_score', 0))
-    edu = float(request.form.get('education_score', 0))
-    disc = float(request.form.get('discipline_score', 0))
-    law = float(request.form.get('law_compliance_score', 0))
-    exp = float(request.form.get('experience_score', 0))
-    serv = float(request.form.get('service_spirit_score', 0))
+    # Status: 'Active', 'Resigned' (Hojii Gadhiise), 'Terminated' (Badiidhaan Geeddare/Gaggeeffame)
+    status = db.Column(db.String(50), default='Active')
     
-    total = perf + edu + disc + law + exp + serv
-    next_rank_id = request.form.get('next_rank_id')
-    
-    assessment = PromotionAssessment(
-        employee_id=employee.id,
-        performance_score=perf,
-        education_score=edu,
-        discipline_score=disc,
-        law_compliance_score=law,
-        experience_score=exp,
-        service_spirit_score=serv,
-        total_score=total,
-        current_rank_id=employee.rank_id,
-        next_rank_id=int(next_rank_id) if next_rank_id else None,
-        status='Pending Head Office Review'
-    )
-    
-    db.session.add(assessment)
-    db.session.commit()
-    flash('Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera!', 'success')
-    return redirect(url_for('branch_dashboard'))
+    # Sababa Hojii Gadhiisuu ykn Jijjiiramaa galchuuf
+    resignation_reason = db.Column(db.Text, nullable=True)
+    resignation_date = db.Column(db.DateTime, nullable=True)
 
-@app.route('/head-office/dashboard')
-@login_required
-def head_office_dashboard():
-    branch_id = request.args.get('branch_id', type=int)
-    branches = Branch.query.all()
-    
-    if branch_id:
-        assessments = PromotionAssessment.query.join(Employee).filter(Employee.branch_id == branch_id).all()
-    else:
-        assessments = PromotionAssessment.query.all()
-        
-    return render_template('head_office_dashboard.html', assessments=assessments, branches=branches, selected_branch=branch_id)
+    retirement_age = db.Column(db.Integer, default=55)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-@app.route('/head-office/approve/<int:assessment_id>')
-@login_required
-def approve_assessment(assessment_id):
-    assessment = PromotionAssessment.query.get_or_404(assessment_id)
-    assessment.status = 'Approved by Head Office'
-    
-    if assessment.next_rank_id:
-        employee = Employee.query.get(assessment.employee_id)
-        employee.rank_id = assessment.next_rank_id
-        
-    db.session.commit()
-    flash('Gamaaggamni kun milkaa’inaan mirkanaa’eera (Approved)!', 'success')
-    return redirect(url_for('head_office_dashboard'))
+    branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
+    rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-@app.route('/head-office/export-csv')
-@login_required
-def export_csv():
-    output = io.StringIO()
-    writer = csv.writer(output)
+# 5. Jijjiirraa (Transfers) - Seenaa fi To'annoo Guutuu Wajjin
+class Transfer(db.Model):
+    __tablename__ = 'transfer'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
-    writer.writerow([
-        'ID', 'Maqaa Guutuu', 'Damee (Branch)', 'Gahee Hojii', 
-        'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Ida\'ama Waliigalaa (%)', 
-        'Gonfoo Ammaa', 'Gonfoo Itti Aanu', 'Haala (Status)'
-    ])
+    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
     
-    assessments = PromotionAssessment.query.all()
-    for a in assessments:
-        emp = a.employee
-        branch_name = emp.branch.name if emp.branch else 'Hin beekamne'
-        current_rank = emp.rank.name if emp.rank else 'Hin beekamne'
-        next_rank = a.next_rank.name if a.next_rank else 'Hin beekamne'
-        
-        writer.writerow([
-            emp.id, emp.full_name, branch_name, emp.job_position,
-            emp.education_level, emp.field_of_study, a.total_score,
-            current_rank, next_rank, a.status
-        ])
-        
-    output.seek(0)
-    return Response(
-        output,
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=HRKMSO_Promotion_Evaluations.csv"}
-    )
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    # Database keessatti 'to_branch' qofa waan ta'eef kolunichi sirriitti map ta'eera
+    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
+    
+    reason = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
+    approval_reason = db.Column(db.Text, nullable=True)
+    transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    employee = db.relationship('Employee', backref=db.backref('transfers', lazy=True))
+    from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref=db.backref('outgoing_transfers', lazy=True))
+    to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref=db.backref('incoming_transfers', lazy=True))

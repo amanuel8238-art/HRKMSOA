@@ -1,55 +1,82 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from datetime import datetime
 
 db = SQLAlchemy()
 
-class User(db.Model):
+# 1. To'annoo Fayyadamtootaa (User & Admin Role)
+class User(UserMixin, db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='branch')
+    password = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(50), nullable=False, default='user')
     branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
 
+    branch = db.relationship('Branch', backref=db.backref('users', lazy=True))
+
+# 2. Dameewwan (Branches)
 class Branch(db.Model):
+    __tablename__ = 'branch'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-    employees = db.relationship('Employee', backref='branch', lazy=True)
+    name = db.Column(db.String(150), nullable=False)
+    location = db.Column(db.String(150))
 
+# 3. Sadarkaa (Ranks)
 class Rank(db.Model):
+    __tablename__ = 'rank'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
 
+# 4. Hojjettoota (Employees)
 class Employee(db.Model):
+    __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
-    job_position = db.Column(db.String(100), nullable=False)
-    education_level = db.Column(db.String(50), nullable=True)
-    field_of_study = db.Column(db.String(100), nullable=True)
+    unique_id = db.Column(db.String(50), unique=True, nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=False)
     rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=False)
-    rank = db.relationship('Rank', backref='employees', lazy=True)
+    rank_date = db.Column(db.String(50), nullable=True)
+    hire_date = db.Column(db.String(50), nullable=True)
+    birth_date = db.Column(db.String(50), nullable=True)
+    rank_salary = db.Column(db.Float, nullable=True, default=0.0)
+    location_allowance = db.Column(db.Float, nullable=True, default=0.0)
+    food_allowance = db.Column(db.Float, nullable=True, default=0.0)
+    education_level = db.Column(db.String(100), nullable=True)
+    field_of_study = db.Column(db.String(150), nullable=True)
+    job_position = db.Column(db.String(150), nullable=True)
+    
+    # Status: 'Active', 'Resigned' (Hojii Gadhiise), 'Terminated' (Badiidhaan Geeddare/Gaggeeffame)
+    status = db.Column(db.String(50), default='Active')
+    
+    # Sababa Hojii Gadhiisuu ykn Jijjiiramaa galchuuf
+    resignation_reason = db.Column(db.Text, nullable=True)
+    resignation_date = db.Column(db.DateTime, nullable=True)
 
+    retirement_age = db.Column(db.Integer, default=55)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
+    rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
+
+# 5. Jijjiirraa (Transfers) - Seenaa fi To'annoo Guutuu Wajjin
 class Transfer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-class DisciplineRecord(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-class PromotionAssessment(db.Model):
+    __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    performance_score = db.Column(db.Float, default=0.0)
-    education_score = db.Column(db.Float, default=0.0)
-    discipline_score = db.Column(db.Float, default=0.0)
-    law_compliance_score = db.Column(db.Float, default=0.0)
-    experience_score = db.Column(db.Float, default=0.0)
-    service_spirit_score = db.Column(db.Float, default=0.0)
-    total_score = db.Column(db.Float, default=0.0)
     
-    current_rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True)
-    next_rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True)  # <-- ForeignKey kun dabalameera!
+    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
     
-    status = db.Column(db.String(50), default='Pending Head Office Review')
+    # Database keessatti 'to_branch' qofa waan ta'eef kolunichi sirriitti map ta'eera
+    to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
     
-    employee = db.relationship('Employee', backref='assessments', lazy=True)
-    current_rank = db.relationship('Rank', foreign_keys=[current_rank_id], lazy=True)
-    next_rank = db.relationship('Rank', foreign_keys=[next_rank_id], lazy=True)
+    reason = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
+    approval_reason = db.Column(db.Text, nullable=True)
+    transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    employee = db.relationship('Employee', backref=db.backref('transfers', lazy=True))
+    from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref=db.backref('outgoing_transfers', lazy=True))
+    to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref=db.backref('incoming_transfers', lazy=True))
