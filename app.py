@@ -376,6 +376,13 @@ def employees():
     all_ranks = Rank.query.all()
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
+# --- RANKS ROUTE (Error-Free Fix) ---
+@app.route('/ranks')
+@login_required
+def ranks():
+    all_ranks = Rank.query.all()
+    return render_template('ranks.html', ranks=all_ranks)
+
 @app.route('/export_employees_excel')
 @login_required
 def export_employees_excel():
@@ -761,34 +768,30 @@ def export_transfers_excel():
             fb = Branch.query.get(int(from_b_val)) if str(from_b_val).isdigit() else Branch.query.filter_by(name=str(from_b_val)).first()
             if fb:
                 from_b_name = fb.name
-            else:
-                from_b_name = str(from_b_val)
                 
         to_b_name = 'N/A'
         if to_b_val:
             tb = Branch.query.get(int(to_b_val)) if str(to_b_val).isdigit() else Branch.query.filter_by(name=str(to_b_val)).first()
             if tb:
                 to_b_name = tb.name
-            else:
-                to_b_name = str(to_b_val)
 
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
             'Damee Irraa (From)': from_b_name,
             'Damee Itti (To)': to_b_name,
-            'Sababa / Ibsa': tr.reason if tr.reason else '-',
-            'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
+            'Sababii / Gaaffii': tr.reason if tr.reason else '-',
+            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Gonkolee')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Gudina')
     output.seek(0)
-
+    
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
