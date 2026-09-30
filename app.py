@@ -761,34 +761,36 @@ def export_transfers_excel():
 
     data = []
     for idx, tr in enumerate(all_transfers, start=1):
-        emp = Employee.query.get(tr.employee_id)
-        emp_name = emp.full_name if emp else 'N/A'
+        emp_name = tr.employee.full_name if tr.employee else 'N/A'
+        emp_id = tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-'
         
+        # Branch maqaa argachuuf
         from_b_id = getattr(tr, 'from_branch_id', None)
         to_b_id = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
         
         from_branch_obj = Branch.query.get(int(from_b_id)) if from_b_id and str(from_b_id).isdigit() else None
         to_branch_obj = Branch.query.get(int(to_b_id)) if to_b_id and str(to_b_id).isdigit() else None
         
-        from_name = from_branch_obj.name if from_branch_obj else (str(from_b_id) if from_b_id else '-')
-        to_name = to_branch_obj.name if to_branch_obj else (str(to_b_id) if to_b_id else '-')
+        from_branch_name = from_branch_obj.name if from_branch_obj else (str(from_b_id) if from_b_id else '-')
+        to_branch_name = to_branch_obj.name if to_branch_obj else (str(to_b_id) if to_b_id else '-')
 
         data.append({
             'Lakk.': idx,
+            'ID Hojjetaa': emp_id,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa': from_name,
-            'Damee Gara': to_name,
-            'Sababii / Gaaffii': tr.reason if tr.reason else '-',
-            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
-            'Haala (Status)': tr.status if tr.status else '-'
+            'Damee Irraa Deeme': from_branch_name,
+            'Damee Deemu': to_branch_name,
+            'Sababa / Ibsa': tr.reason if tr.reason else '-',
+            'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
+            'Status': tr.status if tr.status else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
     output.seek(0)
-    
+
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
