@@ -2,7 +2,7 @@ import os
 import io
 import shutil
 from datetime import datetime, date
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, server, send_file, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
@@ -692,23 +692,21 @@ def add_transfer():
         
     return redirect(url_for('transfers'))
 
-# --- INDIVIDUAL TRANSFER / PROMOTION APPROVAL (KOPHA KOPHAATI MURTEESSUU) ---
+# --- INDIVIDUAL TRANSFER / PROMOTION APPROVAL ---
 @app.route('/update_transfer_status/<int:id>', methods=['POST'])
 @admin_required
 def update_transfer_status(id):
     tr = Transfer.query.get_or_404(id)
-    status = request.form.get('status') # 'Approved' ykn 'Rejected'
+    status = request.form.get('status')
     tr.status = status
     
     target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
     if status == 'Approved':
         emp = Employee.query.get(tr.employee_id)
         if emp:
-            # 1. Yoo Jijjiirraa Damee (Branch Transfer) ta'e
             if target_branch is not None and str(target_branch) != str(emp.branch_id):
                 emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
             
-            # 2. Yoo Gaaffii Gonfoo / Promotion Evaluation ta'e
             if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
                 try:
                     parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
@@ -755,32 +753,42 @@ def export_transfers_excel():
         emp = Employee.query.get(tr.employee_id)
         emp_name = emp.full_name if emp else 'N/A'
         
-        from_branch = getattr(tr, 'from_branch_id', 'N/A')
-        to_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
+        from_b_val = getattr(tr, 'from_branch_id', None)
+        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
         
-        from_branch_obj = Branch.query.get(int(from_branch)) if str(from_branch).isdigit() else None
-        from_branch_name = from_branch_obj.name if from_branch_obj else str(from_branch)
-
-        to_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
-        to_branch_name = to_branch_obj.name if to_branch_obj else str(to_branch)
+        from_b_name = 'N/A'
+        if from_b_val:
+            fb = Branch.query.get(int(from_b_val)) if str(from_b_val).isdigit() else Branch.query.filter_by(name=str(from_b_val)).first()
+            if fb:
+                from_b_name = fb.name
+            else:
+                from_b_name = str(from_b_val)
+                
+        to_b_name = 'N/A'
+        if to_b_val:
+            tb = Branch.query.get(int(to_b_val)) if str(to_b_val).isdigit() else Branch.query.filter_by(name=str(to_b_val)).first()
+            if tb:
+                to_b_name = tb.name
+            else:
+                to_b_name = str(to_b_val)
 
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa (From)': from_branch_name,
-            'Damee Itti (To)': to_branch_name,
+            'Damee Irraa (From)': from_b_name,
+            'Damee Itti (To)': to_b_name,
             'Sababa / Ibsa': tr.reason if tr.reason else '-',
-            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
+            'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Gonkolee')
     output.seek(0)
 
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)
