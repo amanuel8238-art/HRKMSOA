@@ -647,6 +647,7 @@ def branches():
 @login_required
 def transfers():
     branch_id_filter = request.args.get('branch_id')
+    type_filter = request.args.get('type') # 'promotion' ykn 'transfer' akka addaan baasuuf
     
     if current_user.role == 'admin':
         query = Transfer.query
@@ -668,11 +669,30 @@ def transfers():
         else:
             all_transfers = []
             
+    # Asitti Promotions (Gonfoo) fi Transfers (Jijjiirraa) addaan qooduun barbaachisaa yoo ta'e:
+    promotions_list = [t for t in all_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
+    transfers_list = [t for t in all_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
+
+    if type_filter == 'promotion':
+        filtered_transfers = promotions_list
+    elif type_filter == 'transfer':
+        filtered_transfers = transfers_list
+    else:
+        filtered_transfers = all_transfers
+
     b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
     all_employees = all_employees.all()
     all_branches = Branch.query.all()
-    return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches, selected_branch=branch_id_filter)
+    
+    return render_template('transfers.html', 
+                           transfers=filtered_transfers, 
+                           promotions_count=len(promotions_list),
+                           transfers_count=len(transfers_list),
+                           employees=all_employees, 
+                           branches=all_branches, 
+                           selected_branch=branch_id_filter,
+                           selected_type=type_filter)
 
 @app.route('/add_transfer', methods=['POST'])
 @login_required
@@ -773,82 +793,23 @@ def export_transfers_excel():
     data = []
     for idx, t in enumerate(all_transfers, start=1):
         emp_name = t.employee.full_name if t.employee else 'N/A'
-        emp_id = t.employee.unique_id if t.employee and t.employee.unique_id else '-'
-        
-        target_b_id = getattr(t, 'to_branch_id', getattr(t, 'to_branch', None))
-        target_branch_obj = Branch.query.get(int(target_b_id)) if target_b_id and str(target_b_id).isdigit() else None
-        to_branch_name = target_branch_obj.name if target_branch_obj else (str(target_b_id) if target_b_id else '-')
-        
-        from_b_id = getattr(t, 'from_branch_id', None)
-        from_branch_obj = Branch.query.get(int(from_b_id)) if from_b_id and str(from_b_id).isdigit() else None
-        from_branch_name = from_branch_obj.name if from_branch_obj else (str(from_b_id) if from_b_id else '-')
-
+        branch_name = t.employee.branch.name if t.employee and t.employee.branch else 'N/A'
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'ID Addaa': emp_id,
-            'Damee Irraa (From)': from_branch_name,
-            'Damee Itti (To)': to_branch_name,
-            'Sababa / Ibsa': t.reason if t.reason else '-',
+            'Damee': branch_name,
+            'Sababa/Gosa': t.reason if t.reason else '-',
             'Guyyaa': str(t.transfer_date) if t.transfer_date else '-',
-            'Status': t.status if t.status else '-'
+            'Haala (Status)': t.status if t.status else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Gondoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_fi_Gonfoo')
     output.seek(0)
-
+    
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
-
-# --- BULK ACTIONS (BULK APPROVE / REJECT) ---
-@app.route('/bulk_update_transfer_status', methods=['POST'])
-@admin_required
-def bulk_update_transfer_status():
-    action = request.form.get('action')
-    transfer_ids = request.form.getlist('transfer_ids')
-
-    if not transfer_ids:
-        flash("Maaloo gaaffiiwwan jijjiirraa/gonfoo tokko ykn isaa ol filadhu!", 'warning')
-        return redirect(url_for('transfers'))
-
-    new_status = 'Approved' if action == 'approve' else 'Rejected'
-    count = 0
-
-    try:
-        create_local_backup()
-        for t_id in transfer_ids:
-            tr = Transfer.query.get(int(t_id))
-            if tr:
-                tr.status = new_status
-                if new_status == 'Approved':
-                    target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-                    emp = Employee.query.get(tr.employee_id)
-                    if emp:
-                        if target_branch is not None and str(target_branch) != str(emp.branch_id):
-                            emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
-                        
-                        if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
-                            try:
-                                parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
-                                if len(parts) > 1:
-                                    r_id = int(parts[1].strip().split()[0])
-                                    if r_id:
-                                        emp.rank_id = r_id
-                            except Exception:
-                                pass
-                count += 1
-        db.session.commit()
-        flash(f"Gaaffiiwwan {count} ta'an milkaa'inaan '{new_status}' ta'aniiru!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    return redirect(url_for('transfers'))
-
-
-# --- RUN APPLICATION ---
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)

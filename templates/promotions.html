@@ -29,6 +29,7 @@
     <div class="row mb-4">
         <div class="col-md-6">
             <form method="GET" action="{{ url_for('transfers') }}" class="card shadow-sm p-3 bg-light">
+                <input type="hidden" name="type" value="promotion">
                 <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
                 <div class="input-group">
                     <select name="branch_id" id="branch_id" class="form-select">
@@ -43,7 +44,7 @@
                         <i class="fas fa-filter"></i> Filadhu
                     </button>
                     {% if selected_branch %}
-                        <a href="{{ url_for('transfers') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
+                        <a href="{{ url_for('transfers', type='promotion') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
                     {% endif %}
                 </div>
             </form>
@@ -79,27 +80,28 @@
                                 <td><strong>{{ tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-' }}</strong></td>
                                 <td>{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
                                 <td>
+                                    {% set from_b_name = '-' %}
                                     {% if tr.from_branch_id %}
-                                        {% set from_b = namespace(name=tr.from_branch_id) %}
                                         {% for b in all_branches %}
                                             {% if b.id|string == tr.from_branch_id|string %}
-                                                {% set from_b.name = b.name %}
+                                                {% set from_b_name = b.name %}
                                             {% endif %}
                                         {% endfor %}
-                                        {{ from_b.name }}
+                                        {{ from_b_name }}
                                     {% else %}
                                         -
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% set to_b_val = tr.to_branch_id if tr.to_branch_id else (tr.to_branch if tr.to_branch else '-') %}
-                                    {% set to_b_name = namespace(name=to_b_val) %}
+                                    {% set to_b_name = [to_b_val] %}
                                     {% for b in all_branches %}
                                         {% if b.id|string == to_b_val|string %}
-                                            {% set to_b_name.name = b.name %}
+                                            {% if to_b_name.pop() %}{% endif %}
+                                            {% if to_b_name.append(b.name) %}{% endif %}
                                         {% endif %}
                                     {% endfor %}
-                                    {{ to_b_name.name }}
+                                    {{ to_b_name[0] }}
                                 </td>
                                 <td>{{ tr.reason if tr.reason else '-' }}</td>
                                 <td>{{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</td>
