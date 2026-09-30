@@ -1,8 +1,23 @@
+import os
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 
-db = SQLAlchemy()
+# Flask App Initialization
+app = Flask(__name__)
+
+# Configuration (Supabase PostgreSQL ykn SQLite)
+database_url = os.environ.get('DATABASE_URL')
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///hrkmso.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+
+# Database Initialization
+db = SQLAlchemy(app)
 
 # 1. To'annoo Fayyadamtootaa (User & Admin Role)
 class User(UserMixin, db.Model):
@@ -48,35 +63,33 @@ class Employee(db.Model):
     field_of_study = db.Column(db.String(150), nullable=True)
     job_position = db.Column(db.String(150), nullable=True)
     
-    # Status: 'Active', 'Resigned' (Hojii Gadhiise), 'Terminated' (Badiidhaan Geeddare/Gaggeeffame)
     status = db.Column(db.String(50), default='Active')
-    
-    # Sababa Hojii Gadhiisuu ykn Jijjiiramaa galchuuf
     resignation_reason = db.Column(db.Text, nullable=True)
     resignation_date = db.Column(db.DateTime, nullable=True)
-
     retirement_age = db.Column(db.Integer, default=55)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     branch = db.relationship('Branch', backref=db.backref('employees', lazy=True))
     rank = db.relationship('Rank', backref=db.backref('employees', lazy=True))
 
-# 5. Jijjiirraa (Transfers) - Seenaa fi To'annoo Guutuu Wajjin
+# 5. Jijjiirraa (Transfers)
 class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    
     from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
-    
-    # Database keessatti 'to_branch' qofa waan ta'eef kolunichi sirriitti map ta'eera
     to_branch_id = db.Column('to_branch', db.Integer, db.ForeignKey('branch.id'), nullable=False)
-    
     reason = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
+    status = db.Column(db.String(50), default='Pending')
     approval_reason = db.Column(db.Text, nullable=True)
     transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
     
     employee = db.relationship('Employee', backref=db.backref('transfers', lazy=True))
     from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref=db.backref('outgoing_transfers', lazy=True))
     to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref=db.backref('incoming_transfers', lazy=True))
+
+# Gunicorn kanaan akka argatuuf
+application = app
+
+if __name__ == '__main__':
+    app.run(debug=True)
