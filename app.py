@@ -436,7 +436,6 @@ def export_employees_excel():
     
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Report.xlsx')
 
-# --- NEW ROUTE FOR EXPORTING TRANSFERS EXCEL ---
 @app.route('/export_transfers_excel')
 @login_required
 def export_transfers_excel():
@@ -754,63 +753,56 @@ def add_transfer():
     if current_user.role != 'admin' and emp.branch_id != user_b_id:
         abort(403)
         
-    transfer_data = {
-        'employee_id': int(employee_id) if employee_id else None,
-        'reason': reason,
-        'transfer_date': datetime.utcnow(),
-        'status': 'Pending'
-    }
-    if hasattr(Transfer, 'to_branch_id'):
-        transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id
-    if hasattr(Transfer, 'from_branch_id'):
-        transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
-
     try:
         create_local_backup()
+        transfer_data = {
+            'employee_id': emp.id,
+            'reason': reason,
+            'transfer_date': datetime.utcnow(),
+            'status': 'Pending'
+        }
+        
+        if hasattr(Transfer, 'to_branch_id'):
+            transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id
+        if hasattr(Transfer, 'from_branch_id'):
+            transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
+            
         new_transfer = Transfer(**transfer_data)
         db.session.add(new_transfer)
+        
+        # Hojjetaan sun damee birootti yoo jijjiirame branch_id isaa achumatti jijjiiruun ni danda'ama ykn status isaa update godhuun ni danda'ama
         db.session.commit()
-        flash("Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!", 'success')
+        flash("Gaaffiin jijjiirraa milkaa'inaan galmaa'eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
         
     return redirect(url_for('transfers'))
 
-# --- INDIVIDUAL TRANSFER / PROMOTION APPROVAL ---
-@app.route('/update_transfer_status/<int:id>', methods=['POST'])
-@admin_required
-def update_transfer_status(id):
-    tr = Transfer.query.get_or_404(id)
-    status = request.form.get('status')
-    tr.status = status
+@app.route('/update_transfer_status/<int:id>/<status>', methods=['POST'])
+@login_required
+def update_transfer_status(id, status):
+    transfer = Transfer.query.get_or_404(id)
     
-    target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-    if status == 'Approved':
-        emp = Employee.query.get(tr.employee_id)
-        if emp:
-            if target_branch is not None and str(target_branch) != str(emp.branch_id):
-                emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
-            
-            if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
-                try:
-                    parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
-                    if len(parts) > 1:
-                        r_id = int(parts[1].strip().split()[0])
-                        if r_id:
-                            emp.rank_id = r_id
-                except Exception:
-                    pass
-
     try:
         create_local_backup()
+        transfer.status = status
+        
+        # Yoo transfer/promotion kun Approved ta'e fi jijjiirraa damee ta'e, branch_id hojjetaa jijjiiruun ni danda'ama
+        if status.lower() == 'approved' and transfer.to_branch_id:
+            emp = transfer.employee
+            if emp and str(transfer.to_branch_id).isdigit():
+                emp.branch_id = int(transfer.to_branch_id)
+                
         db.session.commit()
-        flash("Haalli gaaffichaa milkaa'inaan haaromfameera!", 'success')
+        flash(f"Haalli gaaffichaa gara '{status}'tti jijjiirameera!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Dogoggorri uumameera: {str(e)}", 'danger')
-
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
     return redirect(url_for('transfers'))
 
+# --- APP RUN ---
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
