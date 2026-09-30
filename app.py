@@ -49,7 +49,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# 1. Branch Dashboard
 @app.route('/branch/dashboard')
 @login_required
 def branch_dashboard():
@@ -58,7 +57,6 @@ def branch_dashboard():
     ranks = Rank.query.all()
     return render_template('branch_dashboard.html', employees=employees, ranks=ranks)
 
-# 2. Promotion Assessment Form Handler
 @app.route('/evaluate/<int:employee_id>', methods=['POST'])
 @login_required
 def evaluate_employee(employee_id):
@@ -93,7 +91,6 @@ def evaluate_employee(employee_id):
     flash('Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera!', 'success')
     return redirect(url_for('branch_dashboard'))
 
-# 3. Head Office Dashboard (Damee filatameef sirriitti qindaa'e)
 @app.route('/head-office/dashboard')
 @login_required
 def head_office_dashboard():
@@ -101,14 +98,12 @@ def head_office_dashboard():
     branches = Branch.query.all()
     
     if branch_id:
-        # Sirreeffama join query SQLAlchemy
         assessments = PromotionAssessment.query.join(Employee).filter(Employee.branch_id == branch_id).all()
     else:
         assessments = PromotionAssessment.query.all()
         
     return render_template('head_office_dashboard.html', assessments=assessments, branches=branches, selected_branch=branch_id)
 
-# 4. Head Office Approve Godhuu
 @app.route('/head-office/approve/<int:assessment_id>')
 @login_required
 def approve_assessment(assessment_id):
@@ -123,7 +118,6 @@ def approve_assessment(assessment_id):
     flash('Gamaaggamni kun milkaa’inaan mirkanaa’eera (Approved)!', 'success')
     return redirect(url_for('head_office_dashboard'))
 
-# 5. Excel / CSV Export
 @app.route('/head-office/export-csv')
 @login_required
 def export_csv():
