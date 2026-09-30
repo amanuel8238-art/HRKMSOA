@@ -61,14 +61,13 @@
                                 <small class="text-muted">Qabxii muxxannoo hojii waggaatiin kennamu.</small>
                             </div>
 
-                            <!-- Ulaagaa Umurii (Shallaggii Ofiisaa - Max 4%) -->
+                            <!-- Ulaagaa Umurii (Shallaggii Ofiisaa) -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold text-info">Ulaagaa Umurii (Max 4%):</label>
+                                <label class="form-label fw-bold text-info">Ulaagaa Umurii:</label>
                                 <div class="p-2 bg-white border rounded text-secondary fw-bold" id="autoAgeDisplay">
                                     Umrii shallagamaa jira...
                                 </div>
                                 <input type="hidden" name="age_score" id="age" value="0">
-                                <small class="text-muted">Umrii ragaa dhalootaa irraa ofumaan shallagamee qabxiin isaa walitti ida'amti.</small>
                             </div>
 
                             <!-- Mira Tajaajiltummaa (Max 15%) -->
@@ -144,7 +143,7 @@
             }
         }
 
-        // Qabxiin keessatti osoo hin barreeffamin Umrii Shallagame qofa akka argisiisu godhameera
+        // Akkaataa barbaaddetti "Max 4%" fi barreeffamni dabalataa haquun umrii qofa akka argisiisu godhameera
         document.getElementById('autoAgeDisplay').innerText = "Umrii Shallagame: " + ageText;
         document.getElementById('age').value = calculatedAgeScore;
 
