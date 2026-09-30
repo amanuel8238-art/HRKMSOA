@@ -2,7 +2,7 @@ import os
 import io
 import shutil
 from datetime import datetime, date
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, server, send_file, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
@@ -20,6 +20,17 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+
+# --- JINJA GLOBAL FUNCTION FOR ENDPOINT CHECKING ---
+@app.context_processor
+def utility_processor():
+    def endpoint_exists(endpoint):
+        try:
+            url_for(endpoint)
+            return True
+        except Exception:
+            return False
+    return dict(endpoint_exists=endpoint_exists)
 
 # Dataan akka hin badneef instance folder jiraachuu isaa mirkaneessuu
 instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
@@ -749,27 +760,27 @@ def export_transfers_excel():
         
         from_branch_obj = Branch.query.get(int(from_branch)) if str(from_branch).isdigit() else None
         from_branch_name = from_branch_obj.name if from_branch_obj else str(from_branch)
-        
+
         to_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
         to_branch_name = to_branch_obj.name if to_branch_obj else str(to_branch)
 
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Irraa (From Branch)': from_branch_name,
-            'Gara (To Branch)': to_branch_name,
+            'Damee Irraa (From)': from_branch_name,
+            'Damee Itti (To)': to_branch_name,
             'Sababa / Ibsa': tr.reason if tr.reason else '-',
-            'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
+            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
         })
-        
+
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
     output.seek(0)
-    
+
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
