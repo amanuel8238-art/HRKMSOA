@@ -93,7 +93,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # 3. Dameewwan 39an hunda database keessatti galchuuf
+    # 3. Dameewwan 39an hunda database keessatti galchuuf (Komishinii Manneen Sirreessaa Oromiyaa)
     branches_list = [
         "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
         "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
@@ -756,19 +756,19 @@ def export_transfers_excel():
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa (From)': from_branch_name,
-            'Damee Itti (To)': to_branch_name,
+            'Damee Irraa': from_branch_name,
+            'Damee Gara': to_branch_name,
             'Sababa / Ibsa': tr.reason if tr.reason else '-',
             'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
         })
-        
+
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
     output.seek(0)
-    
+
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
