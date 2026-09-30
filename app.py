@@ -748,27 +748,27 @@ def export_transfers_excel():
         to_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
         
         from_branch_obj = Branch.query.get(int(from_branch)) if str(from_branch).isdigit() else None
-        from_branch_name = from_branch_obj.name if from_branch_obj else (emp.branch.name if emp and emp.branch else 'N/A')
+        from_branch_name = from_branch_obj.name if from_branch_obj else str(from_branch)
         
         to_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
-        to_branch_name = to_branch_obj.name if to_branch_obj else 'N/A'
-
+        to_branch_name = to_branch_obj.name if to_branch_obj else str(to_branch)
+        
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
             'Damee Irraa (From)': from_branch_name,
             'Damee Itti (To)': to_branch_name,
-            'Sababa / Haala': tr.reason if tr.reason else '-',
+            'Sababa / Ibsa': tr.reason if tr.reason else '-',
             'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
-            'Status': tr.status if tr.status else '-'
+            'Haala (Status)': tr.status if tr.status else '-'
         })
-
+        
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
     output.seek(0)
-
+    
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
