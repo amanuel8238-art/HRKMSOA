@@ -3,13 +3,7 @@
     <div class="flex justify-between items-center">
         <h2 class="text-base font-bold text-slate-800">Tarree Gaaffiiwwan Jijjiirraa Damee Hojjettootaa</h2>
         <span class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-semibold">
-            {% set t_count = namespace(value=0) %}
-            {% for t in transfers %}
-                {% if not (t.reason and ('Gonfoo' in t.reason or 'Promotion' in t.reason)) %}
-                    {% set t_count.value = t_count.value + 1 %}
-                {% endif %}
-            {% endfor %}
-            Waliigala: {{ t_count.value }}
+            Waliigala: {{ transfers | length }}
         </span>
     </div>
 
@@ -30,10 +24,8 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
-                {% set has_transfer = namespace(value=false) %}
-                {% for t in transfers %}
-                    {% if not (t.reason and ('Gonfoo' in t.reason or 'Promotion' in t.reason)) %}
-                        {% set has_transfer.value = true %}
+                {% if transfers %}
+                    {% for t in transfers %}
                         <tr class="hover:bg-slate-50">
                             <td class="p-3">{{ loop.index }}</td>
                             <td class="p-3 font-bold text-slate-800">{{ t.employee.full_name if t.employee else '-' }}</td>
@@ -94,9 +86,8 @@
                                 {% endif %}
                             </td>
                         </tr>
-                    {% endif %}
-                {% endfor %}
-                {% if not has_transfer.value %}
+                    {% endfor %}
+                {% else %}
                     <tr>
                         <td colspan="10" class="text-center py-8 text-slate-400">Gaaffiin jijjiirraa argame hin jiru.</td>
                     </tr>
