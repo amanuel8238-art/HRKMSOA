@@ -747,120 +747,29 @@ def export_transfers_excel():
         from_branch = getattr(tr, 'from_branch_id', 'N/A')
         to_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
         
-        from_branch_name = emp.branch.name if (emp and emp.branch) else str(from_branch)
+        from_branch_obj = Branch.query.get(int(from_branch)) if str(from_branch).isdigit() else None
+        from_branch_name = from_branch_obj.name if from_branch_obj else (emp.branch.name if (emp and emp.branch) else str(from_branch))
         
         target_branch_obj = Branch.query.get(int(to_branch)) if str(to_branch).isdigit() else None
         to_branch_name = target_branch_obj.name if target_branch_obj else str(to_branch)
-
+        
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Duraanii': from_branch_name,
-            'Damee Haaraa / Gosa Gaaffii': to_branch_name,
-            'Sababa / Haala Gonfoo': tr.reason if tr.reason else '-',
-            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
+            'Damee Irraa': from_branch_name,
+            'Damee Itti Fufu': to_branch_name,
+            'Sababa / Ibsa': tr.reason if tr.reason else '-',
+            'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
             'Haala (Status)': tr.status if tr.status else '-'
         })
-
+        
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gaaffiiwwan_Jijjiirraa_Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
     output.seek(0)
-
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
-
-@app.route('/ranks', methods=['GET', 'POST'])
-@login_required
-def ranks():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        description = request.form.get('description')
-        if name:
-            create_local_backup()
-            new_rank = Rank(name=name, description=description)
-            db.session.add(new_rank)
-            db.session.commit()
-            flash('Sadarkaan haaraan milkaa\'inaan galmaa\'eera!', 'success')
-        return redirect(url_for('ranks'))
-    all_ranks = Rank.query.all()
-    return render_template('ranks.html', ranks=all_ranks)
-
-@app.route('/reports')
-@login_required
-def reports():
-    return render_template('reports.html')
-
-@app.route('/calendar')
-@login_required
-def calendar_view():
-    return render_template('calendar.html')
-
-@app.route('/api/calendar-events')
-@login_required
-def calendar_events():
-    employees = Employee.query.all()
-    events = []
-    for emp in employees:
-        if emp.hire_date:
-            events.append({'title': f"Qacaramuu: {emp.full_name}", 'start': str(emp.hire_date).split()[0], 'color': '#28a745'})
-        if emp.birth_date:
-            events.append({'title': f"Dhalootaa: {emp.full_name}", 'start': str(emp.birth_date).split()[0], 'color': '#17a2b8'})
-    return jsonify(events)
-
-@app.route('/settings')
-@admin_required
-def settings():
-    users = User.query.all()
-    branches = Branch.query.all()
-    return render_template('settings.html', users=users, branches=branches)
-
-@app.route('/add_user', methods=['POST'])
-@admin_required
-def add_user():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    role = request.form.get('role', 'branch_admin')
-    branch_id = request.form.get('branch_id')
     
-    if User.query.filter_by(username=username).first():
-        flash('Maqaan fayyadamaa kun kanaan dura jira; maaloo maqaa biraa fayyadami.', 'danger')
-        return redirect(url_for('settings'))
-        
-    if username and password:
-        try:
-            create_local_backup()
-            hashed_pw = generate_password_hash(password)
-            new_user = User(
-                username=username,
-                password=hashed_pw,
-                role=role,
-                branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Fayyadamaan haaraan milkaa\'inaan uumameera!', 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('settings'))
-
-@app.route('/delete_user/<int:id>', methods=['POST'])
-@admin_required
-def delete_user(id):
-    user = User.query.get_or_404(id)
-    if user.username == 'admin':
-        flash('Admin guddaan (Main Admin) haqamuu hin danda\'u!', 'danger')
-        return redirect(url_for('settings'))
-    try:
-        create_local_backup()
-        db.session.delete(user)
-        db.session.commit()
-        flash('Fayyadamaan milkaa\'inaan haqameera!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('settings'))
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
 
 if __name__ == '__main__':
     app.run(debug=True)

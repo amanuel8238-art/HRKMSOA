@@ -3,7 +3,7 @@
 <div class="container mt-4 mb-5">
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-header bg-indigo-900 text-white py-3" style="background-color: #312e81;">
-            <h4 class="mb-0"><i class="fas fa-award me-2"></i> Gamaaggama Guddina Gonfoo (Promotion) - Head Office</h4>
+            <h4 class="mb-0"><i class="fas fa-award me-2"></i> Gamaaggama Guddina Gonfoo (Promotion Evaluation) - Head Office</h4>
         </div>
         <div class="card-body p-4">
             
@@ -69,6 +69,8 @@
                 <div class="row mt-4 p-3 bg-light rounded-3 border align-items-center">
                     <div class="col-md-6">
                         <h4 class="mb-0 text-primary">Ida'ama Qabxii Waliigalaa: <span id="totalScoreDisplay" class="fw-bold">0.00</span> / 100%</h4>
+                        <!-- Hidden input to submit total score if needed by backend -->
+                        <input type="hidden" name="total_score" id="totalScoreInput" value="0">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-primary fw-bold">Gonfoo itti Guddatuu (Next Rank):</label>
@@ -78,6 +80,7 @@
                             <option value="{{ r.id }}">{{ r.name }}</option>
                             {% endfor %}
                         </select>
+                        <div class="invalid-feedback">Maaloo gonfoo itti aanu filadhu.</div>
                     </div>
                 </div>
 
@@ -94,19 +97,32 @@
     document.addEventListener('DOMContentLoaded', function () {
         const inputs = document.querySelectorAll('.score-input');
         const totalDisplay = document.getElementById('totalScoreDisplay');
+        const totalInput = document.getElementById('totalScoreInput');
         const form = document.getElementById('evaluationForm');
 
         function calculateTotal() {
             let total = 0;
             inputs.forEach(input => {
                 let val = parseFloat(input.value) || 0;
+                let maxVal = parseFloat(input.getAttribute('max')) || 100;
+                
+                // Prevent individual input from exceeding its max limit visually or logically
+                if (val > maxVal) {
+                    input.value = maxVal;
+                    val = maxVal;
+                }
                 total += val;
             });
+            
             totalDisplay.textContent = total.toFixed(2);
+            totalInput.value = total.toFixed(2);
+
             if(total > 100) {
                 totalDisplay.classList.add('text-danger');
+                totalDisplay.classList.remove('text-success');
             } else {
                 totalDisplay.classList.remove('text-danger');
+                totalDisplay.classList.add('text-success');
             }
         }
 
@@ -114,7 +130,7 @@
             input.addEventListener('input', calculateTotal);
         });
 
-        // Bootstrap validation
+        // Bootstrap validation & custom check
         form.addEventListener('submit', function (event) {
             let total = 0;
             inputs.forEach(input => {
