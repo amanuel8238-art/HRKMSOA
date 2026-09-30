@@ -1,27 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Gulaataa Gonfoo (Ranks) - HRKMSO{% endblock %}
+{% block title %}Gaaffii Gulantaa Gonfoo fi Jijjiirraa - HRKMSO{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
+    <!-- Row 1: Header and Navigation -->
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center gap-3">
-                <!-- Buttoon Deebi'i (Dashboard) Gara Dashboard tti deebisuuf -->
+                <!-- Buttoon Deebi'i (Dashboard) -->
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Deebi'i
                 </a>
-                <h2 class="mb-0">Gulaataa Gonfoo / Sadarkaa (Ranks)</h2>
+                <h2 class="mb-0">Gaaffii Gulantaa Gonfoo (Promotions) & Jijjiirraa</h2>
             </div>
             
-            <!-- Sadarkaa Haaraa Galchuuf Button -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRankModal">
-                <i class="fas fa-plus"></i> Sadarkaa Haaraa Galchi
-            </button>
+            <!-- Excel Export Button -->
+            <div>
+                <a href="{{ url_for('export_transfers_excel', branch_id=selected_branch) }}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Excel-tti Buufachuuf (Export)
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Table of Ranks -->
+    <!-- Row 2: Admin Branch Filter Form -->
+    {% if current_user.role == 'admin' %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="GET" action="{{ url_for('transfers') }}" class="card shadow-sm p-3 bg-light">
+                <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
+                <div class="input-group">
+                    <select name="branch_id" id="branch_id" class="form-select">
+                        <option value="">Dameewwan Hunda (All Branches)</option>
+                        {% for b in all_branches %}
+                            <option value="{{ b.id }}" {% if selected_branch|string == b.id|string %}selected{% endif %}>
+                                {{ b.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Filadhu
+                    </button>
+                    {% if selected_branch %}
+                        <a href="{{ url_for('transfers') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Table of Transfers & Promotions -->
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -29,66 +59,83 @@
                     <thead class="table-dark">
                         <tr>
                             <th>#</th>
-                            <th>Maqaa Sadarkaa (Rank Name)</th>
-                            <th>Ibsa / Description</th>
+                            <th>ID Hojjetaa</th>
+                            <th>Maqaa Hojjetaa</th>
+                            <th>Damee Irraa (From)</th>
+                            <th>Damee Itti (To)</th>
+                            <th>Sababa / Ibsa (Reason / Score)</th>
+                            <th>Guyyaa</th>
+                            <th>Haala (Status)</th>
+                            {% if current_user.role == 'admin' %}
                             <th>Action</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
-                        {% if ranks %}
-                            {% for rank in ranks %}
+                        {% if transfers %}
+                            {% for tr in transfers %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td><strong>{{ rank.name }}</strong></td>
-                                <td>{{ rank.description if rank.description else '-' }}</td>
+                                <td><strong>{{ tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-' }}</strong></td>
+                                <td>{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
                                 <td>
-                                    <a href="#" class="btn btn-sm btn-outline-warning">
-                                        <i class="fas fa-edit"></i> Gulaali
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash"></i> Haquuf
-                                    </a>
+                                    {% if tr.from_branch_id %}
+                                        {% set from_b = namespace(name=tr.from_branch_id) %}
+                                        {% for b in all_branches %}
+                                            {% if b.id|string == tr.from_branch_id|string %}
+                                                {% set from_b.name = b.name %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ from_b.name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
+                                <td>
+                                    {% set to_b_val = tr.to_branch_id if tr.to_branch_id else (tr.to_branch if tr.to_branch else '-') %}
+                                    {% set to_b_name = namespace(name=to_b_val) %}
+                                    {% for b in all_branches %}
+                                        {% if b.id|string == to_b_val|string %}
+                                            {% set to_b_name.name = b.name %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ to_b_name.name }}
+                                </td>
+                                <td>{{ tr.reason if tr.reason else '-' }}</td>
+                                <td>{{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</td>
+                                <td>
+                                    {% if tr.status == 'Approved' %}
+                                        <span class="badge bg-success">Eeyyamameera (Approved)</span>
+                                    {% elif tr.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Harkifateera/Kallattiin Fashaleera (Rejected)</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Eeggannoo Irra Jira (Pending)</span>
+                                    {% endif %}
+                                </td>
+                                {% if current_user.role == 'admin' %}
+                                <td>
+                                    <form action="{{ url_for('update_transfer_status', id=tr.id) }}" method="POST" class="d-inline">
+                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                            <option value="Pending" {% if tr.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                            <option value="Approved" {% if tr.status == 'Approved' %}selected{% endif %}>Approve</option>
+                                            <option value="Rejected" {% if tr.status == 'Rejected' %}selected{% endif %}>Reject</option>
+                                        </select>
+                                    </form>
+                                </td>
+                                {% endif %}
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">
-                                    Daataan sadarkaa (rank) galmaa'e hin jiru.
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    Daataan gaaffii gonfoo ykn jijjiirraa galmaa'e hin jiru.
+                                    {% if selected_branch %} (Filannoo damee kanaan ragaan hin argamne){% endif %}
                                 </td>
                             </tr>
                         {% endif %}
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Sadarkaa Haaraa Itti Dabalan -->
-<div class="modal fade" id="addRankModal" tabindex="-1" aria-labelledby="addRankModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ url_for('ranks') }}">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title" id="addRankModalLabel">Sadarkaa Haaraa Dabaluu</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Maqaa Sadarkaa *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Ibsa (Description)</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
-                    <button type="submit" class="btn btn-success">Galchi</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

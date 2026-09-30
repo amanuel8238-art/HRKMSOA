@@ -642,11 +642,17 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
+# --- TRANSFERS & PROMOTION EVALUATIONS WITH BRANCH FILTERING ---
 @app.route('/transfers')
 @login_required
 def transfers():
+    branch_id_filter = request.args.get('branch_id')
+    
     if current_user.role == 'admin':
-        all_transfers = Transfer.query.all()
+        query = Transfer.query
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == int(branch_id_filter))
+        all_transfers = query.all()
     else:
         user_b = current_user.branch_id
         if user_b:
@@ -666,7 +672,7 @@ def transfers():
     all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
     all_employees = all_employees.all()
     all_branches = Branch.query.all()
-    return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches)
+    return render_template('transfers.html', transfers=all_transfers, employees=all_employees, branches=all_branches, selected_branch=branch_id_filter)
 
 @app.route('/add_transfer', methods=['POST'])
 @login_required
@@ -738,12 +744,17 @@ def update_transfer_status(id):
 
     return redirect(url_for('transfers'))
 
-# --- EXPORT TRANSFERS & PROMOTIONS TO EXCEL ---
+# --- EXPORT TRANSFERS & PROMOTIONS TO EXCEL (WITH BRANCH FILTERING) ---
 @app.route('/export_transfers_excel')
 @login_required
 def export_transfers_excel():
+    branch_id_filter = request.args.get('branch_id')
+
     if current_user.role == 'admin':
-        all_transfers = Transfer.query.all()
+        query = Transfer.query
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == int(branch_id_filter))
+        all_transfers = query.all()
     else:
         user_b = current_user.branch_id
         if user_b:
@@ -762,28 +773,44 @@ def export_transfers_excel():
     data = []
     for idx, tr in enumerate(all_transfers, start=1):
         emp_name = tr.employee.full_name if tr.employee else 'N/A'
-        from_b = tr.employee.branch.name if (tr.employee and tr.employee.branch) else 'N/A'
-        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
-        if str(to_b_val).isdigit():
-            b_obj = Branch.query.get(int(to_b_val))
-            to_b_name = b_obj.name if b_obj else str(to_b_val)
-        else:
-            to_b_name = str(to_b_val)
+        emp_id = tr.employee.unique_id if (tr.employee and tr.employee.unique_id) else '-'
+        
+        from_b_val = getattr(tr, 'from_branch_id', None)
+        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
+        
+        from_b_name = 'N/A'
+        if from_b_val:
+            if str(from_b_val).isdigit():
+                b_obj = Branch.query.get(int(from_b_val))
+                if b_obj:
+                    from_b_name = b_obj.name
+            else:
+                from_b_name = str(from_b_val)
+                
+        to_b_name = 'N/A'
+        if to_b_val:
+            if str(to_b_val).isdigit():
+                b_obj = Branch.query.get(int(to_b_val))
+                if b_obj:
+                    to_b_name = b_obj.name
+            else:
+                to_b_name = str(to_b_val)
 
         data.append({
             'Lakk.': idx,
+            'ID Hojjetaa': emp_id,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa': from_b,
-            'Damee Itti': to_b_name,
+            'Damee Irraa (From)': from_b_name,
+            'Damee Itti (To)': to_b_name,
             'Sababa / Ibsa': tr.reason if tr.reason else '-',
             'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
-            'Status': tr.status if tr.status else '-'
+            'Haala (Status)': tr.status if tr.status else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
     output.seek(0)
 
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
