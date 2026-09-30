@@ -771,46 +771,41 @@ def export_transfers_excel():
             all_transfers = []
 
     data = []
-    for idx, tr in enumerate(all_transfers, start=1):
-        emp_name = tr.employee.full_name if tr.employee else 'N/A'
-        emp_id = tr.employee.unique_id if (tr.employee and tr.employee.unique_id) else '-'
+    for idx, t in enumerate(all_transfers, start=1):
+        emp_name = t.employee.full_name if t.employee else 'N/A'
+        emp_id = t.employee.unique_id if (t.employee and t.employee.unique_id) else '-'
         
-        from_b_val = getattr(tr, 'from_branch_id', None)
-        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
+        from_b_val = getattr(t, 'from_branch_id', None)
+        to_b_val = getattr(t, 'to_branch_id', getattr(t, 'to_branch', None))
         
-        from_b_name = 'N/A'
-        if from_b_val:
-            if str(from_b_val).isdigit():
-                b_obj = Branch.query.get(int(from_b_val))
-                if b_obj:
-                    from_b_name = b_obj.name
-            else:
-                from_b_name = str(from_b_val)
-                
-        to_b_name = 'N/A'
-        if to_b_val:
-            if str(to_b_val).isdigit():
-                b_obj = Branch.query.get(int(to_b_val))
-                if b_obj:
-                    to_b_name = b_obj.name
-            else:
-                to_b_name = str(to_b_val)
+        # Branch maqaan akka baasuuf
+        from_b_name = str(from_b_val)
+        if from_b_val and str(from_b_val).isdigit():
+            b_obj = Branch.query.get(int(from_b_val))
+            if b_obj:
+                from_b_name = b_obj.name
+
+        to_b_name = str(to_b_val)
+        if to_b_val and str(to_b_val).isdigit():
+            b_obj = Branch.query.get(int(to_b_val))
+            if b_obj:
+                to_b_name = b_obj.name
 
         data.append({
             'Lakk.': idx,
             'ID Hojjetaa': emp_id,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa (From)': from_b_name,
-            'Damee Itti (To)': to_b_name,
-            'Sababa / Ibsa': tr.reason if tr.reason else '-',
-            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
-            'Haala (Status)': tr.status if tr.status else '-'
+            'Damee Irraa (From)': from_b_name if from_b_name else '-',
+            'Damee Itti (To)': to_b_name if to_b_name else '-',
+            'Sababa / Ibsa': t.reason if t.reason else '-',
+            'Guyyaa': t.transfer_date.strftime('%Y-%m-%d') if t.transfer_date else '-',
+            'Haala (Status)': t.status if t.status else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Fi_Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa fi Gonfoo')
     output.seek(0)
 
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
