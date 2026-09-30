@@ -71,7 +71,7 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# --- AUTOMATIC DATABASE BACKUP FUNCTION (DATAAN AKKA HIN BADNEF) ---
+# --- AUTOMATIC DATABASE BACKUP FUNCTION ---
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -436,6 +436,55 @@ def export_employees_excel():
     
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Report.xlsx')
 
+# --- NEW ROUTE FOR EXPORTING TRANSFERS EXCEL ---
+@app.route('/export_transfers_excel')
+@login_required
+def export_transfers_excel():
+    branch_id_filter = request.args.get('branch_id')
+    
+    if current_user.role == 'admin':
+        query = Transfer.query
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == int(branch_id_filter))
+        all_transfers = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_str = str(user_b)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            conditions = []
+            if from_col is not None:
+                conditions.append(db.cast(from_col, db.String) == b_str)
+            if to_col is not None:
+                conditions.append(db.cast(to_col, db.String) == b_str)
+            all_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+        else:
+            all_transfers = []
+
+    data = []
+    for idx, t in enumerate(all_transfers, start=1):
+        emp_name = t.employee.full_name if t.employee else 'N/A'
+        from_b = getattr(t, 'from_branch_id', 'N/A')
+        to_b = getattr(t, 'to_branch_id', getattr(t, 'to_branch', 'N/A'))
+        
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Hojjetaa': emp_name,
+            'Sababii / Gaaffii': t.reason if t.reason else '-',
+            'Damee Irraa': str(from_b),
+            'Damee Seenuu': str(to_b),
+            'Haala (Status)': t.status if t.status else '-'
+        })
+        
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Jijjiirraa_Gorsaa')
+    output.seek(0)
+    
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Transfers_Report.xlsx')
+
 @app.route('/add_employee', methods=['POST'])
 @login_required
 def add_employee():
@@ -647,7 +696,7 @@ def branches():
 @login_required
 def transfers():
     branch_id_filter = request.args.get('branch_id')
-    type_filter = request.args.get('type') # 'promotion' ykn 'transfer' akka addaan baasuuf
+    type_filter = request.args.get('type')
     
     if current_user.role == 'admin':
         query = Transfer.query
