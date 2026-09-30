@@ -44,9 +44,12 @@ class PromotionAssessment(db.Model):
     experience_score = db.Column(db.Float, default=0.0)
     service_spirit_score = db.Column(db.Float, default=0.0)
     total_score = db.Column(db.Float, default=0.0)
-    current_rank_id = db.Column(db.Integer, nullable=True)
-    next_rank_id = db.Column(db.Integer, nullable=True)
+    
+    current_rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True)
+    next_rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True)  # <-- ForeignKey kun dabalameera!
+    
     status = db.Column(db.String(50), default='Pending Head Office Review')
     
     employee = db.relationship('Employee', backref='assessments', lazy=True)
+    current_rank = db.relationship('Rank', foreign_keys=[current_rank_id], lazy=True)
     next_rank = db.relationship('Rank', foreign_keys=[next_rank_id], lazy=True)
