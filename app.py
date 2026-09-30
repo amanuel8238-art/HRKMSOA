@@ -762,26 +762,21 @@ def export_transfers_excel():
     data = []
     for idx, tr in enumerate(all_transfers, start=1):
         emp_name = tr.employee.full_name if tr.employee else 'N/A'
-        emp_id = tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-'
-        
-        # Branch maqaa argachuuf
-        from_b_id = getattr(tr, 'from_branch_id', None)
-        to_b_id = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-        
-        from_branch_obj = Branch.query.get(int(from_b_id)) if from_b_id and str(from_b_id).isdigit() else None
-        to_branch_obj = Branch.query.get(int(to_b_id)) if to_b_id and str(to_b_id).isdigit() else None
-        
-        from_branch_name = from_branch_obj.name if from_branch_obj else (str(from_b_id) if from_b_id else '-')
-        to_branch_name = to_branch_obj.name if to_branch_obj else (str(to_b_id) if to_b_id else '-')
+        from_b = tr.employee.branch.name if (tr.employee and tr.employee.branch) else 'N/A'
+        to_b_val = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', 'N/A'))
+        if str(to_b_val).isdigit():
+            b_obj = Branch.query.get(int(to_b_val))
+            to_b_name = b_obj.name if b_obj else str(to_b_val)
+        else:
+            to_b_name = str(to_b_val)
 
         data.append({
             'Lakk.': idx,
-            'ID Hojjetaa': emp_id,
             'Maqaa Hojjetaa': emp_name,
-            'Damee Irraa Deeme': from_branch_name,
-            'Damee Deemu': to_branch_name,
+            'Damee Irraa': from_b,
+            'Damee Itti': to_b_name,
             'Sababa / Ibsa': tr.reason if tr.reason else '-',
-            'Guyyaa': tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-',
+            'Guyyaa': str(tr.transfer_date) if tr.transfer_date else '-',
             'Status': tr.status if tr.status else '-'
         })
 
