@@ -612,6 +612,51 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
+@app.route('/transfers')
+@login_required
+def transfers():
+    branch_id_filter = request.args.get('branch_id')
+    all_branches = Branch.query.all()
+    
+    if current_user.role == 'admin':
+        query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_id_int = int(branch_id_filter)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(
+                    Employee.branch_id == b_id_int,
+                    Transfer.to_branch_id == b_id_int
+                )
+            )
+        transfers_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_str = str(user_b)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            conditions = []
+            if from_col is not None:
+                conditions.append(db.cast(from_col, db.String) == b_str)
+            if to_col is not None:
+                conditions.append(db.cast(to_col, db.String) == b_str)
+            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            transfers_list = [t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
+        else:
+            transfers_list = []
+
+    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
+    all_employees = all_employees.all()
+    
+    return render_template('transfers.html', 
+                           transfers=transfers_list,
+                           transfers_count=len(transfers_list),
+                           employees=all_employees, 
+                           all_branches=all_branches, 
+                           branches=all_branches,
+                           selected_branch=branch_id_filter)
+
 @app.route('/promotions')
 @login_required
 def promotions():
