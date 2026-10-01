@@ -1,163 +1,87 @@
-<!DOCTYPE html>
-<html lang="af">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gamaaggama Hojjetichaa - HRKMSO</title>
-    <!-- Tailwind CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">Gamaaggama Hojjetichaa (HRKMSO)</h1>
-            
-            <!-- Hojjetichaa Ragaalee Bu'uuraa -->
-            <div class="border-b pb-4 mb-6 bg-gray-50 p-4 rounded">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
-                    <p><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name or 'Hin ibsamne' }}</p>
-                    <p><strong>Bakka Hojii:</strong> {{ employee.branch or 'Hin ibsamne' }}</p>
-                    <p><strong>Gahee Hojii:</strong> {{ employee.position or 'Hin ibsamne' }}</p>
-                    <p><strong>Saala:</strong> {{ employee.gender or 'Hin ibsamne' }}</p>
-                    <p id="employeeBirthDate" data-birth="{% if employee.birth_date and employee.birth_date|string|lower not in ['none', 'null', ''] %}{{ employee.birth_date }}{% endif %}">
-                        <strong>Umrii / Guyyaa Dhalootaa:</strong> 
-                        {% if employee.birth_date and employee.birth_date|string|lower not in ['none', 'null', ''] %}
-                            {{ employee.birth_date }}
-                        {% else %}
-                            Hin ibsamne
-                        {% endif %}
-                        <span id="autoAgeDisplay" class="text-blue-600 font-semibold"></span>
-                    </p>
-                    <p><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level or 'Hin ibsamne' }}</p>
-                    <p><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study or 'Hin ibsamne' }}</p>
-                    <p><strong>Gonfaa Dura Yeroo Itti Argate:</strong> 
-                        {% if employee.last_promotion_date and employee.last_promotion_date|string|lower not in ['none', 'null', ''] %}
-                            {{ employee.last_promotion_date }}
+{% extends "base.html" %}
+
+{% block title %}Gamaaggama Hojjetichaa - HRKMSO{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-lg border-0 rounded-3 mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-star-half-alt me-2"></i> Gamaaggama Hojjetichaa (HRKMSO)</h4>
+        </div>
+        <div class="card-body p-4">
+            <!-- Odeeffannoo Hojjetichaa -->
+            <div class="row mb-4 p-3 bg-light rounded border">
+                <div class="col-md-6">
+                    <p class="mb-2"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name }}</p>
+                    <p class="mb-2"><strong>Bakka Hojii:</strong> {{ employee.branch.name if employee.branch else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Gahee Hojii:</strong> {{ employee.position if employee.position else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Saala:</strong> {{ employee.gender }}</p>
+                </div>
+                <div class="col-md-6">
+                    <!-- Umrii Shallagamu (Bara Ammaa 2019 - Bara Dhalootaa) -->
+                    <p class="mb-2">
+                        <strong>Umrii:</strong> 
+                        {% if employee.birth_date %}
+                            {# Yeroo birth_date akka 'YYYY-MM-DD' tti qabameYEAR qofa baasuuf #}
+                            {{ 2019 - (employee.birth_date[:4] | int) }} Waggaa
                         {% else %}
                             Hin ibsamne
                         {% endif %}
                     </p>
+                    <p class="mb-2"><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level if employee.education_level else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study if employee.field_of_study else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.last_promotion_date if employee.last_promotion_date else 'Hin ibsamne' }}</p>
                 </div>
             </div>
 
-            <form method="POST" action="">
-                <h2 class="text-lg font-bold text-gray-800 mb-4">Ulaagaalee Gamaaggamaa</h2>
+            <!-- Foomii Gamaaggamaa (Evaluation Form) -->
+            <form method="POST" action="{{ url_for('save_evaluation', id=employee.id) }}">
+                <h5 class="fw-bold text-secondary mb-3">Ulaagaalee Gamaaggamaa</h5>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <!-- Bu'uura Raawwii Hojii 25% -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Bu'uura Raawwii Hojii (Max 25%):</label>
-                        <input type="number" step="0.01" max="25" name="performance_score" id="perf" class="score-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00">
-                    </div>
-
-                    <!-- Sadarkaa Barumsaa & Leenjii 20% -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                        <input type="number" step="0.01" max="20" name="education_score" id="edu" class="score-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00">
-                    </div>
-
-                    <!-- Naamusaa Poolisii 20% -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Naamusaa Poolisii (Max 20%):</label>
-                        <input type="number" step="0.01" max="20" name="discipline_score" id="disc" class="score-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00">
-                    </div>
-
-                    <!-- Seera fi Heera 10% -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Seera fi Heera (Max 10%):</label>
-                        <input type="number" step="0.01" max="10" name="law_compliance_score" id="law" class="score-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00">
-                    </div>
-
-                    <!-- Muxannoo Hojii 10% -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Muxannoo Hojii (Max 10%):</label>
-                        <input type="number" step="0.01" max="10" name="experience_score" id="exp" class="score-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00">
-                    </div>
-
-                    <!-- Mira Tajaajiltummaa 15% -->
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-1">Mira Tajaajiltummaa (Max 15%):</label>
-                        <input type="number" step="0.01" max="15" name="service_spirit_score" id="serv" class="score-input shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="0.00">
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
+                    <input type="number" step="0.01" name="performance_score" class="form-control" max="25" required>
                 </div>
 
-                <!-- Hidden Age Score Input -->
-                <input type="hidden" name="age_score" id="age" value="0">
-
-                <!-- Ida'ama Waliigalaa -->
-                <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h2 class="text-xl font-bold text-gray-800">Ida'ama Waliigalaa: <span id="totalScoreDisplay" class="text-green-600">0.00 / 100%</span></h2>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
+                    <input type="number" step="0.01" name="education_score" class="form-control" max="20" required>
                 </div>
 
-                <!-- Gonfaa Itti Aanu Yeroo Itti Argatu (Next Rank) -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Gonfaa Itti Aanu Yeroo Itti Argatu (Sadarkaa Itti Aanu):</label>
-                    <select name="next_rank_id" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        {% for rank in ranks %}
-                            <option value="{{ rank.id }}">{{ rank.name }}</option>
-                        {% endfor %}
-                    </select>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Naamusaa Poolisii (Max 20%):</label>
+                    <input type="number" step="0.01" name="discipline_score" class="form-control" max="20" required>
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded focus:outline-none focus:shadow-outline">Gamaaggama Galmeessi</button>
-                    <a href="{{ url_for('employees') }}" class="inline-block align-baseline font-bold text-sm text-blue-600 hover:text-blue-800">Gara Hojjettootaatti Deebi'i</a>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Seera fi Heera (Max 10%):</label>
+                    <input type="number" step="0.01" name="law_score" class="form-control" max="10" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Muxannoo Hojii (Max 10%):</label>
+                    <input type="number" step="0.01" name="experience_score" class="form-control" max="10" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 15%):</label>
+                    <input type="number" step="0.01" name="service_delivery_score" class="form-control" max="15" required>
+                </div>
+
+                <!-- Guyyaa Gonfaa Amma Itti Argatu (Unkaa / Input keessatti akka galfamu) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</label>
+                    <input type="date" name="next_promotion_date" class="form-control" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="{{ url_for('employees') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Duubatti Deebi'i
+                    </a>
+                    <button type="submit" class="btn btn-success fw-bold px-4">Gamaaggama Galchi / Lakkaa'i</button>
                 </div>
             </form>
         </div>
     </div>
-
-    <!-- JavaScript for Age Calculation & Real-time Total Score -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            try {
-                let bDateEl = document.getElementById('employeeBirthDate');
-                let bStr = bDateEl ? bDateEl.getAttribute('data-birth').trim() : '';
-                let ageText = "";
-
-                if (bStr && bStr !== "" && bStr.toLowerCase() !== "none" && bStr.toLowerCase() !== "null") {
-                    let parts = bStr.split(/[-/]/);
-                    if (parts.length > 0) {
-                        let birthYear = parseInt(parts[0].length === 4 ? parts[0] : parts[parts.length - 1]);
-                        if (!isNaN(birthYear)) {
-                            if (birthYear < 100) birthYear += (birthYear > 30 ? 1900 : 2000);
-                            let currentYear = new Date().getFullYear();
-                            let age = currentYear - birthYear;
-                            ageText = "(Umrii: " + age + ")";
-                        }
-                    }
-                }
-
-                let ageDisplay = document.getElementById('autoAgeDisplay');
-                if (ageDisplay) {
-                    ageDisplay.innerText = ageText;
-                }
-
-                function calculateTotal() {
-                    let perf = parseFloat(document.getElementById('perf')?.value) || 0;
-                    let edu = parseFloat(document.getElementById('edu')?.value) || 0;
-                    let disc = parseFloat(document.getElementById('disc')?.value) || 0;
-                    let law = parseFloat(document.getElementById('law')?.value) || 0;
-                    let exp = parseFloat(document.getElementById('exp')?.value) || 0;
-                    let serv = parseFloat(document.getElementById('serv')?.value) || 0;
-
-                    let total = perf + edu + disc + law + exp + serv;
-
-                    let totalDisplay = document.getElementById('totalScoreDisplay');
-                    if (totalDisplay) {
-                        totalDisplay.innerText = total.toFixed(2) + " / 100%";
-                    }
-                }
-
-                document.querySelectorAll('.score-input').forEach(input => {
-                    input.addEventListener('input', calculateTotal);
-                });
-                
-                calculateTotal();
-            } catch (err) {
-                console.log("JS Error: ", err);
-            }
-        });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}
