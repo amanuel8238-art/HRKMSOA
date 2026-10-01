@@ -212,7 +212,6 @@ def dashboard():
     warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
     penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
     
-    # Lakkoofsa hojjettoota Gaaffii Gonfoo (Promotion Requests) damee sanaa keessatti
     if current_user.role == 'admin':
         promotion_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
     else:
@@ -533,7 +532,6 @@ def evaluate_employee(id):
             emp.next_promotion_status = next_promotion_status
             emp.next_promotion_date = next_promotion_date
 
-            # Gaaffii Gonfoo (Promotion Request) ta'ee Transfer table keessatti galmaa'a
             transfer_data = {
                 'employee_id': emp.id,
                 'reason': f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}",
@@ -614,11 +612,12 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
-# 1. Gaaffii Gulantaa Gonfoo (Promotions / Ranks) Qofaaf
+# 1. Gaaffii Gulantaa Gonfoo (Promotions / Ranks) Qofaaf - Dameewwan 39 cufaaf filtering sirrii ta'e
 @app.route('/promotions')
 @login_required
 def promotions():
     branch_id_filter = request.args.get('branch_id')
+    all_branches = Branch.query.all()
     
     if current_user.role == 'admin':
         query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
@@ -650,13 +649,13 @@ def promotions():
     b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
     all_employees = all_employees.all()
-    all_branches = Branch.query.all()
     
     return render_template('promotions.html', 
                            promotions=promotions_list,
                            promotions_count=len(promotions_list),
                            employees=all_employees, 
-                           branches=all_branches, 
+                           all_branches=all_branches, 
+                           branches=all_branches,
                            selected_branch=branch_id_filter)
 
 # 2. Gaaffii Jijjiirraa (Transfers) Qofaaf (Gonfoo Hin Qabanne)
@@ -664,6 +663,7 @@ def promotions():
 @login_required
 def transfers():
     branch_id_filter = request.args.get('branch_id')
+    all_branches = Branch.query.all()
     
     if current_user.role == 'admin':
         query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
@@ -695,12 +695,12 @@ def transfers():
     b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
     all_employees = all_employees.all()
-    all_branches = Branch.query.all()
     
     return render_template('transfers.html', 
                            transfers=all_transfers,
                            transfers_count=len(all_transfers),
                            employees=all_employees, 
+                           all_branches=all_branches,
                            branches=all_branches, 
                            selected_branch=branch_id_filter)
 

@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <!-- Row 2: Admin Branch Filter Form (Dameewwan 39 hundi akka filaman) -->
+    <!-- Row 2: Admin Branch Filter Form (Dameewwan 39 hundi maqaan isaanii akka filaman) -->
     {% if current_user.role == 'admin' %}
     <div class="row mb-4">
         <div class="col-md-6">
@@ -32,12 +32,14 @@
                 <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
                 <div class="input-group">
                     <select name="branch_id" id="branch_id" class="form-select">
-                        <option value="">Dameewwan Hunda (All Branches - 39)</option>
-                        {% for b in all_branches %}
-                            <option value="{{ b.id }}" {% if selected_branch and selected_branch|string == b.id|string %}selected{% endif %}>
-                                {{ b.name }}
-                            </option>
-                        {% endfor %}
+                        <option value="">Dameewwan Hunda (All Branches)</option>
+                        {% if all_branches %}
+                            {% for b in all_branches %}
+                                <option value="{{ b.id }}" {% if selected_branch and selected_branch|string == b.id|string %}selected{% endif %}>
+                                    {{ b.name }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
                     </select>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-filter"></i> Filadhu
@@ -81,7 +83,7 @@
                                     {% set b_name = '-' %}
                                     {% if tr.employee and tr.employee.branch %}
                                         {% set b_name = tr.employee.branch.name %}
-                                    {% elif tr.to_branch_id %}
+                                    {% elif tr.to_branch_id and all_branches %}
                                         {% for b in all_branches %}
                                             {% if b.id|string == tr.to_branch_id|string %}
                                                 {% set b_name = b.name %}
