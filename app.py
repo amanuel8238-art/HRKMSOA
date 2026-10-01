@@ -212,16 +212,16 @@ def dashboard():
     warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
     penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
     
-    # Lakkoofsa hojjettoota gamaaggamaman (Evaluated / Promotion Requests) damee sanaa keessatti
+    # Lakkoofsa hojjettoota Gaaffii Gonfoo (Promotion Requests) damee sanaa keessatti
     if current_user.role == 'admin':
-        evaluated_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
+        promotion_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
     else:
-        evaluated_count = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+        promotion_count = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
             Employee.branch_id == branch_id_val,
             Transfer.reason.ilike('%Gaaffii Gonfoo%')
         ).count() if user_b else 0
 
-    reward_count = evaluated_count
+    reward_count = promotion_count
     clean_count = emp_count
 
     return render_template('dashboard.html', 
@@ -533,7 +533,7 @@ def evaluate_employee(id):
             emp.next_promotion_status = next_promotion_status
             emp.next_promotion_date = next_promotion_date
 
-            # Gaaffii Gonfoo (Promotion Request) ta'ee Transfer table keessatti galmaa'a (garuu fuula Promotions qofa jalatti calalamee baasa)
+            # Gaaffii Gonfoo (Promotion Request) ta'ee Transfer table keessatti galmaa'a
             transfer_data = {
                 'employee_id': emp.id,
                 'reason': f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}",
@@ -754,7 +754,6 @@ def update_transfer_status(id):
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     
-    # Yoo gaaffiin sun gonfoo ta'e gara /promotionstti, yoo jijjiirraa ta'e gara /transferstti deebisuu
     if tr.reason and "Gaaffii Gonfoo" in tr.reason:
         return redirect(url_for('promotions'))
     return redirect(url_for('transfers'))
