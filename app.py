@@ -736,26 +736,26 @@ def export_promotions_excel():
 
     data = []
     for idx, p in enumerate(promotions_list, start=1):
-        emp = p.employee
-        branch_name = emp.branch.name if emp and emp.branch else 'N/A'
-        rank_name = emp.rank.name if emp and emp.rank else 'N/A'
+        emp_name = p.employee.full_name if p.employee else 'N/A'
+        emp_id = p.employee.unique_id if p.employee and p.employee.unique_id else '-'
+        branch_name = p.employee.branch.name if p.employee and p.employee.branch else 'N/A'
         data.append({
             'Lakk.': idx,
-            'ID Addaa': emp.unique_id if emp and emp.unique_id else '-',
-            'Maqaa Guutuu Hojjetaa': emp.full_name if emp else 'N/A',
+            'ID Addaa': emp_id,
+            'Maqaa Hojjetaa': emp_name,
             'Damee (Branch)': branch_name,
-            'Gulantaa Duraanii': rank_name,
-            'Sababii / Haala Madaallii': p.reason if p.reason else '-',
-            'Guyyaa Gaaffiin Dhihaate': p.transfer_date.strftime('%Y-%m-%d') if p.transfer_date else '-',
-            'Haala (Status)': p.status if p.status else '-'
+            'Sababa / Ibsaa': p.reason if p.reason else '-',
+            'Haala (Status)': p.status if p.status else '-',
+            'Guyyaa': str(p.transfer_date) if p.transfer_date else '-'
         })
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gabbisa')
+        df.to_excel(writer, index=False, sheet_name='Guddina Gulantaa')
     output.seek(0)
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Promotions_Report.xlsx')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
