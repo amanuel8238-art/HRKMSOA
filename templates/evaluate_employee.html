@@ -18,11 +18,11 @@
                     <p class="mb-2"><strong>Saala:</strong> {{ employee.gender }}</p>
                 </div>
                 <div class="col-md-6">
-                    <!-- Umrii Shallagamu (Bara Ammaa 2019 - Bara Dhalootaa) -->
+                    <!-- Umrii Shallagamu (Bara Ammaa 2026 - Bara Dhalootaa) -->
                     <p class="mb-2">
                         <strong>Umrii:</strong> 
                         {% if employee.birth_date %}
-                            {{ 2019 - (employee.birth_date[:4] | int) }} Waggaa
+                            {{ 2026 - (employee.birth_date[:4] | int) }} Waggaa
                         {% else %}
                             Hin ibsamne
                         {% endif %}
@@ -81,13 +81,13 @@
                         <label class="form-label fw-bold text-primary">Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</label>
                         <select name="next_promotion_status" class="form-select">
                             <option value="">-- Sadarkaa Filadhu --</option>
-                            <option value="Konstabilii" {% if employee.next_promotion_status == 'Konstabilii' %}selected{% endif %}>Konstabilii</option>
-                            <option value="G/Sajjiin" {% if employee.next_promotion_status == 'G/Sajjiin' %}selected{% endif %}>G/Sajjiin (Gargaaraa Sajjiin)</option>
-                            <option value="Sajjiin" {% if employee.next_promotion_status == 'Sajjiin' %}selected{% endif %}>Sajjiin</option>
-                            <option value="Sajjiin Oli" {% if employee.next_promotion_status == 'Sajjiin Oli' %}selected{% endif %}>Sajjiin Oli</option>
-                            <option value="Inspeektera" {% if employee.next_promotion_status == 'Inspeektera' %}selected{% endif %}>Inspeektera</option>
-                            <option value="Inspeektera Gargaaraa" {% if employee.next_promotion_status == 'Inspeektera Gargaaraa' %}selected{% endif %}>Inspeektera Gargaaraa</option>
-                            <option value="Inspeektera Ol'aanaa" {% if employee.next_promotion_status == 'Inspeektera Ol'aanaa' %}selected{% endif %}>Inspeektera Ol'aanaa</option>
+                            <option value="Konstabilii" {% if employee.next_promotion_status == "Konstabilii" %}selected{% endif %}>Konstabilii</option>
+                            <option value="G/Sajjiin" {% if employee.next_promotion_status == "G/Sajjiin" %}selected{% endif %}>G/Sajjiin (Gargaaraa Sajjiin)</option>
+                            <option value="Sajjiin" {% if employee.next_promotion_status == "Sajjiin" %}selected{% endif %}>Sajjiin</option>
+                            <option value="Sajjiin Oli" {% if employee.next_promotion_status == "Sajjiin Oli" %}selected{% endif %}>Sajjiin Oli</option>
+                            <option value="Inspeektera" {% if employee.next_promotion_status == "Inspeektera" %}selected{% endif %}>Inspeektera</option>
+                            <option value="Inspeektera Gargaaraa" {% if employee.next_promotion_status == "Inspeektera Gargaaraa" %}selected{% endif %}>Inspeektera Gargaaraa</option>
+                            <option value="Inspeektera Ol'aanaa" {% if employee.next_promotion_status == 'Inspeektera Ol\'aanaa' %}selected{% endif %}>Inspeektera Ol'aanaa</option>
                         </select>
                     </div>
                 </div>
