@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Gaaffii Gulantaa Gonfoo fi Jijjiirraa - HRKMSO{% endblock %}
+{% block title %}Gaaffii Gulantaa Gonfoo - HRKMSO{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -12,12 +12,12 @@
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Deebi'i
                 </a>
-                <h2 class="mb-0">Gaaffii Gulantaa Gonfoo (Promotions) & Jijjiirraa</h2>
+                <h2 class="mb-0">Gaaffii Gulantaa Gonfoo (Promotions / Ranks)</h2>
             </div>
             
             <!-- Excel Export Button -->
             <div>
-                <a href="{{ url_for('export_transfers_excel', branch_id=selected_branch) }}" class="btn btn-success">
+                <a href="{{ url_for('export_ranks_excel', branch_id=selected_branch) }}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Excel-tti Buufachuuf (Export)
                 </a>
             </div>
@@ -28,7 +28,7 @@
     {% if current_user.role == 'admin' %}
     <div class="row mb-4">
         <div class="col-md-6">
-            <form method="GET" action="{{ url_for('transfers') }}" class="card shadow-sm p-3 bg-light">
+            <form method="GET" action="{{ url_for('ranks') }}" class="card shadow-sm p-3 bg-light">
                 <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
                 <div class="input-group">
                     <select name="branch_id" id="branch_id" class="form-select">
@@ -43,7 +43,7 @@
                         <i class="fas fa-filter"></i> Filadhu
                     </button>
                     {% if selected_branch %}
-                        <a href="{{ url_for('transfers') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
+                        <a href="{{ url_for('ranks') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
                     {% endif %}
                 </div>
             </form>
@@ -51,7 +51,7 @@
     </div>
     {% endif %}
 
-    <!-- Table of Transfers & Promotions -->
+    <!-- Table of Ranks & Promotions -->
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -61,9 +61,10 @@
                             <th>#</th>
                             <th>ID Hojjetaa</th>
                             <th>Maqaa Hojjetaa</th>
-                            <th>Damee Irraa (From)</th>
-                            <th>Damee Itti (To)</th>
-                            <th>Sababa / Ibsa (Reason / Score)</th>
+                            <th>Damee (Branch)</th>
+                            <th>Gulantaa Duraanii</th>
+                            <th>Gulantaa Haaraa</th>
+                            <th>Sababa / Ibsa</th>
                             <th>Guyyaa</th>
                             <th>Haala (Status)</th>
                             {% if current_user.role == 'admin' %}
@@ -72,53 +73,42 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if transfers %}
-                            {% for tr in transfers %}
+                        {% if ranks %}
+                            {% for r in ranks %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td><strong>{{ tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-' }}</strong></td>
-                                <td>{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
+                                <td><strong>{{ r.employee.unique_id if r.employee and r.employee.unique_id else '-' }}</strong></td>
+                                <td>{{ r.employee.full_name if r.employee else 'N/A' }}</td>
                                 <td>
-                                    {% if tr.from_branch_id %}
-                                        {% set from_b = namespace(name=tr.from_branch_id) %}
-                                        {% for b in all_branches %}
-                                            {% if b.id|string == tr.from_branch_id|string %}
-                                                {% set from_b.name = b.name %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        {{ from_b.name }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% set to_b_val = tr.to_branch_id if tr.to_branch_id else (tr.to_branch if tr.to_branch else '-') %}
-                                    {% set to_b_name = namespace(name=to_b_val) %}
+                                    {% set branch_val = r.branch_id if r.branch_id else (r.employee.branch_id if r.employee else '-') %}
+                                    {% set branch_name = namespace(name=branch_val) %}
                                     {% for b in all_branches %}
-                                        {% if b.id|string == to_b_val|string %}
-                                            {% set to_b_name.name = b.name %}
+                                        {% if b.id|string == branch_val|string %}
+                                            {% set branch_name.name = b.name %}
                                         {% endif %}
                                     {% endfor %}
-                                    {{ to_b_name.name }}
+                                    {{ branch_name.name }}
                                 </td>
-                                <td>{{ tr.reason if tr.reason else '-' }}</td>
-                                <td>{{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</td>
+                                <td>{{ r.old_rank if r.old_rank else '-' }}</td>
+                                <td>{{ r.new_rank if r.new_rank else '-' }}</td>
+                                <td>{{ r.reason if r.reason else '-' }}</td>
+                                <td>{{ r.rank_date.strftime('%Y-%m-%d') if r.rank_date else '-' }}</td>
                                 <td>
-                                    {% if tr.status == 'Approved' %}
+                                    {% if r.status == 'Approved' %}
                                         <span class="badge bg-success">Eeyyamameera (Approved)</span>
-                                    {% elif tr.status == 'Rejected' %}
-                                        <span class="badge bg-danger">Harkifateera/Kallattiin Fashaleera (Rejected)</span>
+                                    {% elif r.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Harkifateera (Rejected)</span>
                                     {% else %}
                                         <span class="badge bg-warning text-dark">Eeggannoo Irra Jira (Pending)</span>
                                     {% endif %}
                                 </td>
                                 {% if current_user.role == 'admin' %}
                                 <td>
-                                    <form action="{{ url_for('update_transfer_status', id=tr.id) }}" method="POST" class="d-inline">
+                                    <form action="{{ url_for('update_rank_status', id=r.id) }}" method="POST" class="d-inline">
                                         <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-                                            <option value="Pending" {% if tr.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                            <option value="Approved" {% if tr.status == 'Approved' %}selected{% endif %}>Approve</option>
-                                            <option value="Rejected" {% if tr.status == 'Rejected' %}selected{% endif %}>Reject</option>
+                                            <option value="Pending" {% if r.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                            <option value="Approved" {% if r.status == 'Approved' %}selected{% endif %}>Approve</option>
+                                            <option value="Rejected" {% if r.status == 'Rejected' %}selected{% endif %}>Reject</option>
                                         </select>
                                     </form>
                                 </td>
@@ -127,8 +117,8 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
-                                    Daataan gaaffii gonfoo ykn jijjiirraa galmaa'e hin jiru.
+                                <td colspan="10" class="text-center py-4 text-muted">
+                                    Daataan gaaffii gulantaa (rank) galmaa'e hin jiru.
                                     {% if selected_branch %} (Filannoo damee kanaan ragaan hin argamne){% endif %}
                                 </td>
                             </tr>
