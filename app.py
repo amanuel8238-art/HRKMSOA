@@ -670,30 +670,13 @@ def update_transfer_status(id):
     status = request.form.get('status')
     tr.status = status
     
-    target_branch = getattr(tr, 'to_branch_id', getattr(tr, 'to_branch', None))
-    if status == 'Approved':
-        emp = Employee.query.get(tr.employee_id)
-        if emp:
-            if target_branch is not None and str(target_branch) != str(emp.branch_id):
-                emp.branch_id = int(target_branch) if str(target_branch).isdigit() else target_branch
-            if tr.reason and "Gulantaa Barbaadame (Rank ID):" in tr.reason:
-                try:
-                    parts = tr.reason.split("Gulantaa Barbaadame (Rank ID):")
-                    if len(parts) > 1:
-                        r_id = int(parts[1].strip().split()[0])
-                        if r_id:
-                            emp.rank_id = r_id
-                except Exception:
-                    pass
-
     try:
         create_local_backup()
         db.session.commit()
-        flash("Haalli jijjiirraa/madaallii milkaa'inaan haaromeera!", 'success')
+        flash("Haalli jijjiirraa/gonfoo milkaa'inaan haaromfameera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
     return redirect(url_for('transfers'))
 
 if __name__ == '__main__':
