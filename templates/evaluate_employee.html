@@ -22,7 +22,6 @@
                     <p class="mb-2">
                         <strong>Umrii:</strong> 
                         {% if employee.birth_date %}
-                            {# Yeroo birth_date akka 'YYYY-MM-DD' tti qabameYEAR qofa baasuuf #}
                             {{ 2019 - (employee.birth_date[:4] | int) }} Waggaa
                         {% else %}
                             Hin ibsamne
@@ -68,10 +67,16 @@
                     <input type="number" step="0.01" name="service_delivery_score" class="form-control" max="15" required>
                 </div>
 
-                <!-- Guyyaa Gonfaa Amma Itti Argatu (Unkaa / Input keessatti akka galfamu) -->
+                <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Input Date) -->
                 <div class="mb-3">
                     <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</label>
                     <input type="date" name="next_promotion_date" class="form-control" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
+                </div>
+
+                <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu -->
+                <div class="p-3 bg-light rounded border mb-4">
+                    <p class="mb-2 fs-5"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">{{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }} / 100%</span></p>
+                    <p class="mb-0 fs-5"><strong>Sadarkaa Guddinaa Itti Aanu:</strong> <span class="text-primary fw-bold">{{ employee.next_promotion_status if employee.next_promotion_status else 'Shallagama irra jira / Hin ibsamne' }}</span></p>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-4">
