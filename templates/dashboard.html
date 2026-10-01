@@ -27,7 +27,7 @@
                 </div>
                 <div class="flex items-center gap-4 text-sm">
                     <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b>{{ current_user.username }}</b></span>
-                    {% if current_user.role == 'admin' and 'settings' in url_for.__globals__.get('view_functions', {}) %}
+                    {% if current_user.role == 'admin' and endpoint_exists('settings') %}
                     <a href="{{ url_for('settings') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded transition text-white">Manage Users</a>
                     {% endif %}
                     <a href="{{ url_for('logout') }}" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition text-white">Bahi (Logout)</a>
@@ -45,7 +45,11 @@
                 <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
                 <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
                 
-                <!-- Check if 'ranks' endpoint exists, otherwise fallback to 'evaluation' or hide if missing -->
+                <!-- Gaaffii Gulantaa Gonfoo (Promotions) Link -->
+                {% if endpoint_exists('promotions') %}
+                    <a href="{{ url_for('promotions') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gaaffii Gonfoo (Promotions)</a>
+                {% endif %}
+
                 {% if endpoint_exists('ranks') %}
                     <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
                 {% elif endpoint_exists('rank') %}
@@ -162,16 +166,21 @@
                             </div>
                         </div>
 
+                        <!-- Gaaffii Gonfoo / Reward Card -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Badhaasa / Galataa (Rewards)</p>
+                                    <p class="text-xs text-slate-500 font-medium">Gaaffii Gonfoo (Promotions)</p>
                                     <h3 id="statReward" class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count is defined else 0 }}</h3>
                                 </div>
                                 <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">🏆</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
+                                {% if endpoint_exists('promotions') %}
+                                <a href="{{ url_for('promotions') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Gaaffii Gonfoo Ilaali &rarr;</a>
+                                {% else %}
                                 <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -201,14 +210,16 @@
                             <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-users mr-1"></i> Miseensota Ilaali</a>
                             <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-building mr-1"></i> Dameewwan Ilaali</a>
                             
+                            {% if endpoint_exists('promotions') %}
+                            <a href="{{ url_for('promotions') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gaaffii Gonfoo (Promotions)</a>
+                            {% endif %}
+
                             {% if endpoint_exists('ranks') %}
-                            <a href="{{ url_for('ranks') }}" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gulaataa Gonfoo (Evaluation)</a>
-                            {% elif endpoint_exists('rank') %}
-                            <a href="{{ url_for('rank') }}" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gulaataa Gonfoo (Evaluation)</a>
+                            <a href="{{ url_for('ranks') }}" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-layer-group mr-1"></i> Gulaataa Gonfoo</a>
                             {% endif %}
 
                             {% if endpoint_exists('export_employees_excel') %}
-                            <a href="{{ url_for('export_employees_excel') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-file-excel mr-1"></i> Excel-tti Buufadhu</a>
+                            <a href="{{ url_for('export_employees_excel') }}" class="bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-file-excel mr-1"></i> Excel-tti Buufadhu</a>
                             {% endif %}
                         </div>
                     </div>
@@ -226,10 +237,10 @@
         </main>
     </div>
 
-    <!-- Chart Script & State Persistence to Prevent Data Loss -->
+    <!-- Chart Script & Always Sync Live Server Data -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // 1. Lakkoofsota Server irraa dhufan qabachuun Object qopheessuu
+            // Server irraa dataan dhufu kallattiidhaan UI irratti akka uwwifamu gochuu (Caching hambisuun dataa dhabamuu irraa eeguuf)
             const liveData = {
                 emp_count: {{ emp_count if emp_count is defined else 0 }},
                 active_emp_count: {{ active_emp_count if active_emp_count is defined else 0 }},
@@ -242,49 +253,31 @@
                 warning_count: {{ warning_count if warning_count is defined else 0 }},
                 penalty_count: {{ penalty_count if penalty_count is defined else 0 }},
                 reward_count: {{ reward_count if reward_count is defined else 0 }},
-                clean_count: {{ clean_count if clean_count is defined else 0 }},
-                timestamp: new Date().getTime()
+                clean_count: {{ clean_count if clean_count is defined else 0 }}
             };
 
-            // 2. Yoo Server-irraa dataan guutuu ta'ee (0 hin taane ykn caalaa yoo argame) Cache keessatti haaromsuu
-            let dashboardData = liveData;
-            const cachedDataString = localStorage.getItem('hrkmso_dashboard_cache');
-            
-            if (cachedDataString) {
-                try {
-                    const cachedData = JSON.parse(cachedDataString);
-                    if (liveData.emp_count === 0 && cachedData.emp_count > 0) {
-                        dashboardData = cachedData;
-                    } else {
-                        localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
-                    }
-                } catch (e) {
-                    localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
-                }
-            } else {
-                localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
-            }
+            // LocalStorage cache yeroo hundaa live dataan haaroftuu akka qabaatu gochuu
+            localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
 
-            // 3. UI irra elementoota ID qaban irratti deebisee uwwisuu (Data Loss irraa eeguuf)
             const updateElementText = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.innerText = val;
             };
 
-            updateElementText('statEmpCount', dashboardData.emp_count);
-            updateElementText('statActiveEmp', dashboardData.active_emp_count);
-            updateElementText('statBranchCount', dashboardData.branch_count);
-            updateElementText('statTransferCount', dashboardData.transfer_count);
-            updateElementText('statMale', dashboardData.male_count);
-            updateElementText('statFemale', dashboardData.female_count);
-            updateElementText('statRetired', dashboardData.retired_count);
-            updateElementText('statResigned', dashboardData.resigned_count);
-            updateElementText('statWarning', dashboardData.warning_count);
-            updateElementText('statPenalty', dashboardData.penalty_count);
-            updateElementText('statReward', dashboardData.reward_count);
-            updateElementText('statClean', dashboardData.clean_count);
+            updateElementText('statEmpCount', liveData.emp_count);
+            updateElementText('statActiveEmp', liveData.active_emp_count);
+            updateElementText('statBranchCount', liveData.branch_count);
+            updateElementText('statTransferCount', liveData.transfer_count);
+            updateElementText('statMale', liveData.male_count);
+            updateElementText('statFemale', liveData.female_count);
+            updateElementText('statRetired', liveData.retired_count);
+            updateElementText('statResigned', liveData.resigned_count);
+            updateElementText('statWarning', liveData.warning_count);
+            updateElementText('statPenalty', liveData.penalty_count);
+            updateElementText('statReward', liveData.reward_count);
+            updateElementText('statClean', liveData.clean_count);
 
-            // 4. Chart.js render godhuu
+            // Chart.js render godhuu
             const canvasEl = document.getElementById('genderChart');
             if (canvasEl) {
                 const ctx = canvasEl.getContext('2d');
@@ -294,9 +287,9 @@
                         labels: ['Dhiira', 'Dhalaa', 'Umrii 55+'],
                         datasets: [{
                             data: [
-                                dashboardData.male_count, 
-                                dashboardData.female_count, 
-                                dashboardData.retired_count
+                                liveData.male_count, 
+                                liveData.female_count, 
+                                liveData.retired_count
                             ],
                             backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b'],
                             borderWidth: 1
