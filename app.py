@@ -135,7 +135,6 @@ def get_retired_employees_list(active_employees):
                         b_date = date(year, month, day)
                 if b_date:
                     birth_year = b_date.year
-                    # Waggaa 55 fi ol (Bara ammaa irratti hundaa'uun)
                     age = current_year - birth_year
                     if age >= 55:
                         retired_list.append((e, age))
@@ -179,7 +178,7 @@ def dashboard():
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
         branch_count = Branch.query.count()
-        transfer_count = Transfer.query.count()
+        transfer_count = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).count()
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
@@ -204,14 +203,25 @@ def dashboard():
                 conditions.append(db.cast(from_col, db.String) == b_str)
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
-            transfer_count = Transfer.query.filter(db.or_(*conditions)).count() if conditions else 0
+            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            transfer_count = len([t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)])
         else:
             transfer_count = 0
 
     retired_count = len(get_retired_employees_list(all_emps))
     warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
     penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
-    reward_count = 0 
+    
+    # Lakkoofsa hojjettoota gamaaggamaman (Evaluated / Promotion Requests) damee sanaa keessatti
+    if current_user.role == 'admin':
+        evaluated_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
+    else:
+        evaluated_count = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+            Employee.branch_id == branch_id_val,
+            Transfer.reason.ilike('%Gaaffii Gonfoo%')
+        ).count() if user_b else 0
+
+    reward_count = evaluated_count
     clean_count = emp_count
 
     return render_template('dashboard.html', 
@@ -510,17 +520,23 @@ def evaluate_employee(id):
             perf = float(request.form.get('performance_score') or 0.0)
             edu = float(request.form.get('education_score') or 0.0)
             disc = float(request.form.get('discipline_score') or 0.0)
-            law = float(request.form.get('law_compliance_score') or 0.0)
+            law = float(request.form.get('law_score') or request.form.get('law_compliance_score') or 0.0)
             exp = float(request.form.get('experience_score') or 0.0)
             age = float(request.form.get('age_score') or 0.0)
-            serv = float(request.form.get('service_spirit_score') or 0.0)
+            serv = float(request.form.get('service_delivery_score') or request.form.get('service_spirit_score') or 0.0)
             
             total_score = perf + edu + disc + law + exp + age + serv
-            next_rank_id = request.form.get('next_rank_id')
+            next_promotion_status = request.form.get('next_promotion_status')
+            next_promotion_date = request.form.get('next_promotion_date')
             
+            emp.total_score = total_score
+            emp.next_promotion_status = next_promotion_status
+            emp.next_promotion_date = next_promotion_date
+
+            # Gaaffii Gonfoo (Promotion Request) ta'ee Transfer table keessatti galmaa'a (garuu fuula Promotions qofa jalatti calalamee baasa)
             transfer_data = {
                 'employee_id': emp.id,
-                'reason': f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Gulantaa Barbaadame (Rank ID): {next_rank_id}",
+                'reason': f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}",
                 'transfer_date': datetime.utcnow(),
                 'status': 'Pending'
             }
@@ -534,7 +550,7 @@ def evaluate_employee(id):
             db.session.add(new_transfer)
             db.session.commit()
             
-            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan guutamee gara Head Office-tti ergameera!", 'success')
+            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan guutamee Gaaffii Gulantaa Gonfoo (Promotions) jalatti Head Office-tti ergameera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
@@ -598,14 +614,59 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
+# 1. Gaaffii Gulantaa Gonfoo (Promotions / Ranks) Qofaaf
+@app.route('/promotions')
+@login_required
+def promotions():
+    branch_id_filter = request.args.get('branch_id')
+    
+    if current_user.role == 'admin':
+        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_id_int = int(branch_id_filter)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(
+                    Employee.branch_id == b_id_int,
+                    Transfer.to_branch_id == b_id_int
+                )
+            )
+        promotions_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_str = str(user_b)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            conditions = []
+            if from_col is not None:
+                conditions.append(db.cast(from_col, db.String) == b_str)
+            if to_col is not None:
+                conditions.append(db.cast(to_col, db.String) == b_str)
+            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            promotions_list = [t for t in branch_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
+        else:
+            promotions_list = []
+
+    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
+    all_employees = all_employees.all()
+    all_branches = Branch.query.all()
+    
+    return render_template('promotions.html', 
+                           promotions=promotions_list,
+                           promotions_count=len(promotions_list),
+                           employees=all_employees, 
+                           branches=all_branches, 
+                           selected_branch=branch_id_filter)
+
+# 2. Gaaffii Jijjiirraa (Transfers) Qofaaf (Gonfoo Hin Qabanne)
 @app.route('/transfers')
 @login_required
 def transfers():
     branch_id_filter = request.args.get('branch_id')
-    type_filter = request.args.get('type')
     
     if current_user.role == 'admin':
-        query = Transfer.query
+        query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
         if branch_id_filter and str(branch_id_filter).isdigit():
             b_id_int = int(branch_id_filter)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
@@ -626,19 +687,10 @@ def transfers():
                 conditions.append(db.cast(from_col, db.String) == b_str)
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
-            all_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            all_transfers = [t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
         else:
             all_transfers = []
-            
-    promotions_list = [t for t in all_transfers if t.reason and ("Gaaffii Gonfoo" in t.reason or "Promotion" in t.reason)]
-    transfers_list = [t for t in all_transfers if not (t.reason and ("Gaaffii Gonfoo" in t.reason or "Promotion" in t.reason))]
-
-    if type_filter == 'promotion':
-        filtered_transfers = promotions_list
-    elif type_filter == 'transfer':
-        filtered_transfers = transfers_list
-    else:
-        filtered_transfers = all_transfers
 
     b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
@@ -646,13 +698,11 @@ def transfers():
     all_branches = Branch.query.all()
     
     return render_template('transfers.html', 
-                           transfers=filtered_transfers, 
-                           promotions_count=len(promotions_list),
-                           transfers_count=len(transfers_list),
+                           transfers=all_transfers,
+                           transfers_count=len(all_transfers),
                            employees=all_employees, 
                            branches=all_branches, 
-                           selected_branch=branch_id_filter,
-                           selected_type=type_filter)
+                           selected_branch=branch_id_filter)
 
 @app.route('/add_transfer', methods=['POST'])
 @login_required
@@ -703,6 +753,10 @@ def update_transfer_status(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    
+    # Yoo gaaffiin sun gonfoo ta'e gara /promotionstti, yoo jijjiirraa ta'e gara /transferstti deebisuu
+    if tr.reason and "Gaaffii Gonfoo" in tr.reason:
+        return redirect(url_for('promotions'))
     return redirect(url_for('transfers'))
 
 @app.route('/update_rank_status/<int:id>', methods=['POST'])

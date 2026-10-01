@@ -17,7 +17,7 @@
             
             <!-- Excel Export Button -->
             <div>
-                <a href="{{ url_for('export_transfers_excel', branch_id=selected_branch) }}" class="btn btn-success">
+                <a href="{{ url_for('export_employees_excel', branch_id=selected_branch) }}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Excel-tti Buufachuuf (Export)
                 </a>
             </div>
@@ -28,8 +28,7 @@
     {% if current_user.role == 'admin' %}
     <div class="row mb-4">
         <div class="col-md-6">
-            <form method="GET" action="{{ url_for('transfers') }}" class="card shadow-sm p-3 bg-light">
-                <input type="hidden" name="type" value="promotion">
+            <form method="GET" action="{{ url_for('promotions') }}" class="card shadow-sm p-3 bg-light">
                 <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
                 <div class="input-group">
                     <select name="branch_id" id="branch_id" class="form-select">
@@ -44,7 +43,7 @@
                         <i class="fas fa-filter"></i> Filadhu
                     </button>
                     {% if selected_branch %}
-                        <a href="{{ url_for('transfers', type='promotion') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
+                        <a href="{{ url_for('promotions') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
                     {% endif %}
                 </div>
             </form>
@@ -62,8 +61,7 @@
                             <th>#</th>
                             <th>ID Hojjetaa</th>
                             <th>Maqaa Hojjetaa</th>
-                            <th>Damee Irraa (From)</th>
-                            <th>Damee Itti (To)</th>
+                            <th>Damee (Branch)</th>
                             <th>Sababa / Qabxii Madaallii (Score / Reason)</th>
                             <th>Guyyaa</th>
                             <th>Haala (Status)</th>
@@ -73,35 +71,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% if transfers %}
-                            {% for tr in transfers %}
+                        {% if promotions %}
+                            {% for tr in promotions %}
                             <tr>
                                 <td>{{ loop.index }}</td>
                                 <td><strong>{{ tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-' }}</strong></td>
                                 <td>{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
                                 <td>
-                                    {% set from_b_name = '-' %}
-                                    {% if tr.from_branch_id %}
+                                    {% set b_name = '-' %}
+                                    {% if tr.employee and tr.employee.branch %}
+                                        {% set b_name = tr.employee.branch.name %}
+                                    {% elif tr.to_branch_id %}
                                         {% for b in all_branches %}
-                                            {% if b.id|string == tr.from_branch_id|string %}
-                                                {% set from_b_name = b.name %}
+                                            {% if b.id|string == tr.to_branch_id|string %}
+                                                {% set b_name = b.name %}
                                             {% endif %}
                                         {% endfor %}
-                                        {{ from_b_name }}
-                                    {% else %}
-                                        -
                                     {% endif %}
-                                </td>
-                                <td>
-                                    {% set to_b_val = tr.to_branch_id if tr.to_branch_id else (tr.to_branch if tr.to_branch else '-') %}
-                                    {% set to_b_name = [to_b_val] %}
-                                    {% for b in all_branches %}
-                                        {% if b.id|string == to_b_val|string %}
-                                            {% if to_b_name.pop() %}{% endif %}
-                                            {% if to_b_name.append(b.name) %}{% endif %}
-                                        {% endif %}
-                                    {% endfor %}
-                                    {{ to_b_name[0] }}
+                                    {{ b_name }}
                                 </td>
                                 <td>{{ tr.reason if tr.reason else '-' }}</td>
                                 <td>{{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</td>
@@ -129,7 +116,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-muted">
                                     Daataan gaaffii gonfoo galmaa'e hin jiru.
                                     {% if selected_branch %} (Filannoo damee kanaan ragaan hin argamne){% endif %}
                                 </td>
