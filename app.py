@@ -603,10 +603,18 @@ def transfers():
     branch_id_filter = request.args.get('branch_id')
     type_filter = request.args.get('type')
     
+    # Asitti Admin yoo ta'e, Branch filter (Damee Dameen Filadhu) Gaaffii Gonfoo (Promotions) dabalatee 
+    # hunda akka sirriitti filter godhuuf query kana sirreessineerra:
     if current_user.role == 'admin':
         query = Transfer.query
         if branch_id_filter and str(branch_id_filter).isdigit():
-            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == int(branch_id_filter))
+            b_id_int = int(branch_id_filter)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(
+                    Employee.branch_id == b_id_int,
+                    Transfer.to_branch_id == b_id_int
+                )
+            )
         all_transfers = query.all()
     else:
         user_b = current_user.branch_id
@@ -623,8 +631,8 @@ def transfers():
         else:
             all_transfers = []
             
-    promotions_list = [t for t in all_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
-    transfers_list = [t for t in all_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
+    promotions_list = [t for t in all_transfers if t.reason and ("Gaaffii Gonfoo" in t.reason or "Promotion" in t.reason)]
+    transfers_list = [t for t in all_transfers if not (t.reason and ("Gaaffii Gonfoo" in t.reason or "Promotion" in t.reason))]
 
     if type_filter == 'promotion':
         filtered_transfers = promotions_list
