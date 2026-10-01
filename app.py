@@ -698,5 +698,20 @@ def update_transfer_status(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('transfers'))
 
+@app.route('/update_rank_status/<int:id>', methods=['POST'])
+@admin_required
+def update_rank_status(id):
+    r = Rank.query.get_or_404(id)
+    try:
+        create_local_backup()
+        r.name = request.form.get('name', r.name)
+        r.description = request.form.get('description', r.description)
+        db.session.commit()
+        flash("Gulantaan (Rank) milkaa'inaan haaromfameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('ranks'))
+
 if __name__ == '__main__':
     app.run(debug=True)
