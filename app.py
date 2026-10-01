@@ -344,6 +344,25 @@ def ranks():
     all_ranks = Rank.query.all()
     return render_template('ranks.html', ranks=all_ranks)
 
+@app.route('/export_ranks_excel')
+@login_required
+def export_ranks_excel():
+    ranks = Rank.query.all()
+    data = []
+    for idx, r in enumerate(ranks, start=1):
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Gulantaa (Rank)': r.name,
+            'Ibsaa': r.description if hasattr(r, 'description') and r.description else '-'
+        })
+        
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Ranks_Report.xlsx')
+
 @app.route('/export_employees_excel')
 @login_required
 def export_employees_excel():
