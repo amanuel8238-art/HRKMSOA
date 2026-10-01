@@ -612,7 +612,6 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
-# 1. Gaaffii Gulantaa Gonfoo (Promotions / Ranks) Qofaaf - Dameewwan 39 cufaaf filtering sirrii ta'e
 @app.route('/promotions')
 @login_required
 def promotions():
@@ -658,15 +657,13 @@ def promotions():
                            branches=all_branches,
                            selected_branch=branch_id_filter)
 
-# 2. Gaaffii Jijjiirraa (Transfers) Qofaaf (Gonfoo Hin Qabanne)
-@app.route('/transfers')
+@app.route('/export_promotions_excel')
 @login_required
-def transfers():
+def export_promotions_excel():
     branch_id_filter = request.args.get('branch_id')
-    all_branches = Branch.query.all()
     
     if current_user.role == 'admin':
-        query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
         if branch_id_filter and str(branch_id_filter).isdigit():
             b_id_int = int(branch_id_filter)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
@@ -675,7 +672,7 @@ def transfers():
                     Transfer.to_branch_id == b_id_int
                 )
             )
-        all_transfers = query.all()
+        promotions_list = query.all()
     else:
         user_b = current_user.branch_id
         if user_b:
@@ -688,90 +685,32 @@ def transfers():
             if to_col is not None:
                 conditions.append(db.cast(to_col, db.String) == b_str)
             branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
-            all_transfers = [t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
+            promotions_list = [t for t in branch_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
         else:
-            all_transfers = []
+            promotions_list = []
 
-    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
-    all_employees = all_employees.all()
-    
-    return render_template('transfers.html', 
-                           transfers=all_transfers,
-                           transfers_count=len(all_transfers),
-                           employees=all_employees, 
-                           all_branches=all_branches,
-                           branches=all_branches, 
-                           selected_branch=branch_id_filter)
+    data = []
+    for idx, p in enumerate(promotions_list, start=1):
+        emp = p.employee
+        branch_name = emp.branch.name if emp and emp.branch else 'N/A'
+        rank_name = emp.rank.name if emp and emp.rank else 'N/A'
+        data.append({
+            'Lakk.': idx,
+            'ID Addaa': emp.unique_id if emp and emp.unique_id else '-',
+            'Maqaa Guutuu Hojjetaa': emp.full_name if emp else 'N/A',
+            'Damee (Branch)': branch_name,
+            'Gulantaa Duraanii': rank_name,
+            'Sababii / Haala Madaallii': p.reason if p.reason else '-',
+            'Guyyaa Gaaffiin Dhihaate': p.transfer_date.strftime('%Y-%m-%d') if p.transfer_date else '-',
+            'Haala (Status)': p.status if p.status else '-'
+        })
 
-@app.route('/add_transfer', methods=['POST'])
-@login_required
-def add_transfer():
-    employee_id = request.form.get('employee_id')
-    to_branch_id = request.form.get('to_branch_id')
-    reason = request.form.get('reason')
-    
-    emp = Employee.query.get_or_404(int(employee_id) if employee_id else 0)
-    user_b_id = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_id:
-        abort(403)
-        
-    transfer_data = {
-        'employee_id': int(employee_id) if employee_id else None,
-        'reason': reason,
-        'transfer_date': datetime.utcnow(),
-        'status': 'Pending'
-    }
-    if hasattr(Transfer, 'to_branch_id'):
-        transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id
-    if hasattr(Transfer, 'from_branch_id'):
-        transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
-
-    try:
-        create_local_backup()
-        new_transfer = Transfer(**transfer_data)
-        db.session.add(new_transfer)
-        db.session.commit()
-        flash("Gaaffiin jijjiirraa milkaa\'inaan dhiyaateera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-        
-    return redirect(url_for('transfers'))
-
-@app.route('/update_transfer_status/<int:id>', methods=['POST'])
-@admin_required
-def update_transfer_status(id):
-    tr = Transfer.query.get_or_404(id)
-    status = request.form.get('status')
-    tr.status = status
-    
-    try:
-        create_local_backup()
-        db.session.commit()
-        flash("Haalli jijjiirraa/gonfoo milkaa'inaan haaromfameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    
-    if tr.reason and "Gaaffii Gonfoo" in tr.reason:
-        return redirect(url_for('promotions'))
-    return redirect(url_for('transfers'))
-
-@app.route('/update_rank_status/<int:id>', methods=['POST'])
-@admin_required
-def update_rank_status(id):
-    r = Rank.query.get_or_404(id)
-    try:
-        create_local_backup()
-        r.name = request.form.get('name', r.name)
-        r.description = request.form.get('description', r.description)
-        db.session.commit()
-        flash("Gulantaan (Rank) milkaa'inaan haaromfameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('ranks'))
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Gabbisa')
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Promotions_Report.xlsx')
 
 if __name__ == '__main__':
     app.run(debug=True)
