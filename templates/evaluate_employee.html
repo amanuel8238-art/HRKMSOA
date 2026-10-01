@@ -15,14 +15,28 @@
             <!-- Hojjetichaa Ragaalee Bu'uuraa -->
             <div class="border-b pb-4 mb-6 bg-gray-50 p-4 rounded">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
-                    <p><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name }}</p>
+                    <p><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name or 'Hin ibsamne' }}</p>
                     <p><strong>Bakka Hojii:</strong> {{ employee.branch or 'Hin ibsamne' }}</p>
                     <p><strong>Gahee Hojii:</strong> {{ employee.position or 'Hin ibsamne' }}</p>
                     <p><strong>Saala:</strong> {{ employee.gender or 'Hin ibsamne' }}</p>
-                    <p id="employeeBirthDate" data-birth="{{ employee.birth_date }}"><strong>Umrii / Guyyaa Dhalootaa:</strong> {{ employee.birth_date }} <span id="autoAgeDisplay" class="text-blue-600 font-semibold"></span></p>
+                    <p id="employeeBirthDate" data-birth="{% if employee.birth_date and employee.birth_date|string|lower not in ['none', 'null', ''] %}{{ employee.birth_date }}{% endif %}">
+                        <strong>Umrii / Guyyaa Dhalootaa:</strong> 
+                        {% if employee.birth_date and employee.birth_date|string|lower not in ['none', 'null', ''] %}
+                            {{ employee.birth_date }}
+                        {% else %}
+                            Hin ibsamne
+                        {% endif %}
+                        <span id="autoAgeDisplay" class="text-blue-600 font-semibold"></span>
+                    </p>
                     <p><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level or 'Hin ibsamne' }}</p>
                     <p><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study or 'Hin ibsamne' }}</p>
-                    <p><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.last_promotion_date or 'Hin ibsamne' }}</p>
+                    <p><strong>Gonfaa Dura Yeroo Itti Argate:</strong> 
+                        {% if employee.last_promotion_date and employee.last_promotion_date|string|lower not in ['none', 'null', ''] %}
+                            {{ employee.last_promotion_date }}
+                        {% else %}
+                            Hin ibsamne
+                        {% endif %}
+                    </p>
                 </div>
             </div>
 
@@ -98,10 +112,10 @@
         document.addEventListener("DOMContentLoaded", function() {
             try {
                 let bDateEl = document.getElementById('employeeBirthDate');
-                let bStr = bDateEl ? bDateEl.getAttribute('data-birth') : '';
+                let bStr = bDateEl ? bDateEl.getAttribute('data-birth').trim() : '';
                 let ageText = "";
 
-                if (bStr && bStr.trim() !== "" && bStr !== "None" && bStr !== "null") {
+                if (bStr && bStr !== "" && bStr.toLowerCase() !== "none" && bStr.toLowerCase() !== "null") {
                     let parts = bStr.split(/[-/]/);
                     if (parts.length > 0) {
                         let birthYear = parseInt(parts[0].length === 4 ? parts[0] : parts[parts.length - 1]);
