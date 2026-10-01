@@ -112,6 +112,7 @@ with app.app_context():
 
 def get_retired_employees_list(active_employees):
     retired_list = []
+    current_year = datetime.now().year
     for e in active_employees:
         if e.birth_date:
             try:
@@ -134,10 +135,10 @@ def get_retired_employees_list(active_employees):
                         b_date = date(year, month, day)
                 if b_date:
                     birth_year = b_date.year
-                    if birth_year <= 2019:
-                        age = 2019 - birth_year
-                        if age >= 55:
-                            retired_list.append((e, age))
+                    # Waggaa 55 fi ol (Bara ammaa irratti hundaa'uun)
+                    age = current_year - birth_year
+                    if age >= 55:
+                        retired_list.append((e, age))
             except Exception:
                 pass
     return retired_list
@@ -347,9 +348,9 @@ def ranks():
 @app.route('/export_ranks_excel')
 @login_required
 def export_ranks_excel():
-    ranks = Rank.query.all()
+    ranks_data = Rank.query.all()
     data = []
-    for idx, r in enumerate(ranks, start=1):
+    for idx, r in enumerate(ranks_data, start=1):
         data.append({
             'Lakk.': idx,
             'Maqaa Gulantaa (Rank)': r.name,
@@ -603,8 +604,6 @@ def transfers():
     branch_id_filter = request.args.get('branch_id')
     type_filter = request.args.get('type')
     
-    # Asitti Admin yoo ta'e, Branch filter (Damee Dameen Filadhu) Gaaffii Gonfoo (Promotions) dabalatee 
-    # hunda akka sirriitti filter godhuuf query kana sirreessineerra:
     if current_user.role == 'admin':
         query = Transfer.query
         if branch_id_filter and str(branch_id_filter).isdigit():

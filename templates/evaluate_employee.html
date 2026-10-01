@@ -73,10 +73,23 @@
                     <input type="date" name="next_promotion_date" class="form-control" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
                 </div>
 
-                <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu -->
+                <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu (Filannoo Goonfoo / Rank) -->
                 <div class="p-3 bg-light rounded border mb-4">
-                    <p class="mb-2 fs-5"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">{{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }} / 100%</span></p>
-                    <p class="mb-0 fs-5"><strong>Sadarkaa Guddinaa Itti Aanu:</strong> <span class="text-primary fw-bold">{{ employee.next_promotion_status if employee.next_promotion_status else 'Shallagama irra jira / Hin ibsamne' }}</span></p>
+                    <p class="mb-3 fs-5"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">{{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }} / 100%</span></p>
+                    
+                    <div class="mb-0">
+                        <label class="form-label fw-bold text-primary">Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</label>
+                        <select name="next_promotion_status" class="form-select">
+                            <option value="">-- Sadarkaa Filadhu --</option>
+                            <option value="Konstabilii" {% if employee.next_promotion_status == 'Konstabilii' %}selected{% endif %}>Konstabilii</option>
+                            <option value="G/Sajjiin" {% if employee.next_promotion_status == 'G/Sajjiin' %}selected{% endif %}>G/Sajjiin (Gargaaraa Sajjiin)</option>
+                            <option value="Sajjiin" {% if employee.next_promotion_status == 'Sajjiin' %}selected{% endif %}>Sajjiin</option>
+                            <option value="Sajjiin Oli" {% if employee.next_promotion_status == 'Sajjiin Oli' %}selected{% endif %}>Sajjiin Oli</option>
+                            <option value="Inspeektera" {% if employee.next_promotion_status == 'Inspeektera' %}selected{% endif %}>Inspeektera</option>
+                            <option value="Inspeektera Gargaaraa" {% if employee.next_promotion_status == 'Inspeektera Gargaaraa' %}selected{% endif %}>Inspeektera Gargaaraa</option>
+                            <option value="Inspeektera Ol'aanaa" {% if employee.next_promotion_status == 'Inspeektera Ol'aanaa' %}selected{% endif %}>Inspeektera Ol'aanaa</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-4">
