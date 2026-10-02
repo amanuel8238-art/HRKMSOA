@@ -53,7 +53,106 @@
     </div>
     {% endif %}
 
-    <!-- Table of Promotions -->
+    <!-- Unkaa Gamaaggama Hojjetichaa (HRKMSO) - Kan dabalame -->
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Unkaa Gamaaggama Hojjetichaa (HRKMSO)</h5>
+        </div>
+        <div class="card-body">
+            <!-- Odeeffannoo Hojjetichaa -->
+            <div class="row mb-3 border-bottom pb-3 bg-light p-3 rounded">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> Abaabach Itichaa Bulbulaa</p>
+                    <p class="mb-1"><strong>Bakka Hojii:</strong> Head Office (Finfinnee)</p>
+                    <p class="mb-1"><strong>Gahee Hojii:</strong> Hin ibsamne</p>
+                    <p class="mb-0"><strong>Saala:</strong> Dhalaa</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Umrii:</strong> 2026 Waggaa</p>
+                    <p class="mb-1"><strong>Sadarkaa Barumsaa:</strong> 9</p>
+                    <p class="mb-1"><strong>Gosa Barumsaa:</strong> Qaalamaa</p>
+                    <p class="mb-0"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> Hin ibsamne</p>
+                </div>
+            </div>
+
+            <form method="POST" action="">
+                <h6 class="text-secondary fw-bold mb-3">Ulaagaalee Gamaaggamaa</h6>
+                
+                <div class="mb-3 row">
+                    <label class="col-sm-8 col-form-label">Bu'uura Raawwii Hojii (Max 25%):</label>
+                    <div class="col-sm-4">
+                        <input type="number" step="0.01" max="25" class="form-control" name="perf_score" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="mb-3 row">
+                    <label class="col-sm-8 col-form-label">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
+                    <div class="col-sm-4">
+                        <input type="number" step="0.01" max="20" class="form-control" name="edu_score" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="mb-3 row">
+                    <label class="col-sm-8 col-form-label">Naamusaa Poolisii (Max 20%):</label>
+                    <div class="col-sm-4">
+                        <input type="number" step="0.01" max="20" class="form-control" name="discipline_score" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="mb-3 row">
+                    <label class="col-sm-8 col-form-label">Seera fi Heera (Max 10%):</label>
+                    <div class="col-sm-4">
+                        <input type="number" step="0.01" max="10" class="form-control" name="law_score" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="mb-3 row">
+                    <label class="col-sm-8 col-form-label">Muxannoo Hojii (Max 10%):</label>
+                    <div class="col-sm-4">
+                        <input type="number" step="0.01" max="10" class="form-control" name="experience_score" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="mb-3 row">
+                    <label class="col-sm-8 col-form-label">Mira Tajaajiltummaa (Max 15%):</label>
+                    <div class="col-sm-4">
+                        <input type="number" step="0.01" max="15" class="form-control" name="service_score" placeholder="0.00">
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</strong> <input type="date" class="form-control mt-1" name="promotion_date"></p>
+                        <p class="mb-0"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">0.00</span> / 100%</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="next_rank" class="form-label"><strong>Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</strong></label>
+                        <select class="form-select" id="next_rank" name="next_rank">
+                            <option selected disabled>-- Sadarkaa Filadhu --</option>
+                            <option value="Konstabilii">Konstabilii</option>
+                            <option value="Gargaaraa Sajjiin">Gargaaraa Sajjiin</option>
+                            <option value="It/A/Sajjiin">It/A/Sajjiin</option>
+                            <option value="Sajjiin">Sajjiin</option>
+                            <option value="Sajjiin Olaanaa">Sajjiin Olaanaa</option>
+                            <option value="Gargaaraa Inspeektera">Gargaaraa Inspeektera</option>
+                            <option value="Itti/A/Inspeektera">Itti/A/Inspeektera</option>
+                            <option value="Inspeektera">Inspeektera</option>
+                            <option value="Inspeektera Olaanaa">Inspeektera Olaanaa</option>
+                            <option value="Itt/A/Komaandara">Itt/A/Komaandara</option>
+                            <option value="Komaandara">Komaandara</option>
+                            <option value="Gargaaraa Komishinaraa">Gargaaraa Komishinaraa</option>
+                            <option value="Itti Aanaa Komishinaraa">Itti Aanaa Komishinaraa</option>
+                            <option value="Komishinaraa">Komishinaraa</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table of Promotions (Kan kee duraa irraa hin tuqamne) -->
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
