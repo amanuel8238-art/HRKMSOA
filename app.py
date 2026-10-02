@@ -743,32 +743,10 @@ def promotions():
         else:
             promotions_list = []
 
-    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
-    all_employees = all_employees.all()
-    
     return render_template('promotions.html', 
                            promotions=promotions_list,
-                           promotions_count=len(promotions_list),
-                           employees=all_employees,
                            branches=all_branches,
                            selected_branch=branch_id_filter)
-
-@app.route('/update_transfer_status/<int:id>', methods=['POST'])
-@login_required
-def update_transfer_status(id):
-    transfer = Transfer.query.get_or_404(id)
-    new_status = request.form.get('status')
-    try:
-        create_local_backup()
-        if new_status:
-            transfer.status = new_status
-        db.session.commit()
-        flash("Haalli gaaffichaa milkaa'inaan fooyya'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Dogoggorri uumameera: {str(e)}", 'danger')
-    return redirect(request.referrer or url_for('promotions'))
 
 if __name__ == '__main__':
     app.run(debug=True)
