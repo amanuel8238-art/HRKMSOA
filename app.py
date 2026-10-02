@@ -745,8 +745,25 @@ def promotions():
 
     return render_template('promotions.html', 
                            promotions=promotions_list,
+                           all_branches=all_branches,
                            branches=all_branches,
                            selected_branch=branch_id_filter)
+
+@app.route('/update_transfer_status/<int:id>', methods=['POST'])
+@login_required
+def update_transfer_status(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    new_status = request.form.get('status')
+    if new_status in ['Pending', 'Approved', 'Rejected']:
+        try:
+            create_local_backup()
+            transfer_record.status = new_status
+            db.session.commit()
+            flash(f"Haalli gaaffichaa milkaa'inaan gara '{new_status}'tti jijjiirameera!", 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Dogoggorri uumameera: {str(e)}", 'danger')
+    return redirect(url_for('promotions'))
 
 if __name__ == '__main__':
     app.run(debug=True)
