@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <!-- Admin Branch Filter (Dameewwan 39 hundi deebi'anii akka filaman godhameera) -->
+    <!-- Admin Branch Filter -->
     {% if current_user.role == 'admin' %}
     <div class="row mb-4">
         <div class="col-md-6">
@@ -87,7 +87,7 @@
                             {% for tr in promotions %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td>{{ tr.employee.current_rank if tr.employee and tr.employee.current_rank else '-' }}</td>
+                                <td>{{ tr.employee.rank.name if tr.employee and tr.employee.rank else '-' }}</td>
                                 <td class="text-start fw-bold">{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
                                 <td>
                                     {% set b_name = '-' %}
@@ -102,21 +102,24 @@
                                     {% endif %}
                                     {{ b_name }}
                                 </td>
-                                <td>{{ tr.employee.job_title if tr.employee and tr.employee.job_title else '-' }}</td>
+                                <td>{{ tr.employee.job_position if tr.employee and tr.employee.job_position else '-' }}</td>
                                 <td>{{ tr.employee.gender if tr.employee and tr.employee.gender else '-' }}</td>
-                                <td>{{ tr.employee.age if tr.employee and tr.employee.age else '-' }}</td>
-                                <td>{{ tr.prev_promotion_date if tr.prev_promotion_date else '-' }}</td>
-                                <td>{{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</td>
+                                <td>{{ tr.employee.birth_date if tr.employee and tr.employee.birth_date else '-' }}</td>
+                                <td>{{ tr.employee.rank_date if tr.employee and tr.employee.rank_date else '-' }}</td>
+                                <td>{{ tr.employee.next_promotion_date if tr.employee and tr.employee.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-') }}</td>
                                 <td>{{ tr.employee.education_level if tr.employee and tr.employee.education_level else '-' }}</td>
                                 <td>{{ tr.employee.field_of_study if tr.employee and tr.employee.field_of_study else '-' }}</td>
-                                <td>{{ tr.perf_score|default('0.00', true) }}</td>
-                                <td>{{ tr.edu_score|default('0.00', true) }}</td>
-                                <td>{{ tr.discipline_score|default('0.00', true) }}</td>
-                                <td>{{ tr.law_score|default('0.00', true) }}</td>
-                                <td>{{ tr.experience_score|default('0.00', true) }}</td>
-                                <td>{{ tr.service_score|default('0.00', true) }}</td>
-                                <td class="fw-bold text-success">{{ tr.total_score|default('0.00', true) }}%</td>
-                                <td class="fw-bold text-primary">{{ tr.next_rank|default('-', true) }}</td>
+                                
+                                <!-- Qabxiiwwan Madaallii (Scores) -->
+                                <td>{{ tr.employee.perf_score|default('0.00', true) }}</td>
+                                <td>{{ tr.employee.edu_score|default('0.00', true) }}</td>
+                                <td>{{ tr.employee.discipline_score|default('0.00', true) }}</td>
+                                <td>{{ tr.employee.law_score|default('0.00', true) }}</td>
+                                <td>{{ tr.employee.experience_score|default('0.00', true) }}</td>
+                                <td>{{ tr.employee.service_score|default('0.00', true) }}</td>
+                                
+                                <td class="fw-bold text-success">{{ tr.employee.total_score|default(tr.total_score|default('0.00', true), true) }}%</td>
+                                <td class="fw-bold text-primary">{{ tr.employee.next_promotion_status|default(tr.next_rank|default('-', true), true) }}</td>
                                 <td>
                                     {% if tr.status == 'Approved' %}
                                         <span class="badge bg-success">Approved</span>
