@@ -8,14 +8,11 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center gap-3">
-                <!-- Buttoon Deebi'i (Dashboard) -->
                 <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Deebi'i
                 </a>
                 <h2 class="mb-0">Gaaffii Gulantaa Gonfoo (Promotions)</h2>
             </div>
-            
-            <!-- Excel Export Button -->
             <div>
                 <a href="{{ url_for('export_promotions_excel', branch_id=selected_branch) }}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Excel-tti Buufachuuf (Export)
@@ -24,7 +21,7 @@
         </div>
     </div>
 
-    <!-- Row 2: Admin Branch Filter Form (Dameewwan 39 hundi maqaan isaanii akka filaman) -->
+    <!-- Row 2: Admin Branch Filter Form -->
     {% if current_user.role == 'admin' %}
     <div class="row mb-4">
         <div class="col-md-6">
@@ -53,132 +50,26 @@
     </div>
     {% endif %}
 
-    <!-- Unkaa Gamaaggama Hojjetichaa (HRKMSO) - Kan dabalame -->
-    <div class="card shadow-sm mb-4 border-primary">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Unkaa Gamaaggama Hojjetichaa (HRKMSO)</h5>
-        </div>
-        <div class="card-body">
-            <!-- Odeeffannoo Hojjetichaa -->
-            <div class="row mb-3 border-bottom pb-3 bg-light p-3 rounded">
-                <div class="col-md-6">
-                    <p class="mb-1"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> Abaabach Itichaa Bulbulaa</p>
-                    <p class="mb-1"><strong>Bakka Hojii:</strong> Head Office (Finfinnee)</p>
-                    <p class="mb-1"><strong>Gahee Hojii:</strong> Hin ibsamne</p>
-                    <p class="mb-0"><strong>Saala:</strong> Dhalaa</p>
-                </div>
-                <div class="col-md-6">
-                    <p class="mb-1"><strong>Umrii:</strong> 2026 Waggaa</p>
-                    <p class="mb-1"><strong>Sadarkaa Barumsaa:</strong> 9</p>
-                    <p class="mb-1"><strong>Gosa Barumsaa:</strong> Qaalamaa</p>
-                    <p class="mb-0"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> Hin ibsamne</p>
-                </div>
-            </div>
-
-            <form method="POST" action="">
-                <h6 class="text-secondary fw-bold mb-3">Ulaagaalee Gamaaggamaa</h6>
-                
-                <div class="mb-3 row">
-                    <label class="col-sm-8 col-form-label">Bu'uura Raawwii Hojii (Max 25%):</label>
-                    <div class="col-sm-4">
-                        <input type="number" step="0.01" max="25" class="form-control" name="perf_score" placeholder="0.00">
+    <!-- Ragaalee Gaaffii Gonfoo Hunda (Card/List Form) -->
+    <div class="row">
+        {% if promotions %}
+            {% for tr in promotions %}
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Gaaffii Gulantaa Gonfoo - ID Hojjetaa: {{ tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-' }}</h5>
+                        <div>
+                            <span class="badge {% if tr.status == 'Approved' %}bg-success{% elif tr.status == 'Rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %} p-2">
+                                Haala: {{ tr.status }}
+                            </span>
+                        </div>
                     </div>
-                </div>
-
-                <div class="mb-3 row">
-                    <label class="col-sm-8 col-form-label">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                    <div class="col-sm-4">
-                        <input type="number" step="0.01" max="20" class="form-control" name="edu_score" placeholder="0.00">
-                    </div>
-                </div>
-
-                <div class="mb-3 row">
-                    <label class="col-sm-8 col-form-label">Naamusaa Poolisii (Max 20%):</label>
-                    <div class="col-sm-4">
-                        <input type="number" step="0.01" max="20" class="form-control" name="discipline_score" placeholder="0.00">
-                    </div>
-                </div>
-
-                <div class="mb-3 row">
-                    <label class="col-sm-8 col-form-label">Seera fi Heera (Max 10%):</label>
-                    <div class="col-sm-4">
-                        <input type="number" step="0.01" max="10" class="form-control" name="law_score" placeholder="0.00">
-                    </div>
-                </div>
-
-                <div class="mb-3 row">
-                    <label class="col-sm-8 col-form-label">Muxannoo Hojii (Max 10%):</label>
-                    <div class="col-sm-4">
-                        <input type="number" step="0.01" max="10" class="form-control" name="experience_score" placeholder="0.00">
-                    </div>
-                </div>
-
-                <div class="mb-3 row">
-                    <label class="col-sm-8 col-form-label">Mira Tajaajiltummaa (Max 15%):</label>
-                    <div class="col-sm-4">
-                        <input type="number" step="0.01" max="15" class="form-control" name="service_score" placeholder="0.00">
-                    </div>
-                </div>
-
-                <hr>
-
-                <div class="row mb-3 align-items-center">
-                    <div class="col-md-6">
-                        <p class="mb-2"><strong>Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</strong> <input type="date" class="form-control mt-1" name="promotion_date"></p>
-                        <p class="mb-0"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">0.00</span> / 100%</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="next_rank" class="form-label"><strong>Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</strong></label>
-                        <select class="form-select" id="next_rank" name="next_rank">
-                            <option selected disabled>-- Sadarkaa Filadhu --</option>
-                            <option value="Konstabilii">Konstabilii</option>
-                            <option value="Gargaaraa Sajjiin">Gargaaraa Sajjiin</option>
-                            <option value="It/A/Sajjiin">It/A/Sajjiin</option>
-                            <option value="Sajjiin">Sajjiin</option>
-                            <option value="Sajjiin Olaanaa">Sajjiin Olaanaa</option>
-                            <option value="Gargaaraa Inspeektera">Gargaaraa Inspeektera</option>
-                            <option value="Itti/A/Inspeektera">Itti/A/Inspeektera</option>
-                            <option value="Inspeektera">Inspeektera</option>
-                            <option value="Inspeektera Olaanaa">Inspeektera Olaanaa</option>
-                            <option value="Itt/A/Komaandara">Itt/A/Komaandara</option>
-                            <option value="Komaandara">Komaandara</option>
-                            <option value="Gargaaraa Komishinaraa">Gargaaraa Komishinaraa</option>
-                            <option value="Itti Aanaa Komishinaraa">Itti Aanaa Komishinaraa</option>
-                            <option value="Komishinaraa">Komishinaraa</option>
-                        </select>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Table of Promotions (Kan kee duraa irraa hin tuqamne) -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>#</th>
-                            <th>ID Hojjetaa</th>
-                            <th>Maqaa Hojjetaa</th>
-                            <th>Damee (Branch)</th>
-                            <th>Sababa / Qabxii Madaallii (Score / Reason)</th>
-                            <th>Guyyaa</th>
-                            <th>Haala (Status)</th>
-                            {% if current_user.role == 'admin' %}
-                            <th>Action</th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if promotions %}
-                            {% for tr in promotions %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
-                                <td><strong>{{ tr.employee.unique_id if tr.employee and tr.employee.unique_id else '-' }}</strong></td>
-                                <td>{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
-                                <td>
+                    <div class="card-body">
+                        <!-- Odeeffannoo Hojjetichaa -->
+                        <div class="row mb-3 border-bottom pb-3 bg-light p-3 rounded">
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ tr.employee.full_name if tr.employee else 'N/A' }}</p>
+                                <p class="mb-1"><strong>Bakka Hojii:</strong> 
                                     {% set b_name = '-' %}
                                     {% if tr.employee and tr.employee.branch %}
                                         {% set b_name = tr.employee.branch.name %}
@@ -190,43 +81,96 @@
                                         {% endfor %}
                                     {% endif %}
                                     {{ b_name }}
-                                </td>
-                                <td>{{ tr.reason if tr.reason else '-' }}</td>
-                                <td>{{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</td>
-                                <td>
-                                    {% if tr.status == 'Approved' %}
-                                        <span class="badge bg-success">Eeyyamameera (Approved)</span>
-                                    {% elif tr.status == 'Rejected' %}
-                                        <span class="badge bg-danger">Harkifateera (Rejected)</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">Eeggannoo Irra Jira (Pending)</span>
-                                    {% endif %}
-                                </td>
-                                {% if current_user.role == 'admin' %}
-                                <td>
-                                    <form action="{{ url_for('update_transfer_status', id=tr.id) }}" method="POST" class="d-inline">
-                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-                                            <option value="Pending" {% if tr.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                            <option value="Approved" {% if tr.status == 'Approved' %}selected{% endif %}>Approve</option>
-                                            <option value="Rejected" {% if tr.status == 'Rejected' %}selected{% endif %}>Reject</option>
-                                        </select>
-                                    </form>
-                                </td>
-                                {% endif %}
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
-                                    Daataan gaaffii gonfoo galmaa'e hin jiru.
-                                    {% if selected_branch %} (Filannoo damee kanaan ragaan hin argamne){% endif %}
-                                </td>
-                            </tr>
+                                </p>
+                                <p class="mb-0"><strong>Gahee Hojii:</strong> {{ tr.employee.job_title if tr.employee and tr.employee.job_title else 'Hin ibsamne' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>Saala:</strong> {{ tr.employee.gender if tr.employee and tr.employee.gender else 'Hin ibsamne' }}</p>
+                                <p class="mb-1"><strong>Umrii:</strong> {{ tr.employee.age if tr.employee and tr.employee.age else 'Hin ibsamne' }}</p>
+                                <p class="mb-0"><strong>Sadarkaa Barumsaa:</strong> {{ tr.employee.education_level if tr.employee and tr.employee.education_level else 'Hin ibsamne' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>Gosa Barumsaa:</strong> {{ tr.employee.field_of_study if tr.employee and tr.employee.field_of_study else 'Hin ibsamne' }}</p>
+                                <p class="mb-0"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ tr.prev_promotion_date if tr.prev_promotion_date else 'Hin ibsamne' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Ulaagaalee Gamaaggamaa fi Qabxiiwwan -->
+                        <h6 class="text-secondary fw-bold mb-3">Ulaagaalee Gamaaggamaa fi Qabxii</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Bu'uura Raawwii Hojii (Max 25%):
+                                        <span class="badge bg-secondary">{{ tr.perf_score|default('0.00', true) }}%</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Sadarkaa Barumsaa & Leenjii (Max 20%):
+                                        <span class="badge bg-secondary">{{ tr.edu_score|default('0.00', true) }}%</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Naamusaa Poolisii (Max 20%):
+                                        <span class="badge bg-secondary">{{ tr.discipline_score|default('0.00', true) }}%</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Seera fi Heera (Max 10%):
+                                        <span class="badge bg-secondary">{{ tr.law_score|default('0.00', true) }}%</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Muxannoo Hojii (Max 10%):
+                                        <span class="badge bg-secondary">{{ tr.experience_score|default('0.00', true) }}%</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Mira Tajaajiltummaa (Max 15%):
+                                        <span class="badge bg-secondary">{{ tr.service_score|default('0.00', true) }}%</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Bu'aa Waliigalaa, Guyyaa, fi Sadarkaa Guddinaa -->
+                        <div class="row align-items-center mt-3">
+                            <div class="col-md-4">
+                                <p class="mb-1"><strong>Guyyaa Gonfaa Itti Aanu:</strong> {{ tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-' }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-0"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold fs-5">{{ tr.total_score|default('0.00', true) }} / 100%</span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-0"><strong>Sadarkaa Guddinaa Itti Aanu (Goonfoo):</strong> <span class="text-primary fw-bold">{{ tr.next_rank|default('Hin filatamne', true) }}</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Action / Status Update (Admin Only) -->
+                        {% if current_user.role == 'admin' %}
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-end align-items-center gap-2">
+                            <span class="fw-bold">Action (Haala Jijjiiri):</span>
+                            <form action="{{ url_for('update_transfer_status', id=tr.id) }}" method="POST" class="d-inline">
+                                <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                    <option value="Pending" {% if tr.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="Approved" {% if tr.status == 'Approved' %}selected{% endif %}>Approve</option>
+                                    <option value="Rejected" {% if tr.status == 'Rejected' %}selected{% endif %}>Reject</option>
+                                </select>
+                            </form>
+                        </div>
                         {% endif %}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
-        </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card shadow-sm text-center py-5">
+                    <p class="text-muted mb-0">Daataan gaaffii gonfoo galmaa'e hin jiru.</p>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
