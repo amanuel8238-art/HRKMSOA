@@ -569,18 +569,23 @@ def evaluate_employee(id):
     all_ranks = Rank.query.all()
     if request.method == 'POST':
         try:
-            perf = float(request.form.get('performance_score') or 0.0)
-            edu = float(request.form.get('education_score') or 0.0)
+            perf = float(request.form.get('performance_score') or request.form.get('perf_score') or 0.0)
+            edu = float(request.form.get('education_score') or request.form.get('edu_score') or 0.0)
             disc = float(request.form.get('discipline_score') or 0.0)
             law = float(request.form.get('law_score') or request.form.get('law_compliance_score') or 0.0)
             exp = float(request.form.get('experience_score') or 0.0)
-            age = float(request.form.get('age_score') or 0.0)
-            serv = float(request.form.get('service_delivery_score') or request.form.get('service_spirit_score') or 0.0)
+            serv = float(request.form.get('service_delivery_score') or request.form.get('service_spirit_score') or request.form.get('service_score') or 0.0)
             
-            total_score = perf + edu + disc + law + exp + age + serv
-            next_promotion_status = request.form.get('next_promotion_status')
-            next_promotion_date = request.form.get('next_promotion_date')
+            total_score = perf + edu + disc + law + exp + serv
+            next_promotion_status = request.form.get('next_promotion_status') or request.form.get('next_rank')
+            next_promotion_date = request.form.get('next_promotion_date') or request.form.get('promotion_date')
             
+            emp.perf_score = perf
+            emp.edu_score = edu
+            emp.discipline_score = disc
+            emp.law_score = law
+            emp.experience_score = exp
+            emp.service_score = serv
             emp.total_score = total_score
             emp.next_promotion_status = next_promotion_status
             emp.next_promotion_date = next_promotion_date
@@ -601,8 +606,8 @@ def evaluate_employee(id):
             db.session.add(new_transfer)
             db.session.commit()
             
-            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan guutamee Gaaffii Gulantaa Gonfoo (Promotions) jalatti Head Office-tti ergameera!", 'success')
-            return redirect(url_for('employees'))
+            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan guutamee Gaaffii Gulantaa Gonfoo (Promotions) jalatti galmaa'eera!", 'success')
+            return redirect(url_for('promotions'))
         except Exception as e:
             db.session.rollback()
             flash(f'Herrega qabxii irratti dogoggorri uumameera: {str(e)}', 'danger')
