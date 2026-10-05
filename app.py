@@ -578,20 +578,20 @@ def export_promotions_excel():
             promotions_list = []
 
     data = []
-    for idx, p in enumerate(promotions_list, start=1):
-        emp = p.employee if hasattr(p, 'employee') else Employee.query.get(p.employee_id)
-        emp_name = emp.full_name if emp else 'N/A'
-        branch_name = emp.branch.name if emp and emp.branch else 'N/A'
-        data.append({
-            'Lakk.': idx,
-            'Maqaa Hojjetaa': emp_name,
-            'Damee (Branch)': branch_name,
-            'Sababa / Ibsaa': p.reason if hasattr(p, 'reason') else '-',
-            'Haala (Status)': p.status if hasattr(p, 'status') else '-',
-            'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
-        })
-        
-    if not data:
+    if promotions_list:
+        for idx, p in enumerate(promotions_list, start=1):
+            emp = p.employee if hasattr(p, 'employee') else Employee.query.get(p.employee_id)
+            emp_name = emp.full_name if emp else 'N/A'
+            branch_name = emp.branch.name if emp and emp.branch else 'N/A'
+            data.append({
+                'Lakk.': idx,
+                'Maqaa Hojjetaa': emp_name,
+                'Damee (Branch)': branch_name,
+                'Sababa / Ibsaa': p.reason if hasattr(p, 'reason') else '-',
+                'Haala (Status)': p.status if hasattr(p, 'status') else '-',
+                'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
+            })
+    else:
         data.append({
             'Lakk.': '-',
             'Maqaa Hojjetaa': 'Daataan hin jiru',
