@@ -689,13 +689,44 @@ def evaluate_employee(id):
                 db.session.add(new_transfer)
 
             db.session.commit()
-            flash("Gamaaggamni hojjetaa milkaa'inaan galmaa'eera!", 'success')
-            return redirect(url_for('evaluate_employee', id=emp.id))
+            flash("Madaalliin hojjetaa milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('promotions'))
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     return render_template('evaluate_employee.html', employee=emp, all_ranks=all_ranks)
+
+@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
+@login_required
+def add_discipline(employee_id):
+    emp = Employee.query.get_or_404(employee_id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            penalty_type = request.form.get('penalty_type')
+            reason = request.form.get('reason')
+            action_date = request.form.get('action_date') or datetime.now().date()
+
+            new_record = DisciplineRecord(
+                employee_id=emp.id,
+                penalty_type=penalty_type,
+                reason=reason,
+                action_date=action_date
+            )
+            db.session.add(new_record)
+            db.session.commit()
+            flash("Odeeffannoon naamusaa milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return render_template('add_discipline.html', employee=emp)
 
 if __name__ == '__main__':
     app.run(debug=True)
