@@ -510,7 +510,6 @@ def promotions():
     else:
         user_b = current_user.branch_id
         if user_b:
-            b_str = str(user_b)
             branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
             promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
                 Employee.branch_id == branch_id_val,
@@ -590,6 +589,16 @@ def export_promotions_excel():
             'Sababa / Ibsaa': p.reason if hasattr(p, 'reason') else '-',
             'Haala (Status)': p.status if hasattr(p, 'status') else '-',
             'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
+        })
+        
+    if not data:
+        data.append({
+            'Lakk.': '-',
+            'Maqaa Hojjetaa': 'Daataan hin jiru',
+            'Damee (Branch)': '-',
+            'Sababa / Ibsaa': '-',
+            'Haala (Status)': '-',
+            'Guyyaa': '-'
         })
         
     df = pd.DataFrame(data)
