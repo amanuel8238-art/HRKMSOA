@@ -75,7 +75,15 @@
                                 <tr class="hover:bg-slate-50" x-data="{ openReview: false }">
                                     <td class="p-3">{{ loop.index }}</td>
                                     <td class="p-3 font-bold text-slate-800">{{ t.employee.full_name if t.employee else '-' }}</td>
-                                    <td class="p-3 text-slate-600">{{ t.from_branch.name if t.from_branch else '-' }}</td>
+                                    <td class="p-3 text-slate-600">
+                                        {% if t.from_branch %}
+                                            {{ t.from_branch.name }}
+                                        {% elif t.employee and t.employee.branch %}
+                                            {{ t.employee.branch.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
                                     <td class="p-3 text-emerald-700 font-semibold">{{ t.to_branch.name if t.to_branch else '-' }}</td>
                                     <td class="p-3 text-indigo-700 max-w-xs truncate" title="{{ t.reason }}">{{ t.reason if t.reason else '-' }}</td>
                                     <td class="p-3 text-slate-600 max-w-xs truncate" title="{{ t.approval_reason }}">{{ t.approval_reason if t.approval_reason else '-' }}</td>
@@ -117,7 +125,7 @@
                                                         </div>
                                                         <div>
                                                             <label class="block text-slate-700 font-semibold mb-1">Sababa Murtichaa / Remark</label>
-                                                            <textarea name="approval_reason" rows="3" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="Sababa murtichaa barreessi...">{{ t.approval_reason }}</textarea>
+                                                            <textarea name="approval_reason" rows="3" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="Sababa murtichaa barreessi...">{{ t.approval_reason or '' }}</textarea>
                                                         </div>
                                                         <div class="flex justify-end gap-2 pt-2">
                                                             <button type="button" @click="openReview = false" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-xs">Cufi</button>
@@ -158,7 +166,7 @@
                         <select name="employee_id" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
                             <option value="">Hojjetaa filadhu</option>
                             {% for emp in employees %}
-                                <option value="{{ emp.id }}">{{ emp.full_name }}</option>
+                                <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.unique_id or '-' }})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -177,7 +185,7 @@
                     </div>
                     <div>
                         <label class="block text-slate-700 font-semibold mb-1">Guyyaa Gaaffiin Dhiyaate *</label>
-                        <input type="text" name="transfer_date" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="DD/MM/YYYY" required>
+                        <input type="text" name="transfer_date" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="DD/MM/YYYY" required value="{{ current_date or '' }}">
                     </div>
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" @click="openAddModal = false" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-xs">Cufi</button>

@@ -247,7 +247,9 @@ def branches():
 @login_required
 def transfers():
     transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
-    return render_template('transfers.html', transfers=transfers_list)
+    employees = Employee.query.filter_by(status='Active').all()
+    branches = Branch.query.all()
+    return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/add_transfer', methods=['POST'])
 @login_required
@@ -255,15 +257,17 @@ def add_transfer():
     try:
         create_local_backup()
         employee_id = request.form.get('employee_id')
-        from_branch_id = request.form.get('from_branch_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
         transfer_date = request.form.get('transfer_date') or date.today().isoformat()
 
+        emp = Employee.query.get(employee_id) if employee_id and str(employee_id).isdigit() else None
+        from_b_id = emp.branch_id if emp else None
+
         new_transfer = Transfer(
             employee_id=int(employee_id) if employee_id and str(employee_id).isdigit() else None,
-            from_branch_id=from_branch_id,
-            to_branch_id=to_branch_id,
+            from_branch_id=from_b_id,
+            to_branch_id=int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id,
             reason=reason,
             transfer_date=transfer_date,
             status='Pending'
@@ -271,6 +275,28 @@ def add_transfer():
         db.session.add(new_transfer)
         db.session.commit()
         flash("Gaaffiin jijjiirraa milkaa'inaan galmaa'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('transfers'))
+
+@app.route('/update_transfer_status/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def update_transfer_status(id):
+    t_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        t_record.status = request.form.get('status')
+        t_record.approval_reason = request.form.get('approval_reason')
+        
+        if t_record.status == 'Approved' and t_record.employee_id and t_record.to_branch_id:
+            emp = Employee.query.get(t_record.employee_id)
+            if emp:
+                emp.branch_id = t_record.to_branch_id
+                
+        db.session.commit()
+        flash("Murteen jijjiirraa milkaa'inaan galmaa'eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
