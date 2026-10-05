@@ -249,7 +249,6 @@ def transfers():
     transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
     branches = Branch.query.all()
     
-    # Yoo Admin ta'e hojjetaa hunda argata, yoo Manager damee ta'e immoo hojjettoota damee isaa qofa argata
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     if current_user.role == 'admin':
         employees = Employee.query.filter_by(status='Active').all()
@@ -268,7 +267,6 @@ def add_transfer():
         reason = request.form.get('reason')
         transfer_date = request.form.get('transfer_date') or date.today().isoformat()
 
-        # Hojjetichi amma damee kami akka irra jiru database irraa fiduun ofumaan qabanna (From Branch)
         emp = Employee.query.get(employee_id) if employee_id and str(employee_id).isdigit() else None
         from_b_id = emp.branch_id if emp else None
 
@@ -295,16 +293,18 @@ def update_transfer_status(id):
     t_record = Transfer.query.get_or_404(id)
     try:
         create_local_backup()
-        t_record.status = request.form.get('status')
+        new_status = request.form.get('status')
+        t_record.status = new_status
         t_record.approval_reason = request.form.get('approval_reason')
         
-        if t_record.status == 'Approved' and t_record.employee_id and t_record.to_branch_id:
+        # Yoo Admin "Approved" jedhee murteesse, hojjetaa sana ofumaan gara "Damee Haaraa" (to_branch_id)tti jijjiiri
+        if new_status == 'Approved' and t_record.employee_id and t_record.to_branch_id:
             emp = Employee.query.get(t_record.employee_id)
             if emp:
                 emp.branch_id = t_record.to_branch_id
                 
         db.session.commit()
-        flash("Murteen jijjiirraa milkaa'inaan galmaa'eera!", 'success')
+        flash("Murteen jijjiirraa milkaa'inaan galmaa'eera, hojjetaanis gara damee haaraatti jijjiirameera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
