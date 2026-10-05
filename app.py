@@ -672,6 +672,7 @@ def branches():
         all_branches = Branch.query.filter_by(id=b_val).all()
     return render_template('branches.html', branches=all_branches)
 
+# ==================== TRANSFERS (JIJJIIRRAA IDILEE) ====================
 @app.route('/transfers')
 @login_required
 def transfers():
@@ -784,6 +785,8 @@ def reject_transfer(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(request.referrer or url_for('transfers'))
 
+
+# ==================== PROMOTIONS (GAAFFII GONFOO) ====================
 @app.route('/promotions')
 @login_required
 def promotions():
@@ -842,7 +845,7 @@ def approve_promotion(id):
                     p_obj.employee.rank_id = r.id
                     break
         db.session.commit()
-        flash("Gaaffiin Gulantaa Gonfoo (Promotion) mirkanaa'eera!", 'success')
+        flash("Gaaffiin Gulantaa Gonfoo (Promotion) milkaa'inaan mirkanaa'eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -863,6 +866,7 @@ def reject_promotion(id):
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(request.referrer or url_for('promotions'))
+
 
 @app.route('/discipline')
 @login_required
