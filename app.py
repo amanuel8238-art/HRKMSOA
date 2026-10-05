@@ -295,3 +295,549 @@ def update_transfer_status(id):
         create_local_backup()
         new_status = request.form.get('status')
         t_record.status = new_status
+        t_record.approval_reason = request.form.get('approval_reason')
+        
+        if new_status == 'Approved' and t_record.employee_id and t_record.to_branch_id:
+            emp = Employee.query.get(t_record.employee_id)
+            if emp:
+                emp.branch_id = t_record.to_branch_id
+                
+        db.session.commit()
+        flash("Murteen jijjiirraa milkaa'inaan galmaa'eera, hojjetaanis gara damee haaraatti jijjiirameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('transfers'))
+
+@app.route('/retired_employees')
+@login_required
+def retired_employees():
+    if current_user.role == 'admin':
+        all_active = Employee.query.filter_by(status='Active').all()
+    else:
+        user_b = current_user.branch_id
+        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
+    retired_list = get_retired_employees_list(all_active)
+    return render_template('retired_employees.html', retired_list=retired_list)
+
+@app.route('/resigned_employees')
+@login_required
+def resigned_employees():
+    inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
+    query = Employee.query.filter(Employee.status.in_(inactive_statuses))
+    if current_user.role != 'admin':
+        user_b = current_user.branch_id
+        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        query = query.filter_by(branch_id=branch_id_val) if user_b else query.filter(False)
+    resigned_list = query.all()
+    return render_template('resigned_employees.html', employees=resigned_list)
+
+@app.route('/activate_employee/<int:id>', methods=['POST'])
+@login_required
+def activate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+    try:
+        create_local_backup()
+        emp.status = 'Active'
+        if hasattr(emp, 'resignation_reason'):
+            emp.resignation_reason = None
+        if hasattr(emp, 'resignation_date'):
+            emp.resignation_date = None
+        db.session.commit()
+        flash(f'Hojjetaan {emp.full_name} ammaa jalqabee deebi\'ee gara "Active"tti galfameera!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(request.referrer or url_for('employees'))
+
+@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def evaluate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            reason_text = request.form.get('reason', 'Gaaffii Gonfoo (Promotion Evaluation)')
+            transfer_date = request.form.get('transfer_date') or date.today().isoformat()
+
+            new_promotion = Transfer(
+                employee_id=emp.id,
+                from_branch_id=emp.branch_id,
+                to_branch_id=emp.branch_id,
+                reason=f"Gaaffii Gonfoo: {reason_text}",
+                transfer_date=transfer_date,
+                status='Pending'
+            )
+            db.session.add(new_promotion)
+            db.session.commit()
+            flash("Madaalliin gonfoo milkaa'inaan galmaa'ee gara gaaffiiwwan gonfootti ergameera!", 'success')
+            return redirect(url_for('promotions'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    all_ranks = Rank.query.all()
+    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
+
+@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
+@login_required
+def add_discipline(employee_id):
+    emp = Employee.query.get_or_404(employee_id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            penalty_type = request.form.get('penalty_type')
+            description = request.form.get('description', '')
+            d_date = request.form.get('date') or date.today().isoformat()
+
+            new_record = DisciplineRecord(
+                employee_id=emp.id,
+                penalty_type=penalty_type,
+                description=description,
+                date=d_date
+            )
+            db.session.add(new_record)
+            db.session.commit()
+            flash("Odeeffannoon naamusa hojjetaa milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return render_template('add_discipline.html', employee=emp)
+
+@app.route('/employees')
+@login_required
+def employees():
+    branch_id = request.args.get('branch_id')
+    rank = request.args.get('rank')
+    gender = request.args.get('gender')
+    search_query = request.args.get('search', '')
+    education_level = request.args.get('education_level', '')
+    field_of_study = request.args.get('field_of_study', '')
+    status_filter = request.args.get('status', 'Active')
+    sort_order = request.args.get('sort', 'az')
+
+    query = Employee.query
+    if status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+
+    if current_user.role != 'admin':
+        branch_id = current_user.branch_id
+        query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
+    elif branch_id:
+        query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
+
+    if rank:
+        if str(rank).isdigit():
+            query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == int(rank)))
+        else:
+            query = query.join(Employee.rank).filter(Rank.name == rank)
+    
+    if gender:
+        if gender in ['Dhalaa', 'Dubartii']:
+            query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
+        elif gender in ['Dhiira', 'Dhiirra']:
+            query = query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra'))
+        else:
+            query = query.filter_by(gender=gender)
+
+    if education_level:
+        query = query.filter(Employee.education_level.ilike(f'%{education_level}%'))
+
+    if field_of_study:
+        query = query.filter(Employee.field_of_study.ilike(f'%{field_of_study}%'))
+
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{search_query}%'),
+                Employee.unique_id.ilike(f'%{search_query}%'),
+                Employee.job_position.ilike(f'%{search_query}%')
+            )
+        )
+
+    if sort_order == 'za':
+        query = query.order_by(Employee.full_name.desc())
+    else:
+        query = query.order_by(Employee.full_name.asc())
+
+    all_employees = query.all()
+    if current_user.role == 'admin':
+        all_branches = Branch.query.all()
+    else:
+        b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+        all_branches = Branch.query.filter_by(id=b_val).all()
+        
+    all_ranks = Rank.query.all()
+    return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
+
+@app.route('/ranks')
+@login_required
+def ranks():
+    all_ranks = Rank.query.all()
+    return render_template('ranks.html', ranks=all_ranks)
+
+@app.route('/export_ranks_excel')
+@login_required
+def export_ranks_excel():
+    ranks_data = Rank.query.all()
+    if not ranks_data:
+        flash("Odeeffannoon ykn daataan gulantaalee (ranks) waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('ranks'))
+
+    data = []
+    for idx, r in enumerate(ranks_data, start=1):
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Gulantaa (Rank)': r.name,
+            'Ibsaa': r.description if hasattr(r, 'description') and r.description else '-'
+        })
+        
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Ranks_Report.xlsx')
+
+@app.route('/export_employees_excel')
+@login_required
+def export_employees_excel():
+    branch_id = request.args.get('branch_id')
+    search_query = request.args.get('search', '')
+    status_filter = request.args.get('status', 'Active')
+
+    query = Employee.query
+    if status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+
+    if current_user.role != 'admin':
+        branch_id = current_user.branch_id
+        query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
+    elif branch_id:
+        query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
+
+    if search_query:
+        query = query.filter(Employee.full_name.ilike(f'%{search_query}%'))
+
+    emps = query.all()
+    if not emps:
+        flash("Odeeffannoon ykn daataan hojjettootaa filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('employees'))
+
+    data = []
+    for idx, e in enumerate(emps, start=1):
+        branch_name = e.branch.name if e.branch else 'N/A'
+        rank_name = e.rank.name if e.rank else 'N/A'
+        data.append({
+            'Lakk.': idx,
+            'ID Addaa': e.unique_id if e.unique_id else '-',
+            'Maqaa Guutuu': e.full_name,
+            'Saala': e.gender if e.gender else '-',
+            'Damee (Branch)': branch_name,
+            'Gulantaa / Rank': rank_name,
+            'Gita Hojii': e.job_position if e.job_position else '-',
+            'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
+            'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
+            'Status': e.status if e.status else '-'
+        })
+        
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Miseensota')
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Report.xlsx')
+
+@app.route('/promotions')
+@login_required
+def promotions():
+    branch_id_filter = request.args.get('branch_id')
+    all_branches = Branch.query.all()
+    
+    if current_user.role == 'admin':
+        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_id_int = int(branch_id_filter)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(
+                    Employee.branch_id == b_id_int,
+                    Transfer.to_branch_id == b_id_int
+                )
+            )
+        promotions_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
+            promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                Employee.branch_id == branch_id_val,
+                Transfer.reason.ilike('%Gaaffii Gonfoo%')
+            ).all()
+        else:
+            promotions_list = []
+
+    return render_template('promotions.html', promotions=promotions_list, all_branches=all_branches, selected_branch=branch_id_filter)
+
+@app.route('/approve_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def approve_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        transfer_record.status = 'Approved'
+        db.session.commit()
+        flash("Gaaffiin gonfoo milkaa'inaan eeyyamameera (Approved)!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
+
+@app.route('/reject_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def reject_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        transfer_record.status = 'Rejected'
+        db.session.commit()
+        flash("Gaaffiin gonfoo dhorkameera (Rejected).", 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
+
+@app.route('/export_promotions_excel')
+@login_required
+def export_promotions_excel():
+    branch_id_filter = request.args.get('branch_id')
+    
+    if current_user.role == 'admin':
+        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_id_int = int(branch_id_filter)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(
+                    Employee.branch_id == b_id_int,
+                    Transfer.to_branch_id == b_id_int
+                )
+            )
+        promotions_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
+            promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                Employee.branch_id == branch_id_val,
+                Transfer.reason.ilike('%Gaaffii Gonfoo%')
+            ).all()
+        else:
+            promotions_list = []
+
+    if not promotions_list:
+        flash("Odeeffannoon ykn daataan gonfoo (promotions) waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('promotions'))
+
+    data = []
+    for idx, p in enumerate(promotions_list, start=1):
+        emp = p.employee if hasattr(p, 'employee') else Employee.query.get(p.employee_id)
+        emp_name = emp.full_name if emp else 'N/A'
+        branch_name = emp.branch.name if emp and emp.branch else 'N/A'
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Hojjetaa': emp_name,
+            'Damee (Branch)': branch_name,
+            'Sababa / Ibsaa': p.reason if hasattr(p, 'reason') else '-',
+            'Haala (Status)': p.status if hasattr(p, 'status') else '-',
+            'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
+        })
+    
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Gonfoo (Promotions)')
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Promotions_Report.xlsx')
+
+@app.route('/add_employee', methods=['POST'])
+@login_required
+def add_employee():
+    full_name = request.form.get('full_name')
+    unique_id = request.form.get('unique_id')
+    gender = request.form.get('gender')
+    if current_user.role == 'admin':
+        branch_id = request.form.get('branch_id')
+    else:
+        branch_id = current_user.branch_id
+
+    rank_input = request.form.get('rank_id') or request.form.get('rank')
+    rank_id = resolve_rank_id(rank_input)
+
+    try:
+        create_local_backup()
+        new_emp = Employee(
+            full_name=full_name,
+            unique_id=unique_id,
+            gender=gender,
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
+            rank_id=rank_id,
+            rank_date=request.form.get('rank_date') or None,
+            hire_date=request.form.get('hire_date') or None,
+            birth_date=request.form.get('birth_date') or None,
+            rank_salary=float(request.form.get('rank_salary') or 0.0),
+            location_allowance=float(request.form.get('location_allowance') or 0.0),
+            food_allowance=float(request.form.get('food_allowance') or 0.0),
+            education_level=request.form.get('education_level'),
+            field_of_study=request.form.get('field_of_study'),
+            job_position=request.form.get('job_position'),
+            status=request.form.get('status', 'Active')
+        )
+        db.session.add(new_emp)
+        db.session.commit()
+        flash("Hojjetaan haaraan milkaa’inaan galmaa’eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('employees'))
+
+@app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            emp.full_name = request.form.get('full_name')
+            emp.unique_id = request.form.get('unique_id')
+            emp.gender = request.form.get('gender')
+            if current_user.role == 'admin':
+                b_val = request.form.get('branch_id')
+                emp.branch_id = int(b_val) if b_val and str(b_val).isdigit() else b_val
+
+            rank_input = request.form.get('rank_id') or request.form.get('rank')
+            resolved_r = resolve_rank_id(rank_input)
+            if resolved_r:
+                emp.rank_id = resolved_r
+
+            emp.rank_date = request.form.get('rank_date') or emp.rank_date
+            emp.hire_date = request.form.get('hire_date') or emp.hire_date
+            emp.birth_date = request.form.get('birth_date') or emp.birth_date
+            emp.rank_salary = float(request.form.get('rank_salary') or emp.rank_salary or 0.0)
+            emp.location_allowance = float(request.form.get('location_allowance') or emp.location_allowance or 0.0)
+            emp.food_allowance = float(request.form.get('food_allowance') or emp.food_allowance or 0.0)
+            emp.education_level = request.form.get('education_level')
+            emp.field_of_study = request.form.get('field_of_study')
+            emp.job_position = request.form.get('job_position')
+            emp.status = request.form.get('status', emp.status)
+
+            db.session.commit()
+            flash("Odeeffannoon hojjetaa milkaa'inaan fooyya'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    all_branches = Branch.query.all()
+    all_ranks = Rank.query.all()
+    return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
+
+@app.route('/delete_employee/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_employee(id):
+    emp = Employee.query.get_or_404(id)
+    try:
+        create_local_backup()
+        db.session.delete(emp)
+        db.session.commit()
+        flash("Hojjetaan galmee irraa haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('employees'))
+
+@app.route('/users')
+@login_required
+@admin_required
+def users():
+    all_users = User.query.all()
+    all_branches = Branch.query.all()
+    return render_template('users.html', users=all_users, branches=all_branches)
+
+@app.route('/add_user', methods=['POST'])
+@login_required
+@admin_required
+def add_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    role = request.form.get('role')
+    branch_id = request.form.get('branch_id')
+
+    if User.query.filter_by(username=username).first():
+        flash('Maqaa fayyadamaa kana qabu durayyuu jira, maaloo kan biraa filadhu.', 'danger')
+        return redirect(url_for('users'))
+
+    try:
+        create_local_backup()
+        hashed_pw = generate_password_hash(password)
+        new_u = User(
+            username=username,
+            password=hashed_pw,
+            role=role,
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
+        )
+        db.session.add(new_u)
+        db.session.commit()
+        flash("Fayyadamaan haaraan milkaa'inaan galmaa'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('users'))
+
+@app.route('/delete_user/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(id):
+    user_to_del = User.query.get_or_404(id)
+    if user_to_del.username == 'admin':
+        flash('Fayyadamaa Administrator guddaa (admin) balleessuun hin danda\'amu!', 'danger')
+        return redirect(url_for('users'))
+    try:
+        create_local_backup()
+        db.session.delete(user_to_del)
+        db.session.commit()
+        flash("Fayyadamaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('users'))
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
