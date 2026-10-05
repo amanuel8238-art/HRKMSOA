@@ -635,8 +635,7 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-# --- ROUTEHAARAA: Hojjetaa haquuf (Delete Employee) ---
-@app.route('/delete_employee/<int:id>', methods=['POST'])
+@app.route('/delete_employee/<int:id>', methods=['POST'], endpoint='delete_employee_route')
 @login_required
 def delete_employee(id):
     emp = Employee.query.get_or_404(id)
@@ -664,6 +663,8 @@ def evaluate_employee(id):
     all_ranks = Rank.query.all()
     if request.method == 'POST':
         try:
+            create_local_backup()
+            # Qabxiiwwan garaa gsaa HTML form irraa dhufan fudhachuu
             perf = float(request.form.get('performance_score') or request.form.get('perf_score') or 0.0)
             edu = float(request.form.get('education_score') or request.form.get('edu_score') or 0.0)
             disc = float(request.form.get('discipline_score') or 0.0)
@@ -671,10 +672,13 @@ def evaluate_employee(id):
             exp = float(request.form.get('experience_score') or 0.0)
             serv = float(request.form.get('service_delivery_score') or request.form.get('service_spirit_score') or request.form.get('service_score') or 0.0)
             
+            # Herrega ida'amaa (Total score calculation)
             total_score = perf + edu + disc + law + exp + serv
+            
             next_promotion_status = request.form.get('next_promotion_status') or request.form.get('next_rank')
             next_promotion_date = request.form.get('next_promotion_date') or request.form.get('promotion_date')
             
+            # Galmee Employee irra kaa'uu
             emp.perf_score = perf
             emp.edu_score = edu
             emp.discipline_score = disc
@@ -685,66 +689,17 @@ def evaluate_employee(id):
             emp.next_promotion_status = next_promotion_status
             emp.next_promotion_date = next_promotion_date
 
-            reason_text = f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}"
+            # Gaaffii Gonfoo (Promotion) yoo ta'e dabaluu ykn yeroo barbaadame galmeessuu
+            reason_text = f"Gaaffii Gonfoo - Total Score: {total_score}"
             
-            existing_transfer = Transfer.query.filter(
-                Transfer.employee_id == emp.id,
-                Transfer.reason.ilike('%Gaaffii Gonfoo%'),
-                Transfer.status == 'Pending'
-            ).first()
-
-            create_local_backup()
-            if existing_transfer:
-                existing_transfer.reason = reason_text
-                existing_transfer.transfer_date = datetime.now().date()
-            else:
-                new_transfer = Transfer(
-                    employee_id=emp.id,
-                    reason=reason_text,
-                    status='Pending',
-                    transfer_date=datetime.now().date()
-                )
-                db.session.add(new_transfer)
-
             db.session.commit()
-            flash("Madaalliin hojjetaa milkaa'inaan galmaa'eera!", 'success')
-            return redirect(url_for('promotions'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    return render_template('evaluate_employee.html', employee=emp, all_ranks=all_ranks)
-
-@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
-@login_required
-def add_discipline(employee_id):
-    emp = Employee.query.get_or_404(employee_id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            penalty_type = request.form.get('penalty_type')
-            reason = request.form.get('reason')
-            action_date = request.form.get('action_date') or datetime.now().date()
-
-            new_record = DisciplineRecord(
-                employee_id=emp.id,
-                penalty_type=penalty_type,
-                reason=reason,
-                action_date=action_date
-            )
-            db.session.add(new_record)
-            db.session.commit()
-            flash("Odeeffannoon naamusaa milkaa'inaan galmaa'eera!", 'success')
+            flash("Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
-    return render_template('add_discipline.html', employee=emp)
+    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
 
 if __name__ == '__main__':
     app.run(debug=True)

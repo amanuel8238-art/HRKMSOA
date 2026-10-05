@@ -18,7 +18,6 @@
                     <p class="mb-2"><strong>Saala:</strong> {{ employee.gender }}</p>
                 </div>
                 <div class="col-md-6">
-                    <!-- Umrii Shallagamu (Bara Ammaa 2026 - Bara Dhalootaa) -->
                     <p class="mb-2">
                         <strong>Umrii:</strong> 
                         {% if employee.birth_date %}
@@ -39,32 +38,32 @@
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
-                    <input type="number" step="0.01" name="performance_score" class="form-control" max="25" min="0" value="{{ employee.performance_score if employee.performance_score is defined and employee.performance_score else '' }}" required>
+                    <input type="number" step="0.01" name="performance_score" class="form-control score-input" max="25" min="0" value="{{ employee.performance_score if employee.performance_score is defined and employee.performance_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                    <input type="number" step="0.01" name="education_score" class="form-control" max="20" min="0" value="{{ employee.education_score if employee.education_score is defined and employee.education_score else '' }}" required>
+                    <input type="number" step="0.01" name="education_score" class="form-control score-input" max="20" min="0" value="{{ employee.education_score if employee.education_score is defined and employee.education_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Naamusaa Poolisii (Max 20%):</label>
-                    <input type="number" step="0.01" name="discipline_score" class="form-control" max="20" min="0" value="{{ employee.discipline_score if employee.discipline_score is defined and employee.discipline_score else '' }}" required>
+                    <input type="number" step="0.01" name="discipline_score" class="form-control score-input" max="20" min="0" value="{{ employee.discipline_score if employee.discipline_score is defined and employee.discipline_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Seera fi Heera (Max 10%):</label>
-                    <input type="number" step="0.01" name="law_score" class="form-control" max="10" min="0" value="{{ employee.law_score if employee.law_score is defined and employee.law_score else '' }}" required>
+                    <input type="number" step="0.01" name="law_score" class="form-control score-input" max="10" min="0" value="{{ employee.law_score if employee.law_score is defined and employee.law_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Muxannoo Hojii (Max 10%):</label>
-                    <input type="number" step="0.01" name="experience_score" class="form-control" max="10" min="0" value="{{ employee.experience_score if employee.experience_score is defined and employee.experience_score else '' }}" required>
+                    <input type="number" step="0.01" name="experience_score" class="form-control score-input" max="10" min="0" value="{{ employee.experience_score if employee.experience_score is defined and employee.experience_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 15%):</label>
-                    <input type="number" step="0.01" name="service_delivery_score" class="form-control" max="15" min="0" value="{{ employee.service_delivery_score if employee.service_delivery_score is defined and employee.service_delivery_score else '' }}" required>
+                    <input type="number" step="0.01" name="service_delivery_score" class="form-control score-input" max="15" min="0" value="{{ employee.service_delivery_score if employee.service_delivery_score is defined and employee.service_delivery_score else '' }}" required>
                 </div>
 
                 <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Input Date) -->
@@ -75,7 +74,14 @@
 
                 <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu (Filannoo Goonfoo / Rank) -->
                 <div class="p-3 bg-light rounded border mb-4">
-                    <p class="mb-3 fs-5"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">{{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }} / 100%</span></p>
+                    <p class="mb-3 fs-5">
+                        <strong>Ida'ama Waliigalaa:</strong> 
+                        <span id="total_score_display" class="text-success fw-bold">
+                            {{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }}
+                        </span> / 100%
+                    </p>
+                    <!-- Hidden input to send total score to server -->
+                    <input type="hidden" name="total_score" id="total_score" value="{{ employee.total_score if employee.total_score else '0.00' }}">
                     
                     <div class="mb-0">
                         <label class="form-label fw-bold text-primary">Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</label>
@@ -109,4 +115,30 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript to auto-calculate total score -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const scoreInputs = document.querySelectorAll('.score-input');
+        const totalDisplay = document.getElementById('total_score_display');
+        const totalHidden = document.getElementById('total_score');
+
+        function calculateTotal() {
+            let sum = 0;
+            scoreInputs.forEach(input => {
+                let val = parseFloat(input.value) || 0;
+                sum += val;
+            });
+            totalDisplay.textContent = sum.toFixed(2);
+            totalHidden.value = sum.toFixed(2);
+        }
+
+        scoreInputs.forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+
+        // Initialize calculation on page load if values exist
+        calculateTotal();
+    });
+</script>
 {% endblock %}
