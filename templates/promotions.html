@@ -149,7 +149,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="21" class="text-center py-4 text-muted">
+                                <td colspan="{% if current_user.role == 'admin' %}21{% else %}20{% endif %}" class="text-center py-4 text-muted">
                                     Daataan gaaffii gonfoo galmaa'e hin jiru.
                                 </td>
                             </tr>
