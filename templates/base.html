@@ -35,12 +35,26 @@
                             <i class="fas fa-tachometer-alt me-1"></i> Dashboordii
                         </a>
                     </li>
-                    <!-- Bakka itti Galmee Jijjiirraa fi Gonfoo dabalamhe -->
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ url_for('transfers') }}">
-                            <i class="fas fa-exchange-alt me-1"></i> Jijjiirraa & Gonfoo
+                        <a class="nav-link px-3" href="{{ url_for('employees') }}">
+                            <i class="fas fa-users me-1"></i> Miseensota
                         </a>
                     </li>
+                    <!-- Bakka itti Galmee Jijjiirraa fi Gonfoo wal-simsiifame -->
+                    {% if endpoint_exists('transfers') %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('transfers') }}">
+                            <i class="fas fa-exchange-alt me-1"></i> Jijjiirraa
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if endpoint_exists('promotions') %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ url_for('promotions') }}">
+                            <i class="fas fa-award me-1"></i> Gonfoo (Promotions)
+                        </a>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link px-3 text-danger fw-semibold" href="{{ url_for('logout') }}">
                             <i class="fas fa-sign-out-alt me-1"></i> Bahi (Logout)

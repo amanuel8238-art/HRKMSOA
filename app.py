@@ -237,6 +237,18 @@ def dashboard():
                            clean_count=clean_count,
                            ethiopian_today=ethiopian_today)
 
+@app.route('/branches')
+@login_required
+def branches():
+    all_branches = Branch.query.all()
+    return render_template('branches.html', branches=all_branches)
+
+@app.route('/transfers')
+@login_required
+def transfers():
+    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
+    return render_template('transfers.html', transfers=transfers_list)
+
 @app.route('/retired_employees')
 @login_required
 def retired_employees():
@@ -725,3 +737,6 @@ def add_discipline(employee_id):
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
             
     return render_template('add_discipline.html', employee=emp)
+
+if __name__ == '__main__':
+    app.run(debug=True)
