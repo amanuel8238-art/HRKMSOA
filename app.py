@@ -678,49 +678,24 @@ def evaluate_employee(id):
             create_local_backup()
             if existing_transfer:
                 existing_transfer.reason = reason_text
-                existing_transfer.transfer_date = datetime.utcnow()
+                existing_transfer.transfer_date = datetime.now().date()
             else:
-                transfer_data = {
-                    'employee_id': emp.id,
-                    'reason': reason_text,
-                    'transfer_date': datetime.utcnow(),
-                    'status': 'Pending'
-                }
-                if hasattr(Transfer, 'to_branch_id'):
-                    transfer_data['to_branch_id'] = emp.branch_id
-                if hasattr(Transfer, 'from_branch_id'):
-                    transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
-                
-                new_transfer = Transfer(**transfer_data)
+                new_transfer = Transfer(
+                    employee_id=emp.id,
+                    reason=reason_text,
+                    status='Pending',
+                    transfer_date=datetime.now().date()
+                )
                 db.session.add(new_transfer)
 
             db.session.commit()
-            
-            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan galmaa'ee Qabxii Total (%): {total_score:.2f} ta'uun galmeeffameera!", 'success')
-            return redirect(url_for('promotions'))
+            flash("Gamaaggamni hojjetaa milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('evaluate_employee', id=emp.id))
         except Exception as e:
             db.session.rollback()
-            flash(f'Herrega qabxii irratti dogoggorri uumameera: {str(e)}', 'danger')
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
-    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
-
-@app.route('/delete_employee/<int:id>', methods=['POST'])
-@login_required
-def delete_employee(id):
-    emp = Employee.query.get_or_404(id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-        
-    try:
-        create_local_backup()
-        db.session.delete(emp)
-        db.session.commit()
-        flash(f"Hojjetaan {emp.full_name} milkaa'inaan haqameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('employees'))
+    return render_template('evaluate_employee.html', employee=emp, all_ranks=all_ranks)
 
 if __name__ == '__main__':
     app.run(debug=True)
