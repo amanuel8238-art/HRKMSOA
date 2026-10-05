@@ -297,7 +297,6 @@ def update_transfer_status(id):
         t_record.status = new_status
         t_record.approval_reason = request.form.get('approval_reason')
         
-        # Yoo Admin "Approved" jedhee murteesse, hojjetaa sana ofumaan gara "Damee Haaraa" (to_branch_id)tti jijjiiri
         if new_status == 'Approved' and t_record.employee_id and t_record.to_branch_id:
             emp = Employee.query.get(t_record.employee_id)
             if emp:
@@ -512,15 +511,11 @@ def promotions():
         user_b = current_user.branch_id
         if user_b:
             b_str = str(user_b)
-            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
-            from_col = getattr(Transfer, 'from_branch_id', None)
-            conditions = []
-            if from_col is not None:
-                conditions.append(db.cast(from_col, db.String) == b_str)
-            if to_col is not None:
-                conditions.append(db.cast(to_col, db.String) == b_str)
-            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
-            promotions_list = [t for t in branch_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
+            branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
+            promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                Employee.branch_id == branch_id_val,
+                Transfer.reason.ilike('%Gaaffii Gonfoo%')
+            ).all()
         else:
             promotions_list = []
 
@@ -575,16 +570,11 @@ def export_promotions_excel():
     else:
         user_b = current_user.branch_id
         if user_b:
-            b_str = str(user_b)
-            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
-            from_col = getattr(Transfer, 'from_branch_id', None)
-            conditions = []
-            if from_col is not None:
-                conditions.append(db.cast(from_col, db.String) == b_str)
-            if to_col is not None:
-                conditions.append(db.cast(to_col, db.String) == b_str)
-            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
-            promotions_list = [t for t in branch_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
+            branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
+            promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                Employee.branch_id == branch_id_val,
+                Transfer.reason.ilike('%Gaaffii Gonfoo%')
+            ).all()
         else:
             promotions_list = []
 
@@ -725,6 +715,7 @@ def evaluate_employee(id):
     if request.method == 'POST':
         try:
             create_local_backup()
+            
             perf = float(request.form.get('performance_score') or request.form.get('perf_score') or 0.0)
             edu = float(request.form.get('education_score') or request.form.get('edu_score') or 0.0)
             disc = float(request.form.get('discipline_score') or 0.0)
@@ -747,9 +738,21 @@ def evaluate_employee(id):
             emp.next_promotion_status = next_promotion_status
             emp.next_promotion_date = next_promotion_date
 
+            existing_promo = Transfer.query.filter_by(employee_id=emp.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).first()
+            if not existing_promo:
+                new_promo = Transfer(
+                    employee_id=emp.id,
+                    from_branch_id=emp.branch_id,
+                    to_branch_id=emp.branch_id,
+                    reason="Gaaffii Gonfoo (Madaallii irraa)",
+                    transfer_date=date.today().isoformat(),
+                    status='Pending'
+                )
+                db.session.add(new_promo)
+
             db.session.commit()
-            flash("Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera!", 'success')
-            return redirect(url_for('employees'))
+            flash("Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera, gara Gabatee Gonfoo (Promotions)tti dabalamuun isaa mirkanaa'eera!", 'success')
+            return redirect(url_for('promotions'))
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
