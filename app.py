@@ -438,7 +438,12 @@ def export_ranks_excel():
             'Ibsaa': r.description if hasattr(r, 'description') and r.description else '-'
         })
         
-    df = pd.DataFrame(data)
+    if not data:
+        df = pd.DataFrame(columns=['Lakk.', 'Maqaa Gulantaa (Rank)', 'Ibsaa'])
+        df.loc[0] = ['-', 'Daataan hin jiru', '-']
+    else:
+        df = pd.DataFrame(data)
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Gulantaalee')
@@ -483,7 +488,15 @@ def export_employees_excel():
             'Status': e.status if e.status else '-'
         })
         
-    df = pd.DataFrame(data)
+    if not data:
+        df = pd.DataFrame(columns=[
+            'Lakk.', 'ID Addaa', 'Maqaa Guutuu', 'Saala', 'Damee (Branch)', 
+            'Gulantaa / Rank', 'Gita Hojii', 'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Status'
+        ])
+        df.loc[0] = ['-', '-', 'Daataan hin jiru', '-', '-', '-', '-', '-', '-', '-']
+    else:
+        df = pd.DataFrame(data)
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Miseensota')
@@ -591,17 +604,15 @@ def export_promotions_excel():
                 'Haala (Status)': p.status if hasattr(p, 'status') else '-',
                 'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
             })
+    
+    if not data:
+        df = pd.DataFrame(columns=[
+            'Lakk.', 'Maqaa Hojjetaa', 'Damee (Branch)', 'Sababa / Ibsaa', 'Haala (Status)', 'Guyyaa'
+        ])
+        df.loc[0] = ['-', 'Daataan hin jiru', '-', '-', '-', '-']
     else:
-        data.append({
-            'Lakk.': '-',
-            'Maqaa Hojjetaa': 'Daataan hin jiru',
-            'Damee (Branch)': '-',
-            'Sababa / Ibsaa': '-',
-            'Haala (Status)': '-',
-            'Guyyaa': '-'
-        })
-        
-    df = pd.DataFrame(data)
+        df = pd.DataFrame(data)
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(output, index=False, sheet_name='Gonfoo (Promotions)')
@@ -685,116 +696,15 @@ def edit_employee(id):
             emp.status = request.form.get('status', emp.status)
             
             db.session.commit()
-            flash("Odeeffannoon hojjetaa milkaa\'inaan fooyya\'eera!", 'success')
+            flash("Odeeffannoon hojjetaa milkaa'inaan haaromfameera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
-    all_branches = Branch.query.all() if current_user.role == 'admin' else Branch.query.filter_by(id=user_b_val).all()
+    all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-@app.route('/delete_employee/<int:id>', methods=['POST'], endpoint='delete_employee')
-@login_required
-def delete_employee(id):
-    emp = Employee.query.get_or_404(id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-    try:
-        create_local_backup()
-        db.session.delete(emp)
-        db.session.commit()
-        flash('Hojjetaan milkaa’inaan haqameera.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('employees'))
-
-@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
-@login_required
-def evaluate_employee(id):
-    emp = Employee.query.get_or_404(id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-
-    all_ranks = Rank.query.all()
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            
-            perf = float(request.form.get('performance_score') or request.form.get('perf_score') or 0.0)
-            edu = float(request.form.get('education_score') or request.form.get('edu_score') or 0.0)
-            disc = float(request.form.get('discipline_score') or 0.0)
-            law = float(request.form.get('law_score') or request.form.get('law_compliance_score') or 0.0)
-            exp = float(request.form.get('experience_score') or 0.0)
-            serv = float(request.form.get('service_delivery_score') or request.form.get('service_spirit_score') or request.form.get('service_score') or 0.0)
-            
-            total_score = perf + edu + disc + law + exp + serv
-            
-            next_promotion_status = request.form.get('next_promotion_status') or request.form.get('next_rank')
-            next_promotion_date = request.form.get('next_promotion_date') or request.form.get('promotion_date')
-            
-            emp.perf_score = perf
-            emp.edu_score = edu
-            emp.discipline_score = disc
-            emp.law_score = law
-            emp.experience_score = exp
-            emp.service_score = serv
-            emp.total_score = total_score
-            emp.next_promotion_status = next_promotion_status
-            emp.next_promotion_date = next_promotion_date
-
-            existing_promo = Transfer.query.filter_by(employee_id=emp.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).first()
-            if not existing_promo:
-                new_promo = Transfer(
-                    employee_id=emp.id,
-                    from_branch_id=emp.branch_id,
-                    to_branch_id=emp.branch_id,
-                    reason="Gaaffii Gonfoo (Madaallii irraa)",
-                    transfer_date=date.today().isoformat(),
-                    status='Pending'
-                )
-                db.session.add(new_promo)
-
-            db.session.commit()
-            flash("Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera, gara Gabatee Gonfoo (Promotions)tti dabalamuun isaa mirkanaa'eera!", 'success')
-            return redirect(url_for('promotions'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
-
-@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
-@login_required
-def add_discipline(employee_id):
-    employee = Employee.query.get_or_404(employee_id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and employee.branch_id != user_b_val:
-        abort(403)
-
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            penalty_type = request.form.get('penalty_type')
-            offense_description = request.form.get('offense_description') or request.form.get('description')
-            action_date = request.form.get('action_date') or date.today().isoformat()
-
-            new_discipline = DisciplineRecord(
-                employee_id=employee.id,
-                penalty_type=penalty_type,
-                description=offense_description,
-                date=action_date
-            )
-            db.session.add(new_discipline)
-            db.session.commit()
-            flash("Galmeen adaba/ajaa'ibaa milkaa'inaan galmaa'eera!", 'success')
-            return redirect(url_for('employees'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    return render_template('add_discipline.html', employee=employee)
+if __name__ == '__main__':
+    app.run(debug=True)
