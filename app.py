@@ -657,7 +657,6 @@ def evaluate_employee(id):
             next_promotion_status = request.form.get('next_promotion_status') or request.form.get('next_rank')
             next_promotion_date = request.form.get('next_promotion_date') or request.form.get('promotion_date')
             
-            # --- Qabxiiwwan kallattiidhaan Employee table irratti save godhamuu isaanii mirkaneessuu ---
             emp.perf_score = perf
             emp.edu_score = edu
             emp.discipline_score = disc
@@ -670,7 +669,6 @@ def evaluate_employee(id):
 
             reason_text = f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}"
             
-            # Check yoo transfer record duraanii (Pending) jiru ta'e update gochuu, yoo hin jirre haaraa uumuu
             existing_transfer = Transfer.query.filter(
                 Transfer.employee_id == emp.id,
                 Transfer.reason.ilike('%Gaaffii Gonfoo%'),
@@ -718,38 +716,11 @@ def delete_employee(id):
         create_local_backup()
         db.session.delete(emp)
         db.session.commit()
-        flash(f"Hojjetaan {emp.full_name} milkaa\'inaan haqameera!", 'success')
+        flash(f"Hojjetaan {emp.full_name} milkaa'inaan haqameera!", 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f"Hojjetaan kun walitti dhufeenya table biroo qabaachuu danda\'a: {str(e)}", 'danger')
-        
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('employees'))
-
-@app.route('/employee/<int:employee_id>/discipline/add', methods=['GET', 'POST'])
-@login_required
-def add_discipline(employee_id):
-    emp = Employee.query.get_or_404(employee_id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            new_record = DisciplineRecord(
-                employee_id=emp.id,
-                penalty_type=request.form.get('penalty_type'),
-                reason=request.form.get('reason')
-            )
-            db.session.add(new_record)
-            db.session.commit()
-            flash("Galmeen adabbii milkaa'inaan galmaa'eera!", 'success')
-            return redirect(url_for('employees'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-            
-    return render_template('add_discipline.html', employee=emp)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -39,32 +39,32 @@
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
-                    <input type="number" step="0.01" name="performance_score" class="form-control" max="25" required>
+                    <input type="number" step="0.01" name="performance_score" class="form-control" max="25" min="0" value="{{ employee.performance_score if employee.performance_score is defined and employee.performance_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                    <input type="number" step="0.01" name="education_score" class="form-control" max="20" required>
+                    <input type="number" step="0.01" name="education_score" class="form-control" max="20" min="0" value="{{ employee.education_score if employee.education_score is defined and employee.education_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Naamusaa Poolisii (Max 20%):</label>
-                    <input type="number" step="0.01" name="discipline_score" class="form-control" max="20" required>
+                    <input type="number" step="0.01" name="discipline_score" class="form-control" max="20" min="0" value="{{ employee.discipline_score if employee.discipline_score is defined and employee.discipline_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Seera fi Heera (Max 10%):</label>
-                    <input type="number" step="0.01" name="law_score" class="form-control" max="10" required>
+                    <input type="number" step="0.01" name="law_score" class="form-control" max="10" min="0" value="{{ employee.law_score if employee.law_score is defined and employee.law_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Muxannoo Hojii (Max 10%):</label>
-                    <input type="number" step="0.01" name="experience_score" class="form-control" max="10" required>
+                    <input type="number" step="0.01" name="experience_score" class="form-control" max="10" min="0" value="{{ employee.experience_score if employee.experience_score is defined and employee.experience_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 15%):</label>
-                    <input type="number" step="0.01" name="service_delivery_score" class="form-control" max="15" required>
+                    <input type="number" step="0.01" name="service_delivery_score" class="form-control" max="15" min="0" value="{{ employee.service_delivery_score if employee.service_delivery_score is defined and employee.service_delivery_score else '' }}" required>
                 </div>
 
                 <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Input Date) -->
