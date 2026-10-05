@@ -354,6 +354,39 @@ def activate_employee(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(request.referrer or url_for('employees'))
 
+@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def evaluate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            reason_text = request.form.get('reason', 'Gaaffii Gonfoo (Promotion Evaluation)')
+            transfer_date = request.form.get('transfer_date') or date.today().isoformat()
+
+            new_promotion = Transfer(
+                employee_id=emp.id,
+                from_branch_id=emp.branch_id,
+                to_branch_id=emp.branch_id,
+                reason=f"Gaaffii Gonfoo: {reason_text}",
+                transfer_date=transfer_date,
+                status='Pending'
+            )
+            db.session.add(new_promotion)
+            db.session.commit()
+            flash("Madaalliin gonfoo milkaa'inaan galmaa'ee gara gaaffiiwwan gonfootti ergameera!", 'success')
+            return redirect(url_for('promotions'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    all_ranks = Rank.query.all()
+    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
+
 @app.route('/employees')
 @login_required
 def employees():
