@@ -166,7 +166,7 @@
                         <select name="employee_id" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
                             <option value="">Hojjetaa filadhu</option>
                             {% for emp in employees %}
-                                <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.unique_id or '-' }})</option>
+                                <option value="{{ emp.id }}">{{ emp.full_name }} (ID: {{ emp.unique_id or '-' }}) - Damee: {{ emp.branch.name if emp.branch else '-' }}</option>
                             {% endfor %}
                         </select>
                     </div>

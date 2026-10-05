@@ -247,8 +247,15 @@ def branches():
 @login_required
 def transfers():
     transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
-    employees = Employee.query.filter_by(status='Active').all()
     branches = Branch.query.all()
+    
+    # Yoo Admin ta'e hojjetaa hunda argata, yoo Manager damee ta'e immoo hojjettoota damee isaa qofa argata
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role == 'admin':
+        employees = Employee.query.filter_by(status='Active').all()
+    else:
+        employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
+        
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/add_transfer', methods=['POST'])
@@ -261,6 +268,7 @@ def add_transfer():
         reason = request.form.get('reason')
         transfer_date = request.form.get('transfer_date') or date.today().isoformat()
 
+        # Hojjetichi amma damee kami akka irra jiru database irraa fiduun ofumaan qabanna (From Branch)
         emp = Employee.query.get(employee_id) if employee_id and str(employee_id).isdigit() else None
         from_b_id = emp.branch_id if emp else None
 
