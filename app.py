@@ -657,6 +657,7 @@ def evaluate_employee(id):
             next_promotion_status = request.form.get('next_promotion_status') or request.form.get('next_rank')
             next_promotion_date = request.form.get('next_promotion_date') or request.form.get('promotion_date')
             
+            # --- Qabxiiwwan kallattiidhaan Employee table irratti save godhamuu isaanii mirkaneessuu ---
             emp.perf_score = perf
             emp.edu_score = edu
             emp.discipline_score = disc
@@ -669,20 +670,32 @@ def evaluate_employee(id):
 
             reason_text = f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}"
             
-            transfer_data = {
-                'employee_id': emp.id,
-                'reason': reason_text,
-                'transfer_date': datetime.utcnow(),
-                'status': 'Pending'
-            }
-            if hasattr(Transfer, 'to_branch_id'):
-                transfer_data['to_branch_id'] = emp.branch_id
-            if hasattr(Transfer, 'from_branch_id'):
-                transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
+            # Check yoo transfer record duraanii (Pending) jiru ta'e update gochuu, yoo hin jirre haaraa uumuu
+            existing_transfer = Transfer.query.filter(
+                Transfer.employee_id == emp.id,
+                Transfer.reason.ilike('%Gaaffii Gonfoo%'),
+                Transfer.status == 'Pending'
+            ).first()
 
             create_local_backup()
-            new_transfer = Transfer(**transfer_data)
-            db.session.add(new_transfer)
+            if existing_transfer:
+                existing_transfer.reason = reason_text
+                existing_transfer.transfer_date = datetime.utcnow()
+            else:
+                transfer_data = {
+                    'employee_id': emp.id,
+                    'reason': reason_text,
+                    'transfer_date': datetime.utcnow(),
+                    'status': 'Pending'
+                }
+                if hasattr(Transfer, 'to_branch_id'):
+                    transfer_data['to_branch_id'] = emp.branch_id
+                if hasattr(Transfer, 'from_branch_id'):
+                    transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
+                
+                new_transfer = Transfer(**transfer_data)
+                db.session.add(new_transfer)
+
             db.session.commit()
             
             flash(f"Madaalliin hojjetaa {emp.full_name} milkaa\'inaan galmaa'ee Qabxii Total (%): {total_score:.2f} ta'uun galmeeffameera!", 'success')

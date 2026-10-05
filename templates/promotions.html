@@ -85,14 +85,15 @@
                     <tbody>
                         {% if promotions %}
                             {% for tr in promotions %}
+                            {% set emp = tr.employee %}
                             <tr>
                                 <td>{{ loop.index }}</td>
-                                <td>{{ tr.employee.rank.name if tr.employee and tr.employee.rank else '-' }}</td>
-                                <td class="text-start fw-bold">{{ tr.employee.full_name if tr.employee else 'N/A' }}</td>
+                                <td>{{ emp.rank.name if emp and emp.rank else '-' }}</td>
+                                <td class="text-start fw-bold">{{ emp.full_name if emp else 'N/A' }}</td>
                                 <td>
                                     {% set b_name = '-' %}
-                                    {% if tr.employee and tr.employee.branch %}
-                                        {% set b_name = tr.employee.branch.name %}
+                                    {% if emp and emp.branch %}
+                                        {% set b_name = emp.branch.name %}
                                     {% elif tr.to_branch_id and all_branches %}
                                         {% for b in all_branches %}
                                             {% if b.id|string == tr.to_branch_id|string %}
@@ -102,24 +103,24 @@
                                     {% endif %}
                                     {{ b_name }}
                                 </td>
-                                <td>{{ tr.employee.job_position if tr.employee and tr.employee.job_position else '-' }}</td>
-                                <td>{{ tr.employee.gender if tr.employee and tr.employee.gender else '-' }}</td>
-                                <td>{{ tr.employee.birth_date if tr.employee and tr.employee.birth_date else '-' }}</td>
-                                <td>{{ tr.employee.rank_date if tr.employee and tr.employee.rank_date else '-' }}</td>
-                                <td>{{ tr.employee.next_promotion_date if tr.employee and tr.employee.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-') }}</td>
-                                <td>{{ tr.employee.education_level if tr.employee and tr.employee.education_level else '-' }}</td>
-                                <td>{{ tr.employee.field_of_study if tr.employee and tr.employee.field_of_study else '-' }}</td>
+                                <td>{{ emp.job_position if emp and emp.job_position else '-' }}</td>
+                                <td>{{ emp.gender if emp and emp.gender else '-' }}</td>
+                                <td>{{ emp.birth_date if emp and emp.birth_date else '-' }}</td>
+                                <td>{{ emp.rank_date if emp and emp.rank_date else '-' }}</td>
+                                <td>{{ emp.next_promotion_date if emp and emp.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-') }}</td>
+                                <td>{{ emp.education_level if emp and emp.education_level else '-' }}</td>
+                                <td>{{ emp.field_of_study if emp and emp.field_of_study else '-' }}</td>
                                 
-                                <!-- Qabxiiwwan Madaallii -->
-                                <td>{{ tr.employee.perf_score if tr.employee else '0.00' }}</td>
-                                <td>{{ tr.employee.edu_score if tr.employee else '0.00' }}</td>
-                                <td>{{ tr.employee.discipline_score if tr.employee else '0.00' }}</td>
-                                <td>{{ tr.employee.law_score if tr.employee else '0.00' }}</td>
-                                <td>{{ tr.employee.experience_score if tr.employee else '0.00' }}</td>
-                                <td>{{ tr.employee.service_score if tr.employee else '0.00' }}</td>
+                                <!-- Qabxiiwwan Madaallii (Fallbacks to ensure numbers show properly) -->
+                                <td>{{ emp.perf_score if emp and emp.perf_score is not none else '0.00' }}</td>
+                                <td>{{ emp.edu_score if emp and emp.edu_score is not none else '0.00' }}</td>
+                                <td>{{ emp.discipline_score if emp and emp.discipline_score is not none else '0.00' }}</td>
+                                <td>{{ emp.law_score if emp and emp.law_score is not none else '0.00' }}</td>
+                                <td>{{ emp.experience_score if emp and emp.experience_score is not none else '0.00' }}</td>
+                                <td>{{ emp.service_score if emp and emp.service_score is not none else '0.00' }}</td>
                                 
-                                <td class="fw-bold text-success">{{ tr.employee.total_score if tr.employee else '0.00' }}%</td>
-                                <td class="fw-bold text-primary">{{ tr.employee.next_promotion_status if tr.employee else '-' }}</td>
+                                <td class="fw-bold text-success">{{ emp.total_score if emp and emp.total_score is not none else '0.00' }}%</td>
+                                <td class="fw-bold text-primary">{{ emp.next_promotion_status if emp and emp.next_promotion_status else '-' }}</td>
                                 <td>
                                     {% if tr.status == 'Approved' %}
                                         <span class="badge bg-success">Approved</span>
