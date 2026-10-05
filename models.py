@@ -47,18 +47,7 @@ class Employee(db.Model):
     education_level = db.Column(db.String(100), nullable=True)
     field_of_study = db.Column(db.String(150), nullable=True)
     job_position = db.Column(db.String(150), nullable=True)
-    status = db.Column(db.String(50), default='Active') # Active, Resigned, Terminated, etc.
-
-    # --- Qabxiiwwan Madaallii fi Gaaffii Gonfoo (Evaluation & Promotion Scores) ---
-    perf_score = db.Column(db.Float, default=0.0)         # Bu'uura Raawwii Hojii (25%)
-    edu_score = db.Column(db.Float, default=0.0)          # Sadarkaa Barumsaa (20%)
-    discipline_score = db.Column(db.Float, default=0.0)   # Naamusaa Poolisii (20%)
-    law_score = db.Column(db.Float, default=0.0)          # Seera fi Heera (10%)
-    experience_score = db.Column(db.Float, default=0.0)   # Muxannoo Hojii (10%)
-    service_score = db.Column(db.Float, default=0.0)      # Mira Tajaajiltummaa (15%)
-    total_score = db.Column(db.Float, default=0.0)        # Ida'amaa (%)
-    next_promotion_status = db.Column(db.String(100), nullable=True) # Gonfoo Itti Guddatuu
-    next_promotion_date = db.Column(db.String(50), nullable=True)    # Yeroo Itti Argatu
+    status = db.Column(db.String(50), default='Active')
 
     discipline_records = db.relationship('DisciplineRecord', backref='employee', cascade='all, delete-orphan', lazy=True)
     transfers = db.relationship('Transfer', backref='employee', cascade='all, delete-orphan', lazy=True)
@@ -79,4 +68,4 @@ class Transfer(db.Model):
     to_branch_id = db.Column(db.Integer, nullable=True)
     reason = db.Column(db.Text, nullable=True)
     transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(50), default='Pending') # Pending, Approved, Rejected
+    status = db.Column(db.String(50), default='Pending')
