@@ -249,6 +249,33 @@ def transfers():
     transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
     return render_template('transfers.html', transfers=transfers_list)
 
+@app.route('/add_transfer', methods=['POST'])
+@login_required
+def add_transfer():
+    try:
+        create_local_backup()
+        employee_id = request.form.get('employee_id')
+        from_branch_id = request.form.get('from_branch_id')
+        to_branch_id = request.form.get('to_branch_id')
+        reason = request.form.get('reason')
+        transfer_date = request.form.get('transfer_date') or date.today().isoformat()
+
+        new_transfer = Transfer(
+            employee_id=int(employee_id) if employee_id and str(employee_id).isdigit() else None,
+            from_branch_id=from_branch_id,
+            to_branch_id=to_branch_id,
+            reason=reason,
+            transfer_date=transfer_date,
+            status='Pending'
+        )
+        db.session.add(new_transfer)
+        db.session.commit()
+        flash("Gaaffiin jijjiirraa milkaa'inaan galmaa'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('transfers'))
+
 @app.route('/retired_employees')
 @login_required
 def retired_employees():
@@ -544,7 +571,7 @@ def export_promotions_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gonfoo (Promotions)')
+        df.to_excel(output, index=False, sheet_name='Gonfoo (Promotions)')
     output.seek(0)
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Promotions_Report.xlsx')
 
@@ -725,6 +752,3 @@ def add_discipline(employee_id):
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     return render_template('add_discipline.html', employee=employee)
-
-if __name__ == '__main__':
-    app.run(debug=True)
