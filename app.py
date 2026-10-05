@@ -664,7 +664,6 @@ def evaluate_employee(id):
     if request.method == 'POST':
         try:
             create_local_backup()
-            # Qabxiiwwan garaa gsaa HTML form irraa dhufan fudhachuu
             perf = float(request.form.get('performance_score') or request.form.get('perf_score') or 0.0)
             edu = float(request.form.get('education_score') or request.form.get('edu_score') or 0.0)
             disc = float(request.form.get('discipline_score') or 0.0)
@@ -672,13 +671,11 @@ def evaluate_employee(id):
             exp = float(request.form.get('experience_score') or 0.0)
             serv = float(request.form.get('service_delivery_score') or request.form.get('service_spirit_score') or request.form.get('service_score') or 0.0)
             
-            # Herrega ida'amaa (Total score calculation)
             total_score = perf + edu + disc + law + exp + serv
             
             next_promotion_status = request.form.get('next_promotion_status') or request.form.get('next_rank')
             next_promotion_date = request.form.get('next_promotion_date') or request.form.get('promotion_date')
             
-            # Galmee Employee irra kaa'uu
             emp.perf_score = perf
             emp.edu_score = edu
             emp.discipline_score = disc
@@ -689,9 +686,6 @@ def evaluate_employee(id):
             emp.next_promotion_status = next_promotion_status
             emp.next_promotion_date = next_promotion_date
 
-            # Gaaffii Gonfoo (Promotion) yoo ta'e dabaluu ykn yeroo barbaadame galmeessuu
-            reason_text = f"Gaaffii Gonfoo - Total Score: {total_score}"
-            
             db.session.commit()
             flash("Gamaaggamni hojjetichaa milkaa’inaan galmaa’eera!", 'success')
             return redirect(url_for('employees'))
@@ -700,6 +694,37 @@ def evaluate_employee(id):
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
+
+@app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
+@login_required
+def add_discipline(employee_id):
+    employee = Employee.query.get_or_404(employee_id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and employee.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            penalty_type = request.form.get('penalty_type')
+            offense_description = request.form.get('offense_description') or request.form.get('description')
+            action_date = request.form.get('action_date') or date.today().isoformat()
+
+            new_discipline = DisciplineRecord(
+                employee_id=employee.id,
+                penalty_type=penalty_type,
+                description=offense_description,
+                date=action_date
+            )
+            db.session.add(new_discipline)
+            db.session.commit()
+            flash("Naamusri hojjetaa milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return render_template('add_discipline.html', employee=employee)
 
 if __name__ == '__main__':
     app.run(debug=True)
