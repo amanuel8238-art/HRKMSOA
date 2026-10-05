@@ -418,6 +418,71 @@ def export_employees_excel():
     output.seek(0)
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Report.xlsx')
 
+@app.route('/promotions')
+@login_required
+def promotions():
+    branch_id_filter = request.args.get('branch_id')
+    all_branches = Branch.query.all()
+    
+    if current_user.role == 'admin':
+        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_id_int = int(branch_id_filter)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(
+                    Employee.branch_id == b_id_int,
+                    Transfer.to_branch_id == b_id_int
+                )
+            )
+        promotions_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_str = str(user_b)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            conditions = []
+            if from_col is not None:
+                conditions.append(db.cast(from_col, db.String) == b_str)
+            if to_col is not None:
+                conditions.append(db.cast(to_col, db.String) == b_str)
+            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            promotions_list = [t for t in branch_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
+        else:
+            promotions_list = []
+
+    return render_template('promotions.html', promotions=promotions_list, all_branches=all_branches, selected_branch=branch_id_filter)
+
+@app.route('/approve_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def approve_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        transfer_record.status = 'Approved'
+        db.session.commit()
+        flash("Gaaffiin gonfoo milkaa'inaan eeyyamameera (Approved)!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
+
+@app.route('/reject_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def reject_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        transfer_record.status = 'Rejected'
+        db.session.commit()
+        flash("Gaaffiin gonfoo dhorkameera (Rejected).", 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
+
 @app.route('/export_promotions_excel')
 @login_required
 def export_promotions_excel():
@@ -706,246 +771,7 @@ def transfers():
         else:
             transfers_list = []
 
-    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    all_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
-    all_employees = all_employees.all()
-    
-    return render_template('transfers.html', 
-                           transfers=transfers_list,
-                           transfers_count=len(transfers_list),
-                           branches=all_branches,
-                           employees=all_employees)
-
-@app.route('/add_transfer', methods=['POST'])
-@login_required
-def add_transfer():
-    employee_id = request.form.get('employee_id')
-    to_branch_id = request.form.get('to_branch_id')
-    reason = request.form.get('reason')
-    
-    emp = Employee.query.get_or_404(employee_id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-
-    try:
-        create_local_backup()
-        transfer_data = {
-            'employee_id': emp.id,
-            'reason': reason,
-            'transfer_date': datetime.utcnow(),
-            'status': 'Pending'
-        }
-        if hasattr(Transfer, 'to_branch_id'):
-            transfer_data['to_branch_id'] = int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id
-        if hasattr(Transfer, 'from_branch_id'):
-            transfer_data['from_branch_id'] = str(emp.branch_id) if emp.branch_id is not None else None
-
-        new_transfer = Transfer(**transfer_data)
-        db.session.add(new_transfer)
-        db.session.commit()
-        flash("Gaaffiin jijjiirraa (Transfer) milkaa'inaan galmaa'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-        
-    return redirect(url_for('transfers'))
-
-@app.route('/approve_transfer/<int:id>', methods=['POST'])
-@login_required
-def approve_transfer(id):
-    if current_user.role != 'admin':
-        abort(403)
-    t_obj = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        t_obj.status = 'Approved'
-        if hasattr(t_obj, 'to_branch_id') and t_obj.to_branch_id and t_obj.employee:
-            t_obj.employee.branch_id = t_obj.to_branch_id
-        db.session.commit()
-        flash("Gaaffiin jijjiirraa mirkanaa'eera (Approved)!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(request.referrer or url_for('transfers'))
-
-@app.route('/reject_transfer/<int:id>', methods=['POST'])
-@login_required
-def reject_transfer(id):
-    if current_user.role != 'admin':
-        abort(403)
-    t_obj = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        t_obj.status = 'Rejected'
-        db.session.commit()
-        flash("Gaaffiin jijjiirraa dhorkameera (Rejected)!", 'info')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(request.referrer or url_for('transfers'))
-
-
-# ==================== PROMOTIONS (GAAFFII GONFOO) ====================
-@app.route('/promotions')
-@login_required
-def promotions():
-    branch_id_filter = request.args.get('branch_id')
-    all_branches = Branch.query.all()
-    
-    if current_user.role == 'admin':
-        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            b_id_int = int(branch_id_filter)
-            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                db.or_(
-                    Employee.branch_id == b_id_int,
-                    Transfer.to_branch_id == b_id_int
-                )
-            )
-        promotions_list = query.all()
-    else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_str = str(user_b)
-            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
-            from_col = getattr(Transfer, 'from_branch_id', None)
-            conditions = []
-            if from_col is not None:
-                conditions.append(db.cast(from_col, db.String) == b_str)
-            if to_col is not None:
-                conditions.append(db.cast(to_col, db.String) == b_str)
-            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
-            promotions_list = [t for t in branch_transfers if t.reason and "Gaaffii Gonfoo" in t.reason]
-        else:
-            promotions_list = []
-
-    b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    all_active_employees = Employee.query.filter_by(status='Active') if current_user.role == 'admin' else Employee.query.filter_by(branch_id=b_val, status='Active')
-    all_active_employees = all_active_employees.all()
-
-    return render_template('promotions.html',
-                           promotions=promotions_list,
-                           promotions_count=len(promotions_list),
-                           branches=all_branches,
-                           employees=all_active_employees)
-
-@app.route('/approve_promotion/<int:id>', methods=['POST'])
-@login_required
-def approve_promotion(id):
-    if current_user.role != 'admin':
-        abort(403)
-    p_obj = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        p_obj.status = 'Approved'
-        if p_obj.employee and p_obj.reason:
-            for r in Rank.query.all():
-                if r.name in p_obj.reason:
-                    p_obj.employee.rank_id = r.id
-                    break
-        db.session.commit()
-        flash("Gaaffiin Gulantaa Gonfoo (Promotion) milkaa'inaan mirkanaa'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(request.referrer or url_for('promotions'))
-
-@app.route('/reject_promotion/<int:id>', methods=['POST'])
-@login_required
-def reject_promotion(id):
-    if current_user.role != 'admin':
-        abort(403)
-    p_obj = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        p_obj.status = 'Rejected'
-        db.session.commit()
-        flash("Gaaffiin Gulantaa Gonfoo (Promotion) dhorkameera!", 'info')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(request.referrer or url_for('promotions'))
-
-
-@app.route('/discipline')
-@login_required
-def discipline():
-    branch_id_filter = request.args.get('branch_id')
-    all_branches = Branch.query.all()
-    
-    if current_user.role == 'admin':
-        query = DisciplineRecord.query
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            b_id_int = int(branch_id_filter)
-            query = query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(Employee.branch_id == b_id_int)
-        records = query.all()
-    else:
-        user_b = current_user.branch_id
-        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        if b_val:
-            records = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(Employee.branch_id == b_val).all()
-        else:
-            records = []
-
-    return render_template('discipline.html', discipline_records=records, branches=all_branches)
-
-@app.route('/users')
-@login_required
-@admin_required
-def manage_users():
-    all_users = User.query.all()
-    all_branches = Branch.query.all()
-    return render_template('users.html', users=all_users, branches=all_branches)
-
-@app.route('/add_user', methods=['POST'])
-@login_required
-@admin_required
-def add_user():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    role = request.form.get('role', 'branch')
-    branch_id = request.form.get('branch_id')
-
-    if User.query.filter_by(username=username).first():
-        flash('Maqaan fayyadamaa kun kanaan dura jira, maaloo kan biraa filadhu.', 'danger')
-        return redirect(url_for('manage_users'))
-
-    try:
-        create_local_backup()
-        hashed_pw = generate_password_hash(password)
-        new_user = User(
-            username=username,
-            password=hashed_pw,
-            role=role,
-            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        flash("Fayyadamaan haaraan milkaa'inaan galmaa'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    return redirect(url_for('manage_users'))
-
-@app.route('/delete_user/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def delete_user(id):
-    user_to_del = User.query.get_or_404(id)
-    if user_to_del.username == 'admin':
-        flash('Fayyadamaan "admin" guddaan haqamuu hin danda\'u!', 'danger')
-        return redirect(url_for('manage_users'))
-    try:
-        create_local_backup()
-        db.session.delete(user_to_del)
-        db.session.commit()
-        flash("Fayyadamaan milkaa'inaan haqameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('manage_users'))
+    return render_template('transfers.html', transfers=transfers_list, all_branches=all_branches, selected_branch=branch_id_filter)
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
