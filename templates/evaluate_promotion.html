@@ -1,112 +1,74 @@
-{% extends "base.html" %}
+@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def evaluate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
 
-{% block title %}Gamaaggama Hojjetichaa - HRKMSO{% endblock %}
+    all_ranks = Rank.query.all()
+    if request.method == 'POST':
+        try:
+            # Maqaawwan input HTML irraa dhufan sirriitti fudhachuu
+            perf = float(request.form.get('performance_score') or 0.0)
+            edu = float(request.form.get('education_score') or 0.0)
+            disc = float(request.form.get('discipline_score') or 0.0)
+            law = float(request.form.get('law_score') or 0.0)
+            exp = float(request.form.get('experience_score') or 0.0)
+            serv = float(request.form.get('service_delivery_score') or 0.0)
+            
+            # Ida'ama Waliigalaa shallaguu (% 100 keessaa)
+            total_score = perf + edu + disc + law + exp + serv
+            
+            next_promotion_status = request.form.get('next_promotion_status')
+            next_promotion_date = request.form.get('next_promotion_date')
 
-{% block content %}
-<div class="container py-4">
-    <div class="card shadow-lg border-0 rounded-3 mb-4">
-        <div class="card-header bg-primary text-white py-3">
-            <h4 class="mb-0 fw-bold"><i class="fas fa-star-half-alt me-2"></i> Gamaaggama Hojjetichaa (HRKMSO)</h4>
-        </div>
-        <div class="card-body p-4">
-            <!-- Odeeffannoo Hojjetichaa -->
-            <div class="row mb-4 p-3 bg-light rounded border">
-                <div class="col-md-6">
-                    <p class="mb-2"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name }}</p>
-                    <p class="mb-2"><strong>Bakka Hojii:</strong> {{ employee.branch.name if employee.branch else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Gahee Hojii:</strong> {{ employee.position if employee.position else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Saala:</strong> {{ employee.gender }}</p>
-                </div>
-                <div class="col-md-6">
-                    <!-- Umrii Shallagamu (Bara Ammaa 2026 - Bara Dhalootaa) -->
-                    <p class="mb-2">
-                        <strong>Umrii:</strong> 
-                        {% if employee.birth_date %}
-                            {{ 2026 - (employee.birth_date[:4] | int) }} Waggaa
-                        {% else %}
-                            Hin ibsamne
-                        {% endif %}
-                    </p>
-                    <p class="mb-2"><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level if employee.education_level else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study if employee.field_of_study else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.last_promotion_date if employee.last_promotion_date else 'Hin ibsamne' }}</p>
-                </div>
-            </div>
+            reason_text = f"Gaaffii Gonfoo (Promotion Evaluation) - Qabxii Ida'amaa: {total_score:.2f}%, Sadarkaa Itti Aanu (Rank): {next_promotion_status}"
+            
+            # Gaaffii gonfoo duraanii (Pending) yoo jiraate update godha, yoo hin jirre haaraa uuma (Data kee eega)
+            existing_transfer = Transfer.query.filter(
+                Transfer.employee_id == emp.id,
+                Transfer.reason.ilike('%Gaaffii Gonfoo%'),
+                Transfer.status == 'Pending'
+            ).first()
 
-            <!-- Foomii Gamaaggamaa (Evaluation Form) -->
-            <form method="POST" action="{{ url_for('evaluate_employee', id=employee.id) }}">
-                <h5 class="fw-bold text-secondary mb-3">Ulaagaalee Gamaaggamaa</h5>
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
-                    <input type="number" step="0.01" name="performance_score" class="form-control" max="25" required>
-                </div>
+            create_local_backup()
+            if existing_transfer:
+                existing_transfer.reason = reason_text
+                existing_transfer.perf_score = perf
+                existing_transfer.edu_score = edu
+                existing_transfer.discipline_score = disc
+                existing_transfer.law_score = law
+                existing_transfer.experience_score = exp
+                existing_transfer.service_score = serv
+                existing_transfer.total_score = total_score
+                existing_transfer.next_promotion_status = next_promotion_status
+                existing_transfer.next_promotion_date = next_promotion_date
+                existing_transfer.transfer_date = datetime.utcnow()
+            else:
+                new_transfer = Transfer(
+                    employee_id=emp.id,
+                    reason=reason_text,
+                    perf_score=perf,
+                    edu_score=edu,
+                    discipline_score=disc,
+                    law_score=law,
+                    experience_score=exp,
+                    service_score=serv,
+                    total_score=total_score,
+                    next_promotion_status=next_promotion_status,
+                    next_promotion_date=next_promotion_date,
+                    status='Pending',
+                    to_branch_id=emp.branch_id,
+                    from_branch_id=str(emp.branch_id) if emp.branch_id is not None else None
+                )
+                db.session.add(new_transfer)
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                    <input type="number" step="0.01" name="education_score" class="form-control" max="20" required>
-                </div>
+            db.session.commit()
+            flash(f"Madaalliin hojjetaa {emp.full_name} milkaa'inaan galmaa'ee Qabxii Total (%): {total_score:.2f} ta'uun galmeeffameera!", 'success')
+            return redirect(url_for('promotions'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Herrega qabxii irratti dogoggorri uumameera: {str(e)}', 'danger')
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Naamusaa Poolisii (Max 20%):</label>
-                    <input type="number" step="0.01" name="discipline_score" class="form-control" max="20" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Seera fi Heera (Max 10%):</label>
-                    <input type="number" step="0.01" name="law_score" class="form-control" max="10" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Muxannoo Hojii (Max 10%):</label>
-                    <input type="number" step="0.01" name="experience_score" class="form-control" max="10" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 15%):</label>
-                    <input type="number" step="0.01" name="service_delivery_score" class="form-control" max="15" required>
-                </div>
-
-                <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Input Date) -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</label>
-                    <input type="date" name="next_promotion_date" class="form-control" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
-                </div>
-
-                <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu (Filannoo Goonfoo / Rank) -->
-                <div class="p-3 bg-light rounded border mb-4">
-                    <p class="mb-3 fs-5"><strong>Ida'ama Waliigalaa:</strong> <span class="text-success fw-bold">{{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }} / 100%</span></p>
-                    
-                    <div class="mb-0">
-                        <label class="form-label fw-bold text-primary">Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</label>
-                        <select name="next_promotion_status" class="form-select">
-                            <option value="">-- Sadarkaa Filadhu --</option>
-                            <option value="Konstabilii" {% if employee.next_promotion_status == "Konstabilii" %}selected{% endif %}>Konstabilii</option>
-                            <option value="Gargaaraa Sajjiin" {% if employee.next_promotion_status == "Gargaaraa Sajjiin" %}selected{% endif %}>Gargaaraa Sajjiin</option>
-                            <option value="It/A/Sajjiin" {% if employee.next_promotion_status == "It/A/Sajjiin" %}selected{% endif %}>It/A/Sajjiin</option>
-                            <option value="Sajjiin" {% if employee.next_promotion_status == "Sajjiin" %}selected{% endif %}>Sajjiin</option>
-                            <option value="Sajjiin Olaanaa" {% if employee.next_promotion_status == "Sajjiin Olaanaa" %}selected{% endif %}>Sajjiin Olaanaa</option>
-                            <option value="Gargaaraa Inspeektera" {% if employee.next_promotion_status == "Gargaaraa Inspeektera" %}selected{% endif %}>Gargaaraa Inspeektera</option>
-                            <option value="Itti/A/Inspeektera" {% if employee.next_promotion_status == "Itti/A/Inspeektera" %}selected{% endif %}>Itti/A/Inspeektera</option>
-                            <option value="Inspeektera" {% if employee.next_promotion_status == "Inspeektera" %}selected{% endif %}>Inspeektera</option>
-                            <option value="Inspeektera Olaanaa" {% if employee.next_promotion_status == "Inspeektera Olaanaa" %}selected{% endif %}>Inspeektera Olaanaa</option>
-                            <option value="Itt/A/Komaandara" {% if employee.next_promotion_status == "Itt/A/Komaandara" %}selected{% endif %}>Itt/A/Komaandara</option>
-                            <option value="Komaandara" {% if employee.next_promotion_status == "Komaandara" %}selected{% endif %}>Komaandara</option>
-                            <option value="Gargaaraa Komishinaraa" {% if employee.next_promotion_status == "Gargaaraa Komishinaraa" %}selected{% endif %}>Gargaaraa Komishinaraa</option>
-                            <option value="Itti Aanaa Komishinaraa" {% if employee.next_promotion_status == "Itti Aanaa Komishinaraa" %}selected{% endif %}>Itti Aanaa Komishinaraa</option>
-                            <option value="Komishinaraa" {% if employee.next_promotion_status == "Komishinaraa" %}selected{% endif %}>Komishinaraa</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                    <a href="{{ url_for('employees') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-1"></i> Duubatti Deebi'i
-                    </a>
-                    <button type="submit" class="btn btn-success fw-bold px-4">Gamaaggama Galchi / Lakkaa'i</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
+    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
