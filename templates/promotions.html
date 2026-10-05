@@ -110,16 +110,16 @@
                                 <td>{{ tr.employee.education_level if tr.employee and tr.employee.education_level else '-' }}</td>
                                 <td>{{ tr.employee.field_of_study if tr.employee and tr.employee.field_of_study else '-' }}</td>
                                 
-                                <!-- Qabxiiwwan Madaallii -->
-                                <td>{{ tr.perf_score|default(tr.employee.perf_score|default('0.00', true), true) }}</td>
-                                <td>{{ tr.edu_score|default(tr.employee.edu_score|default('0.00', true), true) }}</td>
-                                <td>{{ tr.discipline_score|default(tr.employee.discipline_score|default('0.00', true), true) }}</td>
-                                <td>{{ tr.law_score|default(tr.employee.law_score|default('0.00', true), true) }}</td>
-                                <td>{{ tr.experience_score|default(tr.employee.experience_score|default('0.00', true), true) }}</td>
-                                <td>{{ tr.service_score|default(tr.employee.service_score|default('0.00', true), true) }}</td>
+                                <!-- Qabxiiwwan Madaallii (Sirreeffaman) -->
+                                <td>{{ tr.employee.perf_score if tr.employee else '0.00' }}</td>
+                                <td>{{ tr.employee.edu_score if tr.employee else '0.00' }}</td>
+                                <td>{{ tr.employee.discipline_score if tr.employee else '0.00' }}</td>
+                                <td>{{ tr.employee.law_score if tr.employee else '0.00' }}</td>
+                                <td>{{ tr.employee.experience_score if tr.employee else '0.00' }}</td>
+                                <td>{{ tr.employee.service_score if tr.employee else '0.00' }}</td>
                                 
-                                <td class="fw-bold text-success">{{ tr.total_score|default(tr.employee.total_score|default('0.00', true), true) }}%</td>
-                                <td class="fw-bold text-primary">{{ tr.employee.next_promotion_status|default(tr.next_rank|default('-', true), true) }}</td>
+                                <td class="fw-bold text-success">{{ tr.employee.total_score if tr.employee else '0.00' }}%</td>
+                                <td class="fw-bold text-primary">{{ tr.employee.next_promotion_status if tr.employee else '-' }}</td>
                                 <td>
                                     {% if tr.status == 'Approved' %}
                                         <span class="badge bg-success">Approved</span>
