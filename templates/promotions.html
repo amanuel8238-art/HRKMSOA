@@ -110,7 +110,7 @@
                                 <td>{{ tr.employee.education_level if tr.employee and tr.employee.education_level else '-' }}</td>
                                 <td>{{ tr.employee.field_of_study if tr.employee and tr.employee.field_of_study else '-' }}</td>
                                 
-                                <!-- Qabxiiwwan Madaallii (Transfer/Employee model irraa kallattiidhaan fudhachuu) -->
+                                <!-- Qabxiiwwan Madaallii -->
                                 <td>{{ tr.perf_score|default(tr.employee.perf_score|default('0.00', true), true) }}</td>
                                 <td>{{ tr.edu_score|default(tr.employee.edu_score|default('0.00', true), true) }}</td>
                                 <td>{{ tr.discipline_score|default(tr.employee.discipline_score|default('0.00', true), true) }}</td>
@@ -131,13 +131,18 @@
                                 </td>
                                 {% if current_user.role == 'admin' %}
                                 <td>
-                                    <form action="{{ url_for('update_transfer_status', id=tr.id) }}" method="POST" class="d-inline">
-                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-                                            <option value="Pending" {% if tr.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                            <option value="Approved" {% if tr.status == 'Approved' %}selected{% endif %}>Approve</option>
-                                            <option value="Rejected" {% if tr.status == 'Rejected' %}selected{% endif %}>Reject</option>
-                                        </select>
-                                    </form>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <form action="{{ url_for('approve_promotion', id=tr.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                                <i class="fas fa-check"></i> Eeyyamu
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('reject_promotion', id=tr.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Reject">
+                                                <i class="fas fa-times"></i> Dhorkuu
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                                 {% endif %}
                             </tr>
