@@ -635,6 +635,24 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
+# --- ROUTEHAARAA: Hojjetaa haquuf (Delete Employee) ---
+@app.route('/delete_employee/<int:id>', methods=['POST'])
+@login_required
+def delete_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+    try:
+        create_local_backup()
+        db.session.delete(emp)
+        db.session.commit()
+        flash('Hojjetaan milkaa’inaan haqameera.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('employees'))
+
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def evaluate_employee(id):
