@@ -49,6 +49,19 @@ class Employee(db.Model):
     job_position = db.Column(db.String(150), nullable=True)
     status = db.Column(db.String(50), default='Active')
 
+    # Qabxiiwwan Madaallii (Evaluation Scores) haaraa itti dabalaman
+    perf_score = db.Column(db.Float, default=0.0)
+    edu_score = db.Column(db.Float, default=0.0)
+    discipline_score = db.Column(db.Float, default=0.0)
+    law_score = db.Column(db.Float, default=0.0)
+    experience_score = db.Column(db.Float, default=0.0)
+    service_score = db.Column(db.Float, default=0.0)
+    total_score = db.Column(db.Float, default=0.0)
+    
+    # Gonfoo Itti Aanu fi Guyyaa
+    next_promotion_status = db.Column(db.String(100), nullable=True)
+    next_promotion_date = db.Column(db.String(50), nullable=True)
+
     discipline_records = db.relationship('DisciplineRecord', backref='employee', cascade='all, delete-orphan', lazy=True)
     transfers = db.relationship('Transfer', backref='employee', cascade='all, delete-orphan', lazy=True)
 
