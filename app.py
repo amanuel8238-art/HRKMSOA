@@ -635,7 +635,7 @@ def edit_employee(id):
     all_ranks = Rank.query.all()
     return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
 
-@app.route('/delete_employee/<int:id>', methods=['POST'], endpoint='delete_employee_route')
+@app.route('/delete_employee/<int:id>', methods=['POST'], endpoint='delete_employee')
 @login_required
 def delete_employee(id):
     emp = Employee.query.get_or_404(id)
@@ -718,7 +718,7 @@ def add_discipline(employee_id):
             )
             db.session.add(new_discipline)
             db.session.commit()
-            flash("Naamusri hojjetaa milkaa'inaan galmaa'eera!", 'success')
+            flash("Galmeen adaba/ajaa'ibaa milkaa'inaan galmaa'eera!", 'success')
             return redirect(url_for('employees'))
         except Exception as e:
             db.session.rollback()
