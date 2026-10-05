@@ -430,6 +430,10 @@ def ranks():
 @login_required
 def export_ranks_excel():
     ranks_data = Rank.query.all()
+    if not ranks_data:
+        flash("Odeeffannoon ykn daataan gulantaalee (ranks) waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('ranks'))
+
     data = []
     for idx, r in enumerate(ranks_data, start=1):
         data.append({
@@ -438,12 +442,7 @@ def export_ranks_excel():
             'Ibsaa': r.description if hasattr(r, 'description') and r.description else '-'
         })
         
-    if not data:
-        df = pd.DataFrame(columns=['Lakk.', 'Maqaa Gulantaa (Rank)', 'Ibsaa'])
-        df.loc[0] = ['-', 'Daataan hin jiru', '-']
-    else:
-        df = pd.DataFrame(data)
-
+    df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Gulantaalee')
@@ -471,6 +470,10 @@ def export_employees_excel():
         query = query.filter(Employee.full_name.ilike(f'%{search_query}%'))
 
     emps = query.all()
+    if not emps:
+        flash("Odeeffannoon ykn daataan hojjettootaa filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('employees'))
+
     data = []
     for idx, e in enumerate(emps, start=1):
         branch_name = e.branch.name if e.branch else 'N/A'
@@ -488,15 +491,7 @@ def export_employees_excel():
             'Status': e.status if e.status else '-'
         })
         
-    if not data:
-        df = pd.DataFrame(columns=[
-            'Lakk.', 'ID Addaa', 'Maqaa Guutuu', 'Saala', 'Damee (Branch)', 
-            'Gulantaa / Rank', 'Gita Hojii', 'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Status'
-        ])
-        df.loc[0] = ['-', '-', 'Daataan hin jiru', '-', '-', '-', '-', '-', '-', '-']
-    else:
-        df = pd.DataFrame(data)
-
+    df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Miseensota')
@@ -590,29 +585,25 @@ def export_promotions_excel():
         else:
             promotions_list = []
 
-    data = []
-    if promotions_list:
-        for idx, p in enumerate(promotions_list, start=1):
-            emp = p.employee if hasattr(p, 'employee') else Employee.query.get(p.employee_id)
-            emp_name = emp.full_name if emp else 'N/A'
-            branch_name = emp.branch.name if emp and emp.branch else 'N/A'
-            data.append({
-                'Lakk.': idx,
-                'Maqaa Hojjetaa': emp_name,
-                'Damee (Branch)': branch_name,
-                'Sababa / Ibsaa': p.reason if hasattr(p, 'reason') else '-',
-                'Haala (Status)': p.status if hasattr(p, 'status') else '-',
-                'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
-            })
-    
-    if not data:
-        df = pd.DataFrame(columns=[
-            'Lakk.', 'Maqaa Hojjetaa', 'Damee (Branch)', 'Sababa / Ibsaa', 'Haala (Status)', 'Guyyaa'
-        ])
-        df.loc[0] = ['-', 'Daataan hin jiru', '-', '-', '-', '-']
-    else:
-        df = pd.DataFrame(data)
+    if not promotions_list:
+        flash("Odeeffannoon ykn daataan gonfoo (promotions) waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('promotions'))
 
+    data = []
+    for idx, p in enumerate(promotions_list, start=1):
+        emp = p.employee if hasattr(p, 'employee') else Employee.query.get(p.employee_id)
+        emp_name = emp.full_name if emp else 'N/A'
+        branch_name = emp.branch.name if emp and emp.branch else 'N/A'
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Hojjetaa': emp_name,
+            'Damee (Branch)': branch_name,
+            'Sababa / Ibsaa': p.reason if hasattr(p, 'reason') else '-',
+            'Haala (Status)': p.status if hasattr(p, 'status') else '-',
+            'Guyyaa': str(p.transfer_date) if hasattr(p, 'transfer_date') else '-'
+        })
+    
+    df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(output, index=False, sheet_name='Gonfoo (Promotions)')
