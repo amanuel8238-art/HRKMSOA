@@ -14,41 +14,61 @@
                 <h2 class="mb-0">Gaaffii Gulantaa Gonfoo (Promotions) - Gabatee Madaallii</h2>
             </div>
             <div>
-                <a href="{{ url_for('export_promotions_excel', branch_id=selected_branch) }}" class="btn btn-success">
+                <a href="{{ url_for('export_promotions_excel', branch_id=selected_branch, status=selected_status) }}" class="btn btn-success">
                     <i class="fas fa-file-excel"></i> Excel-tti Buufachuuf (Export)
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Admin Branch Filter -->
-    {% if current_user.role == 'admin' %}
+    <!-- Filter Section (Branch & Status Filter) -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-12">
             <form method="GET" action="{{ url_for('promotions') }}" class="card shadow-sm p-3 bg-light">
-                <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
-                <div class="input-group">
-                    <select name="branch_id" id="branch_id" class="form-select">
-                        <option value="">Dameewwan Hunda (All Branches)</option>
-                        {% if all_branches %}
-                            {% for b in all_branches %}
-                                <option value="{{ b.id }}" {% if selected_branch and selected_branch|string == b.id|string %}selected{% endif %}>
-                                    {{ b.name }}
-                                </option>
-                            {% endfor %}
-                        {% endif %}
-                    </select>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-filter"></i> Filadhu
-                    </button>
-                    {% if selected_branch %}
-                        <a href="{{ url_for('promotions') }}" class="btn btn-outline-secondary">Haqi (Reset)</a>
+                <div class="row g-3 align-items-end">
+                    <!-- Branch Filter (Yoo Admin ta'e) -->
+                    {% if current_user.role == 'admin' %}
+                    <div class="col-md-5">
+                        <label for="branch_id" class="form-label fw-bold">Damee Dameen Filadhu (Filter by Branch):</label>
+                        <select name="branch_id" id="branch_id" class="form-select">
+                            <option value="">Dameewwan Hunda (All Branches)</option>
+                            {% if all_branches %}
+                                {% for b in all_branches %}
+                                    <option value="{{ b.id }}" {% if selected_branch and selected_branch|string == b.id|string %}selected{% endif %}>
+                                        {{ b.name }}
+                                    </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
                     {% endif %}
+
+                    <!-- Status Filter (Pending, Approved, Rejected, All) -->
+                    <div class="col-md-{% if current_user.role == 'admin' %}5{% else %}8{% endif %}">
+                        <label for="status" class="form-label fw-bold">Haalaan Filadhu (Filter by Status):</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Kanneen Furmaata Eeggatan (Pending)</option>
+                            <option value="Approved" {% if selected_status == 'Approved' %}selected{% endif %}>Kan Eeyyamaman (Approved)</option>
+                            <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Kan Dhorkaman (Rejected)</option>
+                            <option value="All" {% if selected_status == 'All' %}selected{% endif %}>Hunda (All History)</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filadhu
+                        </button>
+                        {% if selected_branch or (selected_status and selected_status != 'Pending') %}
+                            <a href="{{ url_for('promotions') }}" class="btn btn-outline-secondary" title="Haqi (Reset)">
+                                <i class="fas fa-undo"></i>
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </form>
         </div>
     </div>
-    {% endif %}
 
     <!-- Gabatee Bal'aa (Excel-like Table Format) -->
     <div class="card shadow-sm">
@@ -111,7 +131,7 @@
                                 <td>{{ emp.education_level if emp and emp.education_level else '-' }}</td>
                                 <td>{{ emp.field_of_study if emp and emp.field_of_study else '-' }}</td>
                                 
-                                <!-- Qabxiiwwan Madaallii (Fallbacks to ensure numbers show properly) -->
+                                <!-- Qabxiiwwan Madaallii -->
                                 <td>{{ emp.perf_score if emp and emp.perf_score is not none else '0.00' }}</td>
                                 <td>{{ emp.edu_score if emp and emp.edu_score is not none else '0.00' }}</td>
                                 <td>{{ emp.discipline_score if emp and emp.discipline_score is not none else '0.00' }}</td>

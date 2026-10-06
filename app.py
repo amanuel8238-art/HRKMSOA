@@ -693,10 +693,16 @@ def export_employees_excel():
 @login_required
 def promotions():
     branch_id_filter = request.args.get('branch_id')
+    status_filter = request.args.get('status', 'Pending') # Default-dhaan Pending qofa fiduuf
     all_branches = Branch.query.all()
     
+    query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+    
+    # Status-iin filachuuf (Pending, Approved, Rejected, ykn All)
+    if status_filter and status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+
     if current_user.role == 'admin':
-        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
         if branch_id_filter and str(branch_id_filter).isdigit():
             b_id_int = int(branch_id_filter)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
@@ -710,22 +716,29 @@ def promotions():
         user_b = current_user.branch_id
         if user_b:
             branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
-            promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                Employee.branch_id == branch_id_val,
-                Transfer.reason.ilike('%Gaaffii Gonfoo%')
+            promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                Employee.branch_id == branch_id_val
             ).all()
         else:
             promotions_list = []
 
-    return render_template('promotions.html', promotions=promotions_list, all_branches=all_branches, selected_branch=branch_id_filter)
+    return render_template('promotions.html', 
+                           promotions=promotions_list, 
+                           all_branches=all_branches, 
+                           selected_branch=branch_id_filter, 
+                           selected_status=status_filter)
 
 @app.route('/export_promotions_excel')
 @login_required
 def export_promotions_excel():
     branch_id_filter = request.args.get('branch_id')
+    status_filter = request.args.get('status', 'Pending')
     
+    query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+    if status_filter and status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+
     if current_user.role == 'admin':
-        query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
         if branch_id_filter and str(branch_id_filter).isdigit():
             b_id_int = int(branch_id_filter)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
@@ -739,9 +752,8 @@ def export_promotions_excel():
         user_b = current_user.branch_id
         if user_b:
             branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
-            promotions_list = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                Employee.branch_id == branch_id_val,
-                Transfer.reason.ilike('%Gaaffii Gonfoo%')
+            promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                Employee.branch_id == branch_id_val
             ).all()
         else:
             promotions_list = []
