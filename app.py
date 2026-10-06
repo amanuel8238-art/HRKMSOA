@@ -113,13 +113,12 @@ with app.app_context():
 def get_retired_employees_list(active_employees):
     retired_list = []
     
-    # Guyyaa har'aa kaasuun gara Kalandarii Itiyoophiyaatti jijjiirree bara ammaa (Ethiopian Year) argachuu
     today = date.today()
     try:
         eth_today = to_ethiopian(today.year, today.month, today.day)
-        current_eth_year = eth_today[0] # Bara Itiyoophiyaa (fkn: 2019)
+        current_eth_year = eth_today[0] 
     except Exception:
-        current_eth_year = today.year - 8 # Yoo libraryn walqabate dogoggorri uumame
+        current_eth_year = today.year - 8 
         
     for e in active_employees:
         if e.birth_date:
@@ -143,11 +142,8 @@ def get_retired_employees_list(active_employees):
                         b_date = date(year, month, day)
                 
                 if b_date:
-                    birth_year = b_date.year # Kunis bara dhalootaa Itiyoophiyaatiin ta'uu qaba
-                    
-                    # Umrii herreguu (Bara Ammaa Itiyoophiyaa - Bara Dhalootaa Itiyoophiyaa)
+                    birth_year = b_date.year 
                     age = current_eth_year - birth_year
-                    
                     if age >= 55:
                         retired_list.append((e, age))
             except Exception:
@@ -365,6 +361,68 @@ def activate_employee(id):
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(request.referrer or url_for('employees'))
+
+@app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            emp.full_name = request.form.get('full_name')
+            emp.unique_id = request.form.get('unique_id')
+            emp.gender = request.form.get('gender')
+            
+            if current_user.role == 'admin':
+                b_id = request.form.get('branch_id')
+                if b_id:
+                    emp.branch_id = int(b_id) if str(b_id).isdigit() else b_id
+
+            rank_input = request.form.get('rank_id') or request.form.get('rank')
+            if rank_input:
+                emp.rank_id = resolve_rank_id(rank_input)
+
+            emp.rank_date = request.form.get('rank_date') or emp.rank_date
+            emp.hire_date = request.form.get('hire_date') or emp.hire_date
+            emp.birth_date = request.form.get('birth_date') or emp.birth_date
+            
+            emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
+            emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
+            emp.responsibility_allowance = float(request.form.get('responsibility_allowance') or 0.0)
+            emp.other_allowance = float(request.form.get('other_allowance') or 0.0)
+            
+            emp.education_level = request.form.get('education_level') or emp.education_level
+            emp.field_of_study = request.form.get('field_of_study') or emp.field_of_study
+
+            db.session.commit()
+            flash("Odeeffannoon hojjetaa milkaa'inaan fooyya'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    all_branches = Branch.query.all()
+    all_ranks = Rank.query.all()
+    return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
+
+@app.route('/delete_employee/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_employee(id):
+    emp = Employee.query.get_or_404(id)
+    try:
+        create_local_backup()
+        db.session.delete(emp)
+        db.session.commit()
+        flash("Hojjetaan milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('employees'))
 
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
