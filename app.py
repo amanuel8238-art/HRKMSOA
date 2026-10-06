@@ -84,7 +84,6 @@ with app.app_context():
     db.create_all()
     create_local_backup()
     
-    # PostgreSQL irratti columns haaraa dhabaman ofumaan dabaluuf (Migration)
     import sqlalchemy as sa
     engine = db.engine
     inspector = sa.inspect(engine)
@@ -527,7 +526,7 @@ def add_discipline(employee_id):
             create_local_backup()
             penalty_type = request.form.get('penalty_type')
             description = request.form.get('description', '')
-            d_date = request.form.get('date') or date.today().isoformat()
+            d_date = request.form.get('date') or request.form.get('offense_date') or date.today().isoformat()
 
             new_record = DisciplineRecord(
                 employee_id=emp.id,
@@ -544,6 +543,56 @@ def add_discipline(employee_id):
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     return render_template('add_discipline.html', employee=emp)
+
+# OF-EEGGANNOO (WARNINGS) ROUTE - Kan akeekkachiisa qofa qaban fi branch filter qabu
+@app.route('/warnings')
+@login_required
+def warnings():
+    branch_id_filter = request.args.get('branch_id')
+    
+    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
+        DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')
+    )
+    
+    if current_user.role == 'admin':
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.filter(Employee.branch_id == int(branch_id_filter))
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+            
+    records = query.all()
+    all_branches = Branch.query.all()
+    return render_template('warnings.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
+
+# ADABBII (PENALTIES) ROUTE - Kan adabbii cimaa (akeekkachiisa ala) qaban fi branch filter qabu
+@app.route('/penalties')
+@login_required
+def penalties():
+    branch_id_filter = request.args.get('branch_id')
+    
+    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
+        db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
+    )
+    
+    if current_user.role == 'admin':
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.filter(Employee.branch_id == int(branch_id_filter))
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+            
+    records = query.all()
+    all_branches = Branch.query.all()
+    return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
 
 @app.route('/employees')
 @login_required
@@ -846,7 +895,6 @@ def export_promotions_excel():
         flash("Odeeffannoon ykn daataan gaaffii gonfoo filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
         return redirect(url_for('promotions'))
 
-    # Bara Itiyoophiyaa ammaa herreguuf
     today = date.today()
     try:
         eth_today = to_ethiopian(today.year, today.month, today.day)
@@ -861,7 +909,6 @@ def export_promotions_excel():
         if emp and emp.branch:
             b_name = emp.branch.name
 
-        # Umrii bara Itiyoophiyaatiin herreguuf
         age = '-'
         if emp and emp.birth_date:
             try:
