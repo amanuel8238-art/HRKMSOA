@@ -611,6 +611,60 @@ def employees():
     all_ranks = Rank.query.all()
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
 
+@app.route('/add_employee', methods=['POST'])
+@login_required
+def add_employee():
+    full_name = request.form.get('full_name')
+    u_id = request.form.get('unique_id')
+    gender = request.form.get('gender')
+    
+    unique_id_val = u_id.strip() if u_id and u_id.strip() != '' else None
+
+    if current_user.role == 'admin':
+        branch_id = request.form.get('branch_id')
+    else:
+        branch_id = current_user.branch_id
+
+    rank_input = request.form.get('rank_id') or request.form.get('rank')
+    rank_id = resolve_rank_id(rank_input)
+
+    if not full_name:
+        flash("Maqaa guutuu hojjetaa galchuun dirqama!", "danger")
+        return redirect(url_for('employees'))
+
+    try:
+        create_local_backup()
+        new_emp = Employee(
+            full_name=full_name,
+            unique_id=unique_id_val,
+            gender=gender or 'Dhiira',
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
+            rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
+            rank_date=request.form.get('rank_date') or None,
+            hire_date=request.form.get('hire_date') or None,
+            birth_date=request.form.get('birth_date') or None,
+            rank_salary=float(request.form.get('rank_salary') or 0.0),
+            location_allowance=float(request.form.get('location_allowance') or 0.0),
+            food_allowance=float(request.form.get('food_allowance') or 0.0),
+            responsibility_allowance=float(request.form.get('responsibility_allowance') or 0.0),
+            other_allowance=float(request.form.get('other_allowance') or 0.0),
+            education_level=request.form.get('education_level') or None,
+            field_of_study=request.form.get('field_of_study') or None,
+            job_position=request.form.get('job_position') or None,
+            status='Active'
+        )
+        db.session.add(new_emp)
+        db.session.commit()
+        flash("Hojjetaan haaraan milkaa'inaan galmaa'eera!", 'success')
+    except IntegrityError:
+        db.session.rollback()
+        flash("ID Addaa (Unique ID) kun duraanuu hojjetaa biraaf kennameera! Maaloo ID adda ta'e fayyadami.", 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
+    return redirect(url_for('employees'))
+
 @app.route('/ranks')
 @login_required
 def ranks():
@@ -724,7 +778,38 @@ def promotions():
     return render_template('promotions.html', 
                            promotions=promotions_list, 
                            all_branches=all_branches, 
-                           selected_branch=branch_id_filter)
+                           selected_branch=branch_id_filter,
+                           selected_status=status_filter)
+
+@app.route('/approve_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def approve_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        transfer_record.status = 'Approved'
+        db.session.commit()
+        flash("Gaaffiin gonfoo milkaa'inaan eeyyamameera (Approved)!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
+
+@app.route('/reject_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def reject_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        transfer_record.status = 'Rejected'
+        db.session.commit()
+        flash("Gaaffiin gonfoo dhorkameera (Rejected).", 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
 
 @app.route('/export_promotions_excel')
 @login_required
@@ -762,27 +847,41 @@ def export_promotions_excel():
         return redirect(url_for('promotions'))
 
     data = []
-    for idx, p in enumerate(promotions_list, start=1):
-        emp_name = p.employee.full_name if p.employee else 'N/A'
-        emp_unique_id = p.employee.unique_id if p.employee and p.employee.unique_id else '-'
-        branch_name = p.employee.branch.name if p.employee and p.employee.branch else 'N/A'
-        rank_name = p.employee.rank.name if p.employee and p.employee.rank else 'N/A'
-        
+    for index, tr in enumerate(promotions_list, start=1):
+        emp = tr.employee
+        b_name = '-'
+        if emp and emp.branch:
+            b_name = emp.branch.name
+
         data.append({
-            'Lakk.': idx,
-            'ID Addaa Hojjetaa': emp_unique_id,
-            'Maqaa Guutuu': emp_name,
-            'Damee (Branch)': branch_name,
-            'Gulantaa Ammaa': rank_name,
-            'Sababii / Ibsaa': p.reason if p.reason else '-',
-            'Guyyaa Gaaffii': p.transfer_date if p.transfer_date else '-',
-            'Sadarkaa (Status)': p.status if p.status else '-',
-            'Murtii / Ibsaa Eeyyamichaa': p.approval_reason if hasattr(p, 'approval_reason') and p.approval_reason else '-'
+            "Lak": index,
+            "Gonfa Ammaa Qabu": emp.rank.name if emp and emp.rank else '-',
+            "Maqaa Miseensotaa": emp.full_name if emp else '-',
+            "Bakka Hojii": b_name,
+            "Gahee Hojii": emp.job_position if emp and emp.job_position else '-',
+            "Saala": emp.gender if emp and emp.gender else '-',
+            "Umrii": emp.birth_date if emp and emp.birth_date else '-',
+            "Bara Gonfaa Dura Yeroo Itti Argate": emp.rank_date if emp and emp.rank_date else '-',
+            "Gonfaa Itti Aanu Yeroo Itti Argatu": emp.next_promotion_date if emp and emp.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-'),
+            "Sadarkaa Barumsaa": emp.education_level if emp and emp.education_level else '-',
+            "Gosa Barumsaa": emp.field_of_study if emp and emp.field_of_study else '-',
+            "Bu'uura Raawwii Hojii (25%)": emp.perf_score if emp and emp.perf_score is not None else '0.00',
+            "Sadarkaa Barumsaa (20%)": emp.edu_score if emp and emp.edu_score is not None else '0.00',
+            "Naamusaa Poolisii (20%)": emp.discipline_score if emp and emp.discipline_score is not None else '0.00',
+            "Seera fi Heera (10%)": emp.law_score if emp and emp.law_score is not None else '0.00',
+            "Muxannoo Hojii (10%)": emp.experience_score if emp and emp.experience_score is not None else '0.00',
+            "Mira Tajaajiltummaa (15%)": emp.service_score if emp and emp.service_score is not None else '0.00',
+            "Ida'amaa": f"{emp.total_score}%" if emp and emp.total_score is not None else '0.00%',
+            "Gonfoo Itti Guddatuu": emp.next_promotion_status if emp and emp.next_promotion_status else '-',
+            "Haala (Status)": tr.status if tr.status else 'Pending'
         })
         
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gaaffiiwwan_Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Promotions')
     output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Promotions_Report.xlsx')
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='Gaaffii_Gulantaa_Gonfoo.xlsx')
+
+if __name__ == '__main__':
+    app.run(debug=True)
