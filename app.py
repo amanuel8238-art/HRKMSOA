@@ -112,7 +112,6 @@ with app.app_context():
 
 def get_retired_employees_list(active_employees):
     retired_list = []
-    
     today = date.today()
     try:
         eth_today = to_ethiopian(today.year, today.month, today.day)
@@ -784,6 +783,7 @@ def add_employee():
     full_name = request.form.get('full_name')
     unique_id = request.form.get('unique_id')
     gender = request.form.get('gender')
+    
     if current_user.role == 'admin':
         branch_id = request.form.get('branch_id')
     else:
@@ -792,14 +792,18 @@ def add_employee():
     rank_input = request.form.get('rank_id') or request.form.get('rank')
     rank_id = resolve_rank_id(rank_input)
 
+    if not full_name:
+        flash("Maqaa guutuu hojjetaa galchuun dirqama!", "danger")
+        return redirect(url_for('employees'))
+
     try:
         create_local_backup()
         new_emp = Employee(
             full_name=full_name,
-            unique_id=unique_id,
-            gender=gender,
+            unique_id=unique_id or None,
+            gender=gender or 'Dhiira',
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
-            rank_id=rank_id,
+            rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             rank_date=request.form.get('rank_date') or None,
             hire_date=request.form.get('hire_date') or None,
             birth_date=request.form.get('birth_date') or None,
@@ -817,6 +821,7 @@ def add_employee():
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
     return redirect(url_for('employees'))
 
 if __name__ == '__main__':
