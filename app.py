@@ -6,6 +6,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, abo
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
+from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
 
@@ -373,7 +374,7 @@ def edit_employee(id):
         try:
             create_local_backup()
             emp.full_name = request.form.get('full_name')
-            emp.unique_id = request.form.get('unique_id')
+            emp.unique_id = request.form.get('unique_id') or None
             emp.gender = request.form.get('gender')
             
             if current_user.role == 'admin':
@@ -391,15 +392,20 @@ def edit_employee(id):
             
             emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
             emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
+            emp.food_allowance = float(request.form.get('food_allowance') or 0.0)
             emp.responsibility_allowance = float(request.form.get('responsibility_allowance') or 0.0)
             emp.other_allowance = float(request.form.get('other_allowance') or 0.0)
             
             emp.education_level = request.form.get('education_level') or emp.education_level
             emp.field_of_study = request.form.get('field_of_study') or emp.field_of_study
+            emp.job_position = request.form.get('job_position') or emp.job_position
 
             db.session.commit()
             flash("Odeeffannoon hojjetaa milkaa'inaan fooyya'eera!", 'success')
             return redirect(url_for('employees'))
+        except IntegrityError:
+            db.session.rollback()
+            flash("ID Addaa (Unique ID) kun duraanuu hojjetaa biraaf kennameera! Maaloo ID adda ta'e fayyadami.", 'danger')
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -495,7 +501,7 @@ def add_discipline(employee_id):
                 employee_id=emp.id,
                 penalty_type=penalty_type,
                 description=description,
-                date=d_date
+                date_given=d_date
             )
             db.session.add(new_record)
             db.session.commit()
@@ -721,7 +727,7 @@ def export_promotions_excel():
         data.append({
             'Lakk.': idx,
             'Maqaa Miseensotaa': emp_name,
-            'Bakka Hojii': branch_name,
+            'Damee (Branch)': branch_name,
             'Gahee Hojii': emp.job_position if emp and hasattr(emp, 'job_position') else '-',
             'Saala': emp.gender if emp and hasattr(emp, 'gender') else '-',
             'Umrii': '-',
@@ -781,9 +787,12 @@ def reject_promotion(id):
 @login_required
 def add_employee():
     full_name = request.form.get('full_name')
-    unique_id = request.form.get('unique_id')
+    u_id = request.form.get('unique_id')
     gender = request.form.get('gender')
     
+    # Unique ID yoo duwwaa ta'e None godhii qabachuuf
+    unique_id_val = u_id.strip() if u_id and u_id.strip() != '' else None
+
     if current_user.role == 'admin':
         branch_id = request.form.get('branch_id')
     else:
@@ -800,7 +809,7 @@ def add_employee():
         create_local_backup()
         new_emp = Employee(
             full_name=full_name,
-            unique_id=unique_id or None,
+            unique_id=unique_id_val,
             gender=gender or 'Dhiira',
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
@@ -809,15 +818,20 @@ def add_employee():
             birth_date=request.form.get('birth_date') or None,
             rank_salary=float(request.form.get('rank_salary') or 0.0),
             location_allowance=float(request.form.get('location_allowance') or 0.0),
+            food_allowance=float(request.form.get('food_allowance') or 0.0),
             responsibility_allowance=float(request.form.get('responsibility_allowance') or 0.0),
             other_allowance=float(request.form.get('other_allowance') or 0.0),
             education_level=request.form.get('education_level') or None,
             field_of_study=request.form.get('field_of_study') or None,
+            job_position=request.form.get('job_position') or None,
             status='Active'
         )
         db.session.add(new_emp)
         db.session.commit()
         flash("Hojjetaan haaraan milkaa'inaan galmaa'eera!", 'success')
+    except IntegrityError:
+        db.session.rollback()
+        flash("ID Addaa (Unique ID) kun duraanuu hojjetaa biraaf kennameera! Maaloo ID adda ta'e fayyadami.", 'danger')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')

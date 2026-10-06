@@ -29,7 +29,7 @@ class Rank(db.Model):
 class Employee(db.Model):
     __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
-    unique_id = db.Column(db.String(100), unique=True, nullable=True)
+    unique_id = db.Column(db.String(100), unique=True, nullable=True)  # Unique ID eegameera
     full_name = db.Column(db.String(150), nullable=False)
     gender = db.Column(db.String(50), nullable=True)
     
@@ -43,13 +43,15 @@ class Employee(db.Model):
     rank_salary = db.Column(db.Float, default=0.0)
     location_allowance = db.Column(db.Float, default=0.0)
     food_allowance = db.Column(db.Float, default=0.0)
+    responsibility_allowance = db.Column(db.Float, default=0.0)
+    other_allowance = db.Column(db.Float, default=0.0)
     
     education_level = db.Column(db.String(100), nullable=True)
     field_of_study = db.Column(db.String(150), nullable=True)
     job_position = db.Column(db.String(150), nullable=True)
     status = db.Column(db.String(50), default='Active')
 
-    # Qabxiiwwan Madaallii (Evaluation Scores) haaraa itti dabalaman
+    # Qabxiiwwan Madaallii (Evaluation Scores)
     perf_score = db.Column(db.Float, default=0.0)
     edu_score = db.Column(db.Float, default=0.0)
     discipline_score = db.Column(db.Float, default=0.0)
