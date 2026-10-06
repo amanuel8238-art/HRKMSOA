@@ -84,6 +84,38 @@ with app.app_context():
     db.create_all()
     create_local_backup()
     
+    # PostgreSQL irratti columns haaraa dhabaman ofumaan dabaluuf (Migration)
+    import sqlalchemy as sa
+    engine = db.engine
+    inspector = sa.inspect(engine)
+    if 'employee' in inspector.get_table_names():
+        columns = [col['name'] for col in inspector.get_columns('employee')]
+        with engine.begin() as conn:
+            if 'food_allowance' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
+            if 'responsibility_allowance' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN responsibility_allowance FLOAT DEFAULT 0.0"))
+            if 'other_allowance' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN other_allowance FLOAT DEFAULT 0.0"))
+            if 'perf_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN perf_score FLOAT DEFAULT 0.0"))
+            if 'edu_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN edu_score FLOAT DEFAULT 0.0"))
+            if 'discipline_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN discipline_score FLOAT DEFAULT 0.0"))
+            if 'law_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN law_score FLOAT DEFAULT 0.0"))
+            if 'experience_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN experience_score FLOAT DEFAULT 0.0"))
+            if 'service_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN service_score FLOAT DEFAULT 0.0"))
+            if 'total_score' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN total_score FLOAT DEFAULT 0.0"))
+            if 'next_promotion_status' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_status VARCHAR(100)"))
+            if 'next_promotion_date' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_date VARCHAR(50)"))
+
     if not User.query.filter_by(username='admin').first():
         hashed_pw = generate_password_hash('admin123')
         admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
@@ -790,7 +822,6 @@ def add_employee():
     u_id = request.form.get('unique_id')
     gender = request.form.get('gender')
     
-    # Unique ID yoo duwwaa ta'e None godhii qabachuuf
     unique_id_val = u_id.strip() if u_id and u_id.strip() != '' else None
 
     if current_user.role == 'admin':
