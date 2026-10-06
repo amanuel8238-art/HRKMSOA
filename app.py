@@ -112,7 +112,15 @@ with app.app_context():
 
 def get_retired_employees_list(active_employees):
     retired_list = []
-    current_year = datetime.now().year
+    
+    # Guyyaa har'aa kaasuun gara Kalandarii Itiyoophiyaatti jijjiirree bara ammaa (Ethiopian Year) argachuu
+    today = date.today()
+    try:
+        eth_today = to_ethiopian(today.year, today.month, today.day)
+        current_eth_year = eth_today[0] # Bara Itiyoophiyaa (fkn: 2019)
+    except Exception:
+        current_eth_year = today.year - 8 # Yoo libraryn walqabate dogoggorri uumame
+        
     for e in active_employees:
         if e.birth_date:
             try:
@@ -133,9 +141,13 @@ def get_retired_employees_list(active_employees):
                         if year < 100:
                             year += 1900 if year > 30 else 2000
                         b_date = date(year, month, day)
+                
                 if b_date:
-                    birth_year = b_date.year
-                    age = current_year - birth_year
+                    birth_year = b_date.year # Kunis bara dhalootaa Itiyoophiyaatiin ta'uu qaba
+                    
+                    # Umrii herreguu (Bara Ammaa Itiyoophiyaa - Bara Dhalootaa Itiyoophiyaa)
+                    age = current_eth_year - birth_year
+                    
                     if age >= 55:
                         retired_list.append((e, age))
             except Exception:
@@ -701,143 +713,19 @@ def add_employee():
             birth_date=request.form.get('birth_date') or None,
             rank_salary=float(request.form.get('rank_salary') or 0.0),
             location_allowance=float(request.form.get('location_allowance') or 0.0),
-            food_allowance=float(request.form.get('food_allowance') or 0.0),
-            education_level=request.form.get('education_level'),
-            field_of_study=request.form.get('field_of_study'),
-            job_position=request.form.get('job_position'),
-            status=request.form.get('status', 'Active')
+            responsibility_allowance=float(request.form.get('responsibility_allowance') or 0.0),
+            other_allowance=float(request.form.get('other_allowance') or 0.0),
+            education_level=request.form.get('education_level') or None,
+            field_of_study=request.form.get('field_of_study') or None,
+            status='Active'
         )
         db.session.add(new_emp)
         db.session.commit()
-        flash("Hojjetaan haaraan milkaa’inaan galmaa’eera!", 'success')
+        flash("Hojjetaan haaraan milkaa'inaan galmaa'eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('employees'))
-
-@app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
-@login_required
-def edit_employee(id):
-    emp = Employee.query.get_or_404(id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            emp.full_name = request.form.get('full_name')
-            emp.unique_id = request.form.get('unique_id')
-            emp.gender = request.form.get('gender')
-            if current_user.role == 'admin':
-                b_val = request.form.get('branch_id')
-                emp.branch_id = int(b_val) if b_val and str(b_val).isdigit() else b_val
-
-            rank_input = request.form.get('rank_id') or request.form.get('rank')
-            resolved_r = resolve_rank_id(rank_input)
-            if resolved_r:
-                emp.rank_id = resolved_r
-
-            emp.rank_date = request.form.get('rank_date') or emp.rank_date
-            emp.hire_date = request.form.get('hire_date') or emp.hire_date
-            emp.birth_date = request.form.get('birth_date') or emp.birth_date
-            emp.rank_salary = float(request.form.get('rank_salary') or emp.rank_salary or 0.0)
-            emp.location_allowance = float(request.form.get('location_allowance') or emp.location_allowance or 0.0)
-            emp.food_allowance = float(request.form.get('food_allowance') or emp.food_allowance or 0.0)
-            emp.education_level = request.form.get('education_level')
-            emp.field_of_study = request.form.get('field_of_study')
-            emp.job_position = request.form.get('job_position')
-            emp.status = request.form.get('status', emp.status)
-
-            db.session.commit()
-            flash("Odeeffannoon hojjetaa milkaa'inaan fooyya'eera!", 'success')
-            return redirect(url_for('employees'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    all_branches = Branch.query.all()
-    all_ranks = Rank.query.all()
-    return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
-
-@app.route('/delete_employee/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def delete_employee(id):
-    emp = Employee.query.get_or_404(id)
-    try:
-        create_local_backup()
-        db.session.delete(emp)
-        db.session.commit()
-        flash("Hojjetaan galmee irraa haqameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('employees'))
-
-@app.route('/users')
-@login_required
-@admin_required
-def users():
-    all_users = User.query.all()
-    all_branches = Branch.query.all()
-    return render_template('users.html', users=all_users, branches=all_branches)
-
-@app.route('/add_user', methods=['POST'])
-@login_required
-@admin_required
-def add_user():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    role = request.form.get('role')
-    branch_id = request.form.get('branch_id')
-
-    if User.query.filter_by(username=username).first():
-        flash('Maqaa fayyadamaa kana qabu durayyuu jira, maaloo kan biraa filadhu.', 'danger')
-        return redirect(url_for('users'))
-
-    try:
-        create_local_backup()
-        hashed_pw = generate_password_hash(password)
-        new_u = User(
-            username=username,
-            password=hashed_pw,
-            role=role,
-            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id
-        )
-        db.session.add(new_u)
-        db.session.commit()
-        flash("Fayyadamaan haaraan milkaa'inaan galmaa'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('users'))
-
-@app.route('/delete_user/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def delete_user(id):
-    user_to_del = User.query.get_or_404(id)
-    if user_to_del.username == 'admin':
-        flash('Fayyadamaa Administrator guddaa (admin) balleessuun hin danda\'amu!', 'danger')
-        return redirect(url_for('users'))
-    try:
-        create_local_backup()
-        db.session.delete(user_to_del)
-        db.session.commit()
-        flash("Fayyadamaan haqameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('users'))
-
-@app.errorhandler(403)
-def forbidden(e):
-    return render_template('403.html'), 403
-
-@app.errorhandler(404)
-def not_found(e):
-    return render_template('404.html'), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
