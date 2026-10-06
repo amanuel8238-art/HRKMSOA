@@ -544,7 +544,6 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
-# OF-EEGGANNOO (WARNINGS) ROUTE - Kan akeekkachiisa qofa qaban fi branch filter qabu
 @app.route('/warnings')
 @login_required
 def warnings():
@@ -569,7 +568,6 @@ def warnings():
     all_branches = Branch.query.all()
     return render_template('warnings.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
 
-# ADABBII (PENALTIES) ROUTE - Kan adabbii cimaa (akeekkachiisa ala) qaban fi branch filter qabu
 @app.route('/penalties')
 @login_required
 def penalties():
@@ -741,7 +739,12 @@ def export_ranks_excel():
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Gulantaalee')
     output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Ranks_Report.xlsx')
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='HRKMSO_Ranks_Report.xlsx'
+    )
 
 @app.route('/export_employees_excel')
 @login_required
@@ -790,7 +793,12 @@ def export_employees_excel():
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Miseensota')
     output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='HRKMSO_Report.xlsx')
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='HRKMSO_Report.xlsx'
+    )
 
 @app.route('/promotions')
 @login_required
@@ -824,11 +832,13 @@ def promotions():
         else:
             promotions_list = []
 
-    return render_template('promotions.html', 
-                           promotions=promotions_list, 
-                           all_branches=all_branches, 
-                           selected_branch=branch_id_filter,
-                           selected_status=status_filter)
+    return render_template(
+        'promotions.html', 
+        promotions=promotions_list, 
+        all_branches=all_branches, 
+        selected_branch=branch_id_filter,
+        selected_status=status_filter
+    )
 
 @app.route('/approve_promotion/<int:id>', methods=['POST'])
 @login_required
@@ -960,7 +970,12 @@ def export_promotions_excel():
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Promotions')
     output.seek(0)
-    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='Gaaffii_Gulantaa_Gonfoo.xlsx')
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='Gaaffii_Gulantaa_Gonfoo.xlsx'
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)

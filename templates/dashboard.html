@@ -23,7 +23,7 @@
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div>
                     <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
-                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan Dadar (Total {{ branch_count }})</p>
+                    <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan (Total {{ branch_count }})</p>
                 </div>
                 <div class="flex items-center gap-4 text-sm">
                     <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b>{{ current_user.username }}</b></span>
@@ -45,7 +45,6 @@
                 <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
                 <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
                 
-                <!-- Gaaffii Gulantaa Gonfoo (Promotions) Link -->
                 {% if endpoint_exists('promotions') %}
                     <a href="{{ url_for('promotions') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gaaffii Gonfoo (Promotions)</a>
                 {% endif %}
@@ -149,7 +148,7 @@
                                 <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
+                                <a href="{{ url_for('warnings') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
@@ -162,7 +161,7 @@
                                 <span class="p-3 bg-rose-50 text-rose-600 rounded-lg text-lg">⚖️</span>
                             </div>
                             <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
+                                <a href="{{ url_for('penalties') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
@@ -240,7 +239,6 @@
     <!-- Chart Script & Always Sync Live Server Data -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Server irraa dataan dhufu kallattiidhaan UI irratti akka uwwifamu gochuu (Caching hambisuun dataa dhabamuu irraa eeguuf)
             const liveData = {
                 emp_count: {{ emp_count if emp_count is defined else 0 }},
                 active_emp_count: {{ active_emp_count if active_emp_count is defined else 0 }},
@@ -256,7 +254,6 @@
                 clean_count: {{ clean_count if clean_count is defined else 0 }}
             };
 
-            // LocalStorage cache yeroo hundaa live dataan haaroftuu akka qabaatu gochuu
             localStorage.setItem('hrkmso_dashboard_cache', JSON.stringify(liveData));
 
             const updateElementText = (id, val) => {
@@ -277,7 +274,6 @@
             updateElementText('statReward', liveData.reward_count);
             updateElementText('statClean', liveData.clean_count);
 
-            // Chart.js render godhuu
             const canvasEl = document.getElementById('genderChart');
             if (canvasEl) {
                 const ctx = canvasEl.getContext('2d');
