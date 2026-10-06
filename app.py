@@ -846,12 +846,44 @@ def export_promotions_excel():
         flash("Odeeffannoon ykn daataan gaaffii gonfoo filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
         return redirect(url_for('promotions'))
 
+    # Bara Itiyoophiyaa ammaa herreguuf
+    today = date.today()
+    try:
+        eth_today = to_ethiopian(today.year, today.month, today.day)
+        current_eth_year = eth_today[0]
+    except Exception:
+        current_eth_year = today.year - 8
+
     data = []
     for index, tr in enumerate(promotions_list, start=1):
         emp = tr.employee
         b_name = '-'
         if emp and emp.branch:
             b_name = emp.branch.name
+
+        # Umrii bara Itiyoophiyaatiin herreguuf
+        age = '-'
+        if emp and emp.birth_date:
+            try:
+                b_str = str(emp.birth_date).strip().split()[0]
+                b_year = None
+                if '-' in b_str:
+                    parts = b_str.split('-')
+                    b_year = int(parts[0]) if len(parts[0]) == 4 else int(parts[2])
+                elif '/' in b_str:
+                    parts = b_str.split('/')
+                    if len(parts) == 3:
+                        y = int(parts[2]) if len(parts[2]) == 4 else int(parts[0])
+                        if y < 100:
+                            y += 1900 if y > 30 else 2000
+                        b_year = y
+                elif b_str.isdigit() and len(b_str) == 4:
+                    b_year = int(b_str)
+                
+                if b_year:
+                    age = current_eth_year - b_year
+            except Exception:
+                pass
 
         data.append({
             "Lak": index,
@@ -860,7 +892,7 @@ def export_promotions_excel():
             "Bakka Hojii": b_name,
             "Gahee Hojii": emp.job_position if emp and emp.job_position else '-',
             "Saala": emp.gender if emp and emp.gender else '-',
-            "Umrii": emp.birth_date if emp and emp.birth_date else '-',
+            "Umrii": age,
             "Bara Gonfaa Dura Yeroo Itti Argate": emp.rank_date if emp and emp.rank_date else '-',
             "Gonfaa Itti Aanu Yeroo Itti Argatu": emp.next_promotion_date if emp and emp.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-'),
             "Sadarkaa Barumsaa": emp.education_level if emp and emp.education_level else '-',
