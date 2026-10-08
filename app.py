@@ -892,6 +892,22 @@ def reject_promotion(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('promotions'))
 
+# 1. Gaaffii Gonfoo / Madaallii Haaraa Haquuf (Delete Promotion Route)
+@app.route('/delete_promotion/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_promotion(id):
+    transfer_record = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        db.session.delete(transfer_record)
+        db.session.commit()
+        flash("Gaaffiin gonfoo milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('promotions'))
+
 @app.route('/export_promotions_excel')
 @login_required
 def export_promotions_excel():
