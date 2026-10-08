@@ -21,7 +21,7 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
-# Function umrii herreequuf (Bara amma Jiru 2019 akka bu'uuraatti fayyadama)
+# Function umrii herreequuf (Bara amma Jiru 2019 akka bu'uuraatti fayyadama) - Lakkoofsa qofa deebisa
 def calculate_age(birth_date):
     if not birth_date:
         return "Hin beekamu"
@@ -45,7 +45,7 @@ def calculate_age(birth_date):
             # Akka Lakkoobsa Itoophiyaatti bara amma jiru 2019 godhameera
             current_eth_year = 2019
             age = current_eth_year - b_year
-            return f"{age} Waggaa"
+            return age  # Jecha "Waggaa" jedhu dhiisee lakkoofsa qofa deebisa
     except Exception:
         pass
     return "Hin beekamu"
@@ -173,7 +173,7 @@ with app.app_context():
 
 def get_retired_employees_list(active_employees):
     retired_list = []
-    current_eth_year = 2019 # Bara Itoophiyaa 2019 bu'uura godhachuun hojjetaa 55 fi ol baasuuf
+    current_eth_year = 2019
         
     for e in active_employees:
         if e.birth_date:
@@ -232,8 +232,7 @@ def logout():
 @app.route('/')
 @login_required
 def dashboard():
-    # Guyyaan har'aa Fuulbaana 28, 2019 akka ta'etti qabameera
-    ethiopian_today = (2019, 1, 28) # (Year, Month, Day) - Fuulbaana 28, 2019
+    ethiopian_today = (2019, 1, 28)
 
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
