@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Akeekkachiisa Naamusa Hojjettootaa (Warnings)</h2>
+    </div>
+
+    <!-- Filter by Branch -->
+    {% if current_user.role == 'admin' %}
+    <form method="GET" action="{{ url_for('warnings') }}" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <select name="branch_id" class="form-select" onchange="this.form.submit()">
+                <option value="">Damee Hunda (All Branches)</option>
+                {% for b in all_branches %}
+                <option value="{{ b.id }}" {% if selected_branch == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Lakk.</th>
+                            <th>Maqaa Hojjetaa</th>
+                            <th>Damee (Branch)</th>
+                            <th>Gosa Akeekkachiisaa</th>
+                            <th>Ibsaa / Sababa</th>
+                            <th>Guyyaa Kenname</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in records %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ r.employee.full_name if r.employee else 'N/A' }}</td>
+                            <td>{{ r.employee.branch.name if r.employee and r.employee.branch else 'N/A' }}</td>
+                            <td><span class="badge bg-warning text-dark">{{ r.penalty_type }}</span></td>
+                            <td>{{ r.description if r.description else '-' }}</td>
+                            <td>{{ r.date_given }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Odeeffannoon akeekkachiisaa hin jiru.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
