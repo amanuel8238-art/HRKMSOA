@@ -30,6 +30,7 @@ class Employee(db.Model):
     __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
     unique_id = db.Column(db.String(100), unique=True, nullable=True)  # Unique ID eegameera
+    pension_number = db.Column(db.String(100), nullable=True)  # Lakkoofsa Sooromaa (Pension Number)
     full_name = db.Column(db.String(150), nullable=False)
     gender = db.Column(db.String(50), nullable=True)
     

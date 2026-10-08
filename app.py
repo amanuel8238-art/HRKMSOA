@@ -119,6 +119,8 @@ with app.app_context():
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
+            if 'pension_number' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -426,6 +428,7 @@ def edit_employee(id):
             create_local_backup()
             emp.full_name = request.form.get('full_name')
             emp.unique_id = request.form.get('unique_id') or None
+            emp.pension_number = request.form.get('pension_number') or None
             emp.gender = request.form.get('gender')
             
             if current_user.role == 'admin':
@@ -726,6 +729,7 @@ def add_employee():
         new_emp = Employee(
             full_name=full_name,
             unique_id=unique_id_val,
+            pension_number=request.form.get('pension_number') or None,
             gender=gender or 'Dhiira',
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
