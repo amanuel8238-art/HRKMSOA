@@ -592,6 +592,28 @@ def penalties():
     all_branches = Branch.query.all()
     return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
 
+@app.route('/disciplined_employees')
+@login_required
+def disciplined_employees():
+    branch_id_filter = request.args.get('branch_id')
+    
+    query = Employee.query.join(DisciplineRecord, Employee.id == DisciplineRecord.employee_id).distinct()
+    
+    if current_user.role == 'admin':
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.filter(Employee.branch_id == int(branch_id_filter))
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+            
+    employees = query.all()
+    all_branches = Branch.query.all()
+    return render_template('disciplined_employees.html', employees=employees, all_branches=all_branches, selected_branch=branch_id_filter)
+
 @app.route('/employees')
 @login_required
 def employees():

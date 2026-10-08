@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Hojjettoota Badii Naamusaa Qaban - HRKMSO{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6 d-flex align-items-center">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-3 shadow-sm">
+                <i class="fas fa-arrow-left"></i> Deebi'i
+            </a>
+            <h2 class="fw-bold text-danger mb-0"><i class="fas fa-gavel me-2"></i> Hojjettoota Badii Naamusaa Qaban</h2>
+        </div>
+    </div>
+
+    <!-- Branch Filter for Admin -->
+    {% if current_user.role == 'admin' %}
+    <div class="card shadow-sm mb-4 border-0 rounded-3 bg-light">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('disciplined_employees') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small">Damee (Branch) Filadhu</label>
+                    <select name="branch_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Dameewwan Hunda</option>
+                        {% for b in all_branches %}
+                        <option value="{{ b.id }}" {% if selected_branch == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Employees Table -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark text-uppercase fs-7">
+                        <tr>
+                            <th class="py-3 ps-3">#</th>
+                            <th class="py-3">ID Addaa</th>
+                            <th class="py-3">Maqaa Guutuu</th>
+                            <th class="py-3">Damee (Branch)</th>
+                            <th class="py-3">Gita Hojii</th>
+                            <th class="py-3">Baay'ina Badii</th>
+                            <th class="py-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if employees %}
+                            {% for emp in employees %}
+                            <tr>
+                                <td class="ps-3">{{ loop.index }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
+                                <td><strong class="text-dark">{{ emp.full_name }}</strong></td>
+                                <td>{{ emp.branch.name if emp.branch else '-' }}</td>
+                                <td>{{ emp.job_position if emp.job_position else '-' }}</td>
+                                <td>
+                                    <span class="badge bg-danger">Galmee Badii Qaba</span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('edit_employee', id=emp.id) }}" class="btn btn-sm btn-warning shadow-sm" title="Fooyyessi / Ilaali"><i class="fas fa-edit"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-check-circle fa-2x mb-2 text-success d-block"></i>
+                                    Hojjetaan badii naamusaa qabu hin argamne.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
