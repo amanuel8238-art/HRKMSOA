@@ -73,9 +73,10 @@
     <!-- Gabatee Bal'aa (Excel-like Table Format) -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
-            <div class="table-responsive" style="max-height: 75vh;">
-                <table class="table table-bordered table-striped table-hover align-middle mb-0 text-center" style="font-size: 13px;">
-                    <thead class="table-dark text-nowrap sticky-top">
+            <!-- Table-responsive fi style dabalataa haguugamuu hambisuuf -->
+            <div class="table-responsive" style="max-height: 75vh; overflow-x: auto;">
+                <table class="table table-bordered table-striped table-hover align-middle mb-0 text-center" style="font-size: 13px; min-width: 1500px;">
+                    <thead class="table-dark text-nowrap sticky-top" style="z-index: 10;">
                         <tr>
                             <th>Lak</th>
                             <th>Gonfa Ammaa Qabu</th>
@@ -98,7 +99,7 @@
                             <th>Gonfoo Itti Guddatuu</th>
                             <th>Haala (Status)</th>
                             {% if current_user.role == 'admin' %}
-                            <th>Action</th>
+                            <th style="position: sticky; right: 0; background-color: #212529; z-index: 11;">Action</th>
                             {% endif %}
                         </tr>
                     </thead>
@@ -151,16 +152,22 @@
                                     {% endif %}
                                 </td>
                                 {% if current_user.role == 'admin' %}
-                                <td>
-                                    <div class="d-flex gap-1 justify-content-center">
+                                <!-- Column Action akka hin dhokanne sticky godhameera -->
+                                <td style="position: sticky; right: 0; background-color: #f8f9fa; z-index: 5;">
+                                    <div class="d-flex gap-1 justify-content-center flex-nowrap">
                                         <form action="{{ url_for('approve_promotion', id=tr.id) }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-success" title="Approve">
-                                                <i class="fas fa-check"></i> Eeyyamu
+                                            <button type="submit" class="btn btn-sm btn-success px-2" title="Approve">
+                                                <i class="fas fa-check"></i>
                                             </button>
                                         </form>
                                         <form action="{{ url_for('reject_promotion', id=tr.id) }}" method="POST" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Reject">
-                                                <i class="fas fa-times"></i> Dhorkuu
+                                            <button type="submit" class="btn btn-sm btn-danger px-2" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('delete_promotion', id=tr.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2" title="Delete" onclick="return confirm('Dhugumaan galmee kana haquu barbaaddaa?')">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
                                     </div>
