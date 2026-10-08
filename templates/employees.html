@@ -108,6 +108,7 @@
                             <th class="py-3">ID Addaa</th>
                             <th class="py-3">Maqaa Guutuu</th>
                             <th class="py-3">Saala</th>
+                            <th class="py-3">Umrii</th> <!-- Asitti Gabatee Mata Duree (Table Header) dabalameera -->
                             <th class="py-3">Damee (Branch)</th>
                             <th class="py-3">Gita Hojii</th>
                             <th class="py-3">Gulantaa</th>
@@ -124,6 +125,16 @@
                                 <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
                                 <td><strong class="text-dark">{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
+                                
+                                <!-- Kunoo asitti Umrii hojjetaa calculate_age fayyadamuun fida -->
+                                <td>
+                                    {% if emp.birth_date %}
+                                        <span class="badge bg-info text-dark">{{ calculate_age(emp.birth_date) }} Waggaa</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
                                 <td>{{ emp.branch.name if emp.branch else '-' }}</td>
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td>{{ emp.rank.name if emp.rank else '-' }}</td>
@@ -174,7 +185,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="10" class="text-center py-5 text-muted">
+                                <td colspan="11" class="text-center py-5 text-muted">
                                     <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
                                     Hojjetaan argame hin jiru.
                                 </td>

@@ -21,6 +21,35 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
+# Function umrii herreequuf (Bara amma Jiru 2019 akka bu'uuraatti fayyadama)
+def calculate_age(birth_date):
+    if not birth_date:
+        return "Hin beekamu"
+    try:
+        b_str = str(birth_date).strip().split()[0]
+        b_year = None
+        if '-' in b_str:
+            parts = b_str.split('-')
+            b_year = int(parts[0]) if len(parts[0]) == 4 else int(parts[2])
+        elif '/' in b_str:
+            parts = b_str.split('/')
+            if len(parts) == 3:
+                y = int(parts[2]) if len(parts[2]) == 4 else int(parts[0])
+                if y < 100:
+                    y += 1900 if y > 30 else 2000
+                b_year = y
+        elif b_str.isdigit() and len(b_str) == 4:
+            b_year = int(b_str)
+        
+        if b_year:
+            # Akka Lakkoobsa Itoophiyaatti bara amma jiru 2019 godhameera
+            current_eth_year = 2019
+            age = current_eth_year - b_year
+            return f"{age} Waggaa"
+    except Exception:
+        pass
+    return "Hin beekamu"
+
 @app.context_processor
 def utility_processor():
     def endpoint_exists(endpoint):
@@ -29,7 +58,7 @@ def utility_processor():
             return True
         except Exception:
             return False
-    return dict(endpoint_exists=endpoint_exists)
+    return dict(endpoint_exists=endpoint_exists, calculate_age=calculate_age)
 
 instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
 if not os.path.exists(instance_dir):
@@ -144,12 +173,7 @@ with app.app_context():
 
 def get_retired_employees_list(active_employees):
     retired_list = []
-    today = date.today()
-    try:
-        eth_today = to_ethiopian(today.year, today.month, today.day)
-        current_eth_year = eth_today[0] 
-    except Exception:
-        current_eth_year = today.year - 8 
+    current_eth_year = 2019 # Bara Itoophiyaa 2019 bu'uura godhachuun hojjetaa 55 fi ol baasuuf
         
     for e in active_employees:
         if e.birth_date:
@@ -208,11 +232,8 @@ def logout():
 @app.route('/')
 @login_required
 def dashboard():
-    today = date.today()
-    try:
-        ethiopian_today = to_ethiopian(today.year, today.month, today.day)
-    except Exception:
-        ethiopian_today = None
+    # Guyyaan har'aa Fuulbaana 28, 2019 akka ta'etti qabameera
+    ethiopian_today = (2019, 1, 28) # (Year, Month, Day) - Fuulbaana 28, 2019
 
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
@@ -304,7 +325,7 @@ def add_transfer():
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
-        transfer_date = request.form.get('transfer_date') or date.today().isoformat()
+        transfer_date = request.form.get('transfer_date') or "2019-01-28"
 
         emp = Employee.query.get(employee_id) if employee_id and str(employee_id).isdigit() else None
         from_b_id = emp.branch_id if emp else None
@@ -492,7 +513,7 @@ def evaluate_employee(id):
         try:
             create_local_backup()
             reason_text = request.form.get('reason', 'Gaaffii Gonfoo (Promotion Evaluation)')
-            transfer_date = request.form.get('transfer_date') or date.today().isoformat()
+            transfer_date = request.form.get('transfer_date') or "2019-01-28"
 
             new_promotion = Transfer(
                 employee_id=emp.id,
@@ -526,7 +547,7 @@ def add_discipline(employee_id):
             create_local_backup()
             penalty_type = request.form.get('penalty_type')
             description = request.form.get('description', '')
-            d_date = request.form.get('date') or request.form.get('offense_date') or date.today().isoformat()
+            d_date = request.form.get('date') or request.form.get('offense_date') or "2019-01-28"
 
             new_record = DisciplineRecord(
                 employee_id=emp.id,
@@ -892,7 +913,6 @@ def reject_promotion(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('promotions'))
 
-# 1. Gaaffii Gonfoo / Madaallii Haaraa Haquuf (Delete Promotion Route)
 @app.route('/delete_promotion/<int:id>', methods=['POST'])
 @login_required
 @admin_required
@@ -943,12 +963,7 @@ def export_promotions_excel():
         flash("Odeeffannoon ykn daataan gaaffii gonfoo filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
         return redirect(url_for('promotions'))
 
-    today = date.today()
-    try:
-        eth_today = to_ethiopian(today.year, today.month, today.day)
-        current_eth_year = eth_today[0]
-    except Exception:
-        current_eth_year = today.year - 8
+    current_eth_year = 2019
 
     data = []
     for index, tr in enumerate(promotions_list, start=1):
@@ -989,7 +1004,7 @@ def export_promotions_excel():
             "Saala": emp.gender if emp and emp.gender else '-',
             "Umrii": age,
             "Bara Gonfaa Dura Yeroo Itti Argate": emp.rank_date if emp and emp.rank_date else '-',
-            "Gonfaa Itti Aanu Yeroo Itti Argatu": emp.next_promotion_date if emp and emp.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-'),
+            "Gonfaa Itti Aanu Yeroo Itti Argatu": emp.next_promotion_date if emp and emp.next_promotion_date else (str(tr.transfer_date) if tr.transfer_date else '-'),
             "Sadarkaa Barumsaa": emp.education_level if emp and emp.education_level else '-',
             "Gosa Barumsaa": emp.field_of_study if emp and emp.field_of_study else '-',
             "Bu'uura Raawwii Hojii (25%)": emp.perf_score if emp and emp.perf_score is not None else '0.00',
