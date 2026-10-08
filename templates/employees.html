@@ -108,7 +108,7 @@
                             <th class="py-3">ID Addaa</th>
                             <th class="py-3">Maqaa Guutuu</th>
                             <th class="py-3">Saala</th>
-                            <th class="py-3">Umrii</th> <!-- Asitti Gabatee Mata Duree (Table Header) dabalameera -->
+                            <th class="py-3">Umrii</th>
                             <th class="py-3">Damee (Branch)</th>
                             <th class="py-3">Gita Hojii</th>
                             <th class="py-3">Gulantaa</th>
@@ -126,10 +126,10 @@
                                 <td><strong class="text-dark">{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
                                 
-                                <!-- Kunoo asitti Umrii hojjetaa calculate_age fayyadamuun fida -->
+                                <!-- "Waggaa" jedhu dhiifamee lakkoofsi qofti akka baatu godhameera -->
                                 <td>
                                     {% if emp.birth_date %}
-                                        <span class="badge bg-info text-dark">{{ calculate_age(emp.birth_date) }} Waggaa</span>
+                                        <span class="badge bg-info text-dark">{{ calculate_age(emp.birth_date) }}</span>
                                     {% else %}
                                         -
                                     {% endif %}
@@ -272,36 +272,4 @@
 
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Durgoo Nyaataa (Food Allowance)</label>
-                            <input type="number" step="0.01" name="food_allowance" class="form-control" value="0.0">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Lakkoofsa Bilbilaa</label>
-                            <input type="text" name="phone_number" class="form-control" placeholder="Fkn: 0911223344">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Guyyaa Qacaramuu (Hire Date)</label>
-                            <input type="text" name="hire_date" class="form-control" placeholder="Fkn: 12/05/2015">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Guyyaa Dhalootaa (Birth Date)</label>
-                            <input type="text" name="birth_date" class="form-control" placeholder="Fkn: 20/10/1985">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Guyyaa Gulantaa (Rank Date)</label>
-                            <input type="text" name="rank_date" class="form-control" placeholder="Fkn: 01/04/2018">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
-                    <button type="submit" class="btn btn-success">Galmeessi</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
+                            <input type="number" step="0.01" name="food_allowance" class
