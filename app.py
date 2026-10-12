@@ -120,6 +120,8 @@ with app.app_context():
         with engine.begin() as conn:
             if 'pension_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
+            if 'phone_number' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN phone_number VARCHAR(50)"))
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -428,6 +430,11 @@ def edit_employee(id):
             emp.full_name = request.form.get('full_name')
             emp.unique_id = request.form.get('unique_id') or None
             emp.pension_number = request.form.get('pension_number') or None
+            
+            # Lakk. Bilbilaa yeroo galchu ykn fooyyessu sirriitti qabachuu
+            phone_val = request.form.get('phone_number')
+            emp.phone_number = phone_val.strip() if phone_val and phone_val.strip() != '' and phone_val.strip() != '-' else None
+
             emp.gender = request.form.get('gender')
             
             if current_user.role == 'admin':
@@ -725,10 +732,14 @@ def add_employee():
 
     try:
         create_local_backup()
+        phone_val = request.form.get('phone_number')
+        clean_phone = phone_val.strip() if phone_val and phone_val.strip() != '' and phone_val.strip() != '-' else None
+
         new_emp = Employee(
             full_name=full_name,
             unique_id=unique_id_val,
             pension_number=request.form.get('pension_number') or None,
+            phone_number=clean_phone,
             gender=gender or 'Dhiira',
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
