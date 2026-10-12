@@ -42,10 +42,9 @@ def calculate_age(birth_date):
             b_year = int(b_str)
         
         if b_year:
-            # Akka Lakkoobsa Itoophiyaatti bara amma jiru 2019 godhameera
             current_eth_year = 2019
             age = current_eth_year - b_year
-            return age  # Jecha "Waggaa" jedhu dhiisee lakkoofsa qofa deebisa
+            return age
     except Exception:
         pass
     return "Hin beekamu"

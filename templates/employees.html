@@ -101,18 +101,27 @@
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 text-nowrap">
                     <thead class="table-dark text-uppercase fs-7">
                         <tr>
                             <th class="py-3 ps-3">#</th>
                             <th class="py-3">ID Addaa</th>
                             <th class="py-3">Maqaa Guutuu</th>
+                            <th class="py-3">Lakk. Sooromaa</th>
                             <th class="py-3">Saala</th>
                             <th class="py-3">Umrii</th>
                             <th class="py-3">Damee (Branch)</th>
                             <th class="py-3">Gita Hojii</th>
                             <th class="py-3">Gulantaa</th>
                             <th class="py-3">Sadarkaa Barumsaa</th>
+                            <th class="py-3">Gosa Barumsaa</th>
+                            <th class="py-3">Mindaa Gulantaa</th>
+                            <th class="py-3">Kaffaltii Iddoo</th>
+                            <th class="py-3">Durgoo Nyaataa</th>
+                            <th class="py-3">Lakk. Bilbilaa</th>
+                            <th class="py-3">Guyyaa Qacaramuu</th>
+                            <th class="py-3">Guyyaa Dhalootaa</th>
+                            <th class="py-3">Guyyaa Gulantaa</th>
                             <th class="py-3">Status</th>
                             <th class="py-3 text-center">Action</th>
                         </tr>
@@ -124,8 +133,8 @@
                                 <td class="ps-3">{{ loop.index }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
                                 <td><strong class="text-dark">{{ emp.full_name }}</strong></td>
+                                <td>{{ emp.pension_number if emp.pension_number else '-' }}</td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
-                                
                                 <td>
                                     {% if emp.birth_date %}
                                         <span class="badge bg-info text-dark">{{ calculate_age(emp.birth_date) }}</span>
@@ -133,16 +142,18 @@
                                         -
                                     {% endif %}
                                 </td>
-
                                 <td>{{ emp.branch.name if emp.branch else '-' }}</td>
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td>{{ emp.rank.name if emp.rank else '-' }}</td>
-                                <td>
-                                    {{ emp.education_level if emp.education_level else '-' }}
-                                    {% if emp.field_of_study %}
-                                        <br><small class="text-muted">({{ emp.field_of_study }})</small>
-                                    {% endif %}
-                                </td>
+                                <td>{{ emp.education_level if emp.education_level else '-' }}</td>
+                                <td>{{ emp.field_of_study if emp.field_of_study else '-' }}</td>
+                                <td>{{ "%.2f"|format(emp.rank_salary) if emp.rank_salary else '0.00' }} ETB</td>
+                                <td>{{ "%.2f"|format(emp.location_allowance) if emp.location_allowance else '0.00' }} ETB</td>
+                                <td>{{ "%.2f"|format(emp.food_allowance) if emp.food_allowance else '0.00' }} ETB</td>
+                                <td>{{ emp.phone_number if emp.phone_number else '-' }}</td>
+                                <td>{{ emp.hire_date if emp.hire_date else '-' }}</td>
+                                <td>{{ emp.birth_date if emp.birth_date else '-' }}</td>
+                                <td>{{ emp.rank_date if emp.rank_date else '-' }}</td>
                                 <td>
                                     <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} px-2 py-1">{{ emp.status }}</span>
                                 </td>
@@ -182,7 +193,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="11" class="text-center py-5 text-muted">
+                                <td colspan="20" class="text-center py-5 text-muted">
                                     <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
                                     Hojjetaan argame hin jiru.
                                 </td>
@@ -214,7 +225,6 @@
                             <label class="form-label fw-bold">ID Addaa (Unique ID)</label>
                             <input type="text" name="unique_id" class="form-control" required>
                         </div>
-                        <!-- Bakka Lakkoofsa Sooromaa (Pension Number) itti dabalame -->
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Lakkoofsa Sooromaa (Pension Number)</label>
                             <input type="text" class="form-control" id="pension_number" name="pension_number" placeholder="Lakkoofsa sooromaa galchi">
