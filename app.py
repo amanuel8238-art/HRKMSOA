@@ -431,9 +431,12 @@ def edit_employee(id):
             emp.unique_id = request.form.get('unique_id') or None
             emp.pension_number = request.form.get('pension_number') or None
             
-            # Lakk. Bilbilaa yeroo galchu ykn fooyyessu sirriitti qabachuu
+            # Lakk. Bilbilaa sirriitti qabachuu fi save gochuu
             phone_val = request.form.get('phone_number')
-            emp.phone_number = phone_val.strip() if phone_val and phone_val.strip() != '' and phone_val.strip() != '-' else None
+            if phone_val and phone_val.strip() != '' and phone_val.strip() != '-':
+                emp.phone_number = phone_val.strip()
+            else:
+                emp.phone_number = None
 
             emp.gender = request.form.get('gender')
             
