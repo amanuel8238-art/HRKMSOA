@@ -28,13 +28,13 @@
                             <!-- Lakkoofsa Sooromaa (Pension Number) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Lakkoofsa Sooromaa (Pension Number)</label>
-                                <input type="text" name="pension_number" class="form-control" value="{{ employee.pension_number if employee.pension_number else '' }}">
+                                <input type="text" name="pension_number" class="form-control" value="{% if employee.pension_number and employee.pension_number != '-' %}{{ employee.pension_number }}{% endif %}">
                             </div>
 
                             <!-- Lakkoofsa Bilbilaa (Phone Number) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Lakkoofsa Bilbilaa (Phone Number)</label>
-                                <input type="text" name="phone_number" class="form-control" value="{{ employee.phone_number if employee.phone_number else '' }}" placeholder="Fkn: 0911223344">
+                                <input type="text" name="phone_number" class="form-control" value="{% if employee.phone_number and employee.phone_number != '-' %}{{ employee.phone_number }}{% endif %}" placeholder="Fkn: 0911223344">
                             </div>
 
                             <!-- Saala -->
