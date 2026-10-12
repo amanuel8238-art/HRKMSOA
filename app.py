@@ -145,6 +145,8 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_status VARCHAR(100)"))
             if 'next_promotion_date' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_date VARCHAR(50)"))
+            if 'last_promotion_date' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN last_promotion_date VARCHAR(50)"))
 
     if not User.query.filter_by(username='admin').first():
         hashed_pw = generate_password_hash('admin123')
@@ -452,6 +454,8 @@ def edit_employee(id):
             emp.rank_date = request.form.get('rank_date') or emp.rank_date
             emp.hire_date = request.form.get('hire_date') or emp.hire_date
             emp.birth_date = request.form.get('birth_date') or emp.birth_date
+            emp.last_promotion_date = request.form.get('last_promotion_date') or emp.last_promotion_date
+            emp.status = request.form.get('status') or emp.status
             
             emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
             emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
@@ -1032,7 +1036,7 @@ def export_promotions_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Promotions')
+        df.to_excel(output, index=False, sheet_name='Promotions')
     output.seek(0)
     return send_file(
         output, 
