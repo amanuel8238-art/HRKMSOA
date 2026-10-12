@@ -21,7 +21,6 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
-# Function umrii herreequuf (Bara amma Jiru 2019 akka bu'uuraatti fayyadama) - Lakkoofsa qofa deebisa
 def calculate_age(birth_date):
     if not birth_date:
         return "Hin beekamu"
@@ -430,7 +429,6 @@ def edit_employee(id):
             emp.full_name = request.form.get('full_name')
             emp.unique_id = request.form.get('unique_id') or None
             
-            # Pension Number fi Phone Number sirriitti addaan baasuun qabachuu
             p_val = request.form.get('pension_number')
             emp.pension_number = p_val.strip() if p_val and p_val.strip() != '' and p_val.strip() != '-' else None
             
@@ -582,11 +580,9 @@ def add_discipline(employee_id):
 @login_required
 def warnings():
     branch_id_filter = request.args.get('branch_id')
-    
     query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
         DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')
     )
-    
     if current_user.role == 'admin':
         if branch_id_filter and str(branch_id_filter).isdigit():
             query = query.filter(Employee.branch_id == int(branch_id_filter))
@@ -597,7 +593,6 @@ def warnings():
             query = query.filter(Employee.branch_id == b_val)
         else:
             query = query.filter(False)
-            
     records = query.all()
     all_branches = Branch.query.all()
     return render_template('warnings.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
@@ -606,11 +601,9 @@ def warnings():
 @login_required
 def penalties():
     branch_id_filter = request.args.get('branch_id')
-    
     query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
         db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
     )
-    
     if current_user.role == 'admin':
         if branch_id_filter and str(branch_id_filter).isdigit():
             query = query.filter(Employee.branch_id == int(branch_id_filter))
@@ -621,7 +614,6 @@ def penalties():
             query = query.filter(Employee.branch_id == b_val)
         else:
             query = query.filter(False)
-            
     records = query.all()
     all_branches = Branch.query.all()
     return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
@@ -630,9 +622,7 @@ def penalties():
 @login_required
 def disciplined_employees():
     branch_id_filter = request.args.get('branch_id')
-    
     query = Employee.query.join(DisciplineRecord, Employee.id == DisciplineRecord.employee_id).distinct()
-    
     if current_user.role == 'admin':
         if branch_id_filter and str(branch_id_filter).isdigit():
             query = query.filter(Employee.branch_id == int(branch_id_filter))
@@ -643,7 +633,6 @@ def disciplined_employees():
             query = query.filter(Employee.branch_id == b_val)
         else:
             query = query.filter(False)
-            
     employees = query.all()
     all_branches = Branch.query.all()
     return render_template('disciplined_employees.html', employees=employees, all_branches=all_branches, selected_branch=branch_id_filter)
@@ -738,7 +727,6 @@ def add_employee():
     try:
         create_local_backup()
         
-        # Pension Number fi Phone Number addaan baasuun qabachuu
         p_val = request.form.get('pension_number')
         clean_pension = p_val.strip() if p_val and p_val.strip() != '' and p_val.strip() != '-' else None
         
