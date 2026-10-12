@@ -30,8 +30,8 @@ class Employee(db.Model):
     __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
     unique_id = db.Column(db.String(100), unique=True, nullable=True)  # Unique ID eegameera
-    pension_number = db.Column(db.String(100), nullable=True)  # Lakkoofsa Sooromaa (Pension Number)
-    phone_number = db.Column(db.String(50), nullable=True)     # Lakkoofsa Bilbilaa (Phone Number)
+    pension_number = db.Column(db.Text, nullable=True)  # Lakkoofsa Sooromaa (Pension Number)
+    phone_number = db.Column(db.Text, nullable=True)     # Lakkoofsa Bilbilaa (Phone Number)
     full_name = db.Column(db.String(150), nullable=False)
     gender = db.Column(db.String(50), nullable=True)
     
@@ -41,6 +41,7 @@ class Employee(db.Model):
     rank_date = db.Column(db.String(50), nullable=True)
     hire_date = db.Column(db.String(50), nullable=True)
     birth_date = db.Column(db.String(50), nullable=True)
+    last_promotion_date = db.Column(db.String(50), nullable=True)
     
     rank_salary = db.Column(db.Float, default=0.0)
     location_allowance = db.Column(db.Float, default=0.0)
