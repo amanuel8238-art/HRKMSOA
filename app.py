@@ -429,9 +429,11 @@ def edit_employee(id):
             create_local_backup()
             emp.full_name = request.form.get('full_name')
             emp.unique_id = request.form.get('unique_id') or None
-            emp.pension_number = request.form.get('pension_number') or None
             
-            # Lakk. Bilbilaa sirriitti qabachuu fi save gochuu
+            # Pension Number fi Phone Number sirriitti addaan baasuun qabachuu
+            p_val = request.form.get('pension_number')
+            emp.pension_number = p_val.strip() if p_val and p_val.strip() != '' and p_val.strip() != '-' else None
+            
             phone_val = request.form.get('phone_number')
             if phone_val and phone_val.strip() != '' and phone_val.strip() != '-':
                 emp.phone_number = phone_val.strip()
@@ -735,13 +737,18 @@ def add_employee():
 
     try:
         create_local_backup()
+        
+        # Pension Number fi Phone Number addaan baasuun qabachuu
+        p_val = request.form.get('pension_number')
+        clean_pension = p_val.strip() if p_val and p_val.strip() != '' and p_val.strip() != '-' else None
+        
         phone_val = request.form.get('phone_number')
         clean_phone = phone_val.strip() if phone_val and phone_val.strip() != '' and phone_val.strip() != '-' else None
 
         new_emp = Employee(
             full_name=full_name,
             unique_id=unique_id_val,
-            pension_number=request.form.get('pension_number') or None,
+            pension_number=clean_pension,
             phone_number=clean_phone,
             gender=gender or 'Dhiira',
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
