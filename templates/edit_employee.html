@@ -25,6 +25,12 @@
                                 <input type="text" name="unique_id" class="form-control" value="{{ employee.unique_id }}" required>
                             </div>
 
+                            <!-- Lakkoofsa Sooromaa (Pension Number) -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Lakkoofsa Sooromaa (Pension Number)</label>
+                                <input type="text" name="pension_number" class="form-control" value="{{ employee.pension_number if employee.pension_number else '' }}">
+                            </div>
+
                             <!-- Saala -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Saala</label>
@@ -95,25 +101,25 @@
                             <!-- Guyyaa Qacaramuu (Hire Date) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Guyyaa Qacaramuu (Hire Date)</label>
-                                <input type="date" name="hire_date" class="form-control" value="{{ employee.hire_date }}">
+                                <input type="text" name="hire_date" class="form-control" value="{{ employee.hire_date if employee.hire_date else '' }}">
                             </div>
 
                             <!-- Guyyaa Dhalootaa (Birth Date) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Guyyaa Dhalootaa (Birth Date)</label>
-                                <input type="date" name="birth_date" class="form-control" value="{{ employee.birth_date }}">
+                                <input type="text" name="birth_date" class="form-control" value="{{ employee.birth_date if employee.birth_date else '' }}">
                             </div>
 
                             <!-- Gonfaa Dura Yeroo Itti Argate (Last Promotion Date) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Gonfaa Dura Yeroo Itti Argate</label>
-                                <input type="date" name="last_promotion_date" class="form-control" value="{{ employee.last_promotion_date }}">
+                                <input type="text" name="last_promotion_date" class="form-control" value="{{ employee.last_promotion_date if employee.last_promotion_date else '' }}">
                             </div>
 
                             <!-- Guyyaa Gulantaa (Rank Date) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Guyyaa Gulantaa (Rank Date)</label>
-                                <input type="date" name="rank_date" class="form-control" value="{{ employee.rank_date }}">
+                                <input type="text" name="rank_date" class="form-control" value="{{ employee.rank_date if employee.rank_date else '' }}">
                             </div>
 
                             <!-- Status -->
