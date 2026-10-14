@@ -314,30 +314,44 @@ def get_branch_stats(branch_id):
         warning_query = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
     else:
-        b_id_val = int(branch_id) if str(branch_id).isdigit() else branch_id
-        emp_query = Employee.query.filter_by(branch_id=b_id_val, status='Active')
+        b_id_str = str(branch_id)
+        
+        emp_query = Employee.query.filter(db.cast(Employee.branch_id, db.String) == b_id_str, Employee.status == 'Active')
         all_active_for_retired = emp_query.all()
+        
         promo_query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
-            Employee.branch_id == b_id_val,
+            db.cast(Employee.branch_id, db.String) == b_id_str,
             Transfer.reason.ilike('%Gaaffii Gonfoo%')
         )
+        
         trans_query = Transfer.query.filter(
             db.or_(
-                Transfer.from_branch_id == b_id_val,
-                Transfer.to_branch_id == b_id_val
+                db.cast(Transfer.from_branch_id, db.String) == b_id_str,
+                db.cast(Transfer.to_branch_id, db.String) == b_id_str
             ),
             db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
         )
+        
         warning_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
-            Employee.branch_id == b_id_val,
+            db.cast(Employee.branch_id, db.String) == b_id_str,
             DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')
         )
+        
         penalty_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
-            Employee.branch_id == b_id_val,
+            db.cast(Employee.branch_id, db.String) == b_id_str,
             db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         )
 
     retired_count = len(get_retired_employees_list(all_active_for_retired))
+
+    resigned_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
+    if branch_id == 'all':
+        resigned_count = Employee.query.filter(Employee.status.in_(resigned_statuses)).count()
+    else:
+        resigned_count = Employee.query.filter(
+            db.cast(Employee.branch_id, db.String) == str(branch_id),
+            Employee.status.in_(resigned_statuses)
+        ).count()
 
     data = {
         "total": emp_query.count(),
@@ -345,7 +359,7 @@ def get_branch_stats(branch_id):
         "male": emp_query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count(),
         "female": emp_query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count(),
         "retired": retired_count,
-        "resigned": Employee.query.filter_by(branch_id=(int(branch_id) if str(branch_id).isdigit() else branch_id) if branch_id != 'all' else None).filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count() if branch_id != 'all' else Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count(),
+        "resigned": resigned_count,
         "transfers": trans_query.count(),
         "promotions": promo_query.count(),
         "warning": warning_query.count(),
