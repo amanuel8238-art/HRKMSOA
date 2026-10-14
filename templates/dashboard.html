@@ -260,18 +260,18 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const initialData = {
-                emp_count: {{ emp_count if emp_count is defined else 0 }},
-                active_emp_count: {{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }},
-                branch_count: {{ branch_count if branch_count is defined else 0 }},
-                transfer_count: {{ transfer_count if transfer_count is defined else 0 }},
-                male_count: {{ male_count if male_count is defined else 0 }},
-                female_count: {{ female_count if female_count is defined else 0 }},
-                retired_count: {{ retired_count if retired_count is defined else 0 }},
-                resigned_count: {{ resigned_count if resigned_count is defined else 0 }},
-                warning_count: {{ warning_count if warning_count is defined else 0 }},
-                penalty_count: {{ penalty_count if penalty_count is defined else 0 }},
-                reward_count: {{ reward_count if reward_count is defined else 0 }},
-                clean_count: {{ clean_count if clean_count is defined else 0 }}
+                total: {{ emp_count if emp_count is defined else 0 }},
+                active: {{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }},
+                branch_count: {{ branch_count if branch_count is defined else 39 }},
+                transfers: {{ transfer_count if transfer_count is defined else 0 }},
+                male: {{ male_count if male_count is defined else 0 }},
+                female: {{ female_count if female_count is defined else 0 }},
+                retired: {{ retired_count if retired_count is defined else 0 }},
+                resigned: {{ resigned_count if resigned_count is defined else 0 }},
+                warning: {{ warning_count if warning_count is defined else 0 }},
+                penalty: {{ penalty_count if penalty_count is defined else 0 }},
+                promotions: {{ reward_count if reward_count is defined else 0 }},
+                clean: {{ clean_count if clean_count is defined else 0 }}
             };
 
             updateDashboardUI(initialData);
@@ -280,16 +280,17 @@
         function updateDashboardUI(data) {
             const updateElementText = (id, val) => {
                 const el = document.getElementById(id);
-                if (el) el.innerText = val;
+                if (el) el.innerText = val !== undefined && val !== null ? val : 0;
             };
 
             updateElementText('statEmpCount', data.total);
             updateElementText('statActiveEmp', data.active);
+            updateElementText('statBranchCount', data.branch_count);
+            updateElementText('statTransferCount', data.transfers);
             updateElementText('statMale', data.male);
             updateElementText('statFemale', data.female);
             updateElementText('statRetired', data.retired);
             updateElementText('statResigned', data.resigned);
-            updateElementText('statTransferCount', data.transfers);
             updateElementText('statWarning', data.warning);
             updateElementText('statPenalty', data.penalty);
             updateElementText('statReward', data.promotions);
