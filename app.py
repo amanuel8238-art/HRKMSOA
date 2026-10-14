@@ -237,6 +237,7 @@ def logout():
 @login_required
 def dashboard():
     ethiopian_today = (2019, 1, 28)
+    branches = Branch.query.all()
 
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
@@ -287,6 +288,7 @@ def dashboard():
     clean_count = emp_count
 
     return render_template('dashboard.html', 
+                           branches=branches,
                            emp_count=emp_count, 
                            branch_count=branch_count, 
                            transfer_count=transfer_count,
@@ -299,6 +301,58 @@ def dashboard():
                            reward_count=reward_count,
                            clean_count=clean_count,
                            ethiopian_today=ethiopian_today)
+
+# 2. Filter API Endpoint (Filtarii yeroo jijjiirtu data damee sanaa fidu)
+@app.route('/api/dashboard-stats/<branch_id>')
+@login_required
+def get_branch_stats(branch_id):
+    if branch_id == 'all':
+        emp_query = Employee.query.filter_by(status='Active')
+        all_active_for_retired = emp_query.all()
+        promo_query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+        trans_query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+        warning_query = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
+        penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
+    else:
+        b_id_val = int(branch_id) if str(branch_id).isdigit() else branch_id
+        emp_query = Employee.query.filter_by(branch_id=b_id_val, status='Active')
+        all_active_for_retired = emp_query.all()
+        promo_query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
+            Employee.branch_id == b_id_val,
+            Transfer.reason.ilike('%Gaaffii Gonfoo%')
+        )
+        trans_query = Transfer.query.filter(
+            db.or_(
+                Transfer.from_branch_id == b_id_val,
+                Transfer.to_branch_id == b_id_val
+            ),
+            db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+        )
+        warning_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
+            Employee.branch_id == b_id_val,
+            DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')
+        )
+        penalty_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
+            Employee.branch_id == b_id_val,
+            db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
+        )
+
+    retired_count = len(get_retired_employees_list(all_active_for_retired))
+
+    data = {
+        "total": emp_query.count(),
+        "active": emp_query.count(),
+        "male": emp_query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count(),
+        "female": emp_query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count(),
+        "retired": retired_count,
+        "resigned": Employee.query.filter_by(branch_id=(int(branch_id) if str(branch_id).isdigit() else branch_id) if branch_id != 'all' else None).filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count() if branch_id != 'all' else Employee.query.filter(Employee.status.in_(['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed'])).count(),
+        "transfers": trans_query.count(),
+        "promotions": promo_query.count(),
+        "warning": warning_query.count(),
+        "penalty": penalty_query.count(),
+        "clean": emp_query.count()
+    }
+    return jsonify(data)
 
 @app.route('/branches')
 @login_required
