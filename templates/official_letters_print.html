@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <title>Xalayaa Official - HRKMSO</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; font-size: 13pt; color: #000; line-height: 1.5; }
+        .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 5mm auto; border: 1px solid #ccc; background: white; box-sizing: border-box; }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header img { width: 75px; height: 75px; object-fit: contain; }
+        .header h3 { margin: 2px 0; font-size: 15pt; font-weight: bold; }
+        .top-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; }
+        .content { text-align: justify; margin-bottom: 15px; }
+        .signature-section { margin-top: 30px; }
+        .gg-section { margin-top: 25px; font-size: 11pt; }
+        @media print {
+            body { background: none; }
+            .page { border: none; margin: 0; padding: 15mm; width: 100%; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <!-- Header Logo fi Mata Duree KMSO -->
+    <div class="header">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="HRKMSO Logo">
+        <h3>KOMISHINII MANNEEN SIRREESSAA OROMIYAA</h3>
+        <p style="margin: 0; font-size: 10pt;">OROMIA CORRECTIONAL FACILITIES COMMISSION - HRKMSO</p>
+        <hr style="border: 1px solid #000; margin-top: 8px;">
+    </div>
+
+    <!-- Lakk fi Guyyaa -->
+    <div class="top-info">
+        <div>Lakk: <u>{{ letter.ref_no }}</u></div>
+        <div>Guyyaa: <u>{{ letter.date }}</u></div>
+    </div>
+
+    <!-- 1. UNKA RAMADDII -->
+    {% if letter.letter_type == 'ramaddii' %}
+    <p><b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u></p>
+    <p><b>Dhimmi isa:- <u>Ramaddii hojii keessan isin beeksisuu ta'a.</u></b></p>
+
+    <div class="content">
+        Akkuma armaan olitti ibsuuf yaalametti koreen manaajimentii koomishinii walga'ii gaafa guyyaa {{ letter.meeting_date }} gaggeesseen hojiif hojjetaa wal simsiisuuf jecha {{ letter.effective_date }} irraa eeggalee <b>{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjetan murtaa'ee jira. 
+        <br><br>
+        Bu'uuruma kanaan mindaa Kaffaltii Iddoo .................................................... <b>{{ "{:,.2f}".format(letter.salary) }}</b><br>
+        Durgoo nyaataa ..................................................................................... <b>{{ "{:,.2f}".format(letter.food_allowance) }}</b><br>
+        <b>Ida'ama ................................................................................................ {{ "{:,.2f}".format(letter.salary + letter.food_allowance) }}</b>
+        <br><br>
+        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjetan sin beeksifna.
+        <br><br>
+        <b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        <br><br>
+        <b>Waaj/Ma/{{ letter.branch_short }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+    </div>
+    {% endif %}
+
+    <!-- 2. UNKA JIJJIIRRAA -->
+    {% if letter.letter_type == 'jijjiirraa' %}
+    <p><b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u></p>
+    <p><b>Dhimmi isa:- <u>Jijjiirraa keessan isin beeksisuu ta'a .</u></b></p>
+
+    <div class="content">
+        Akkuma armaan olitti ibsuuf yaalametti sababaa {{ letter.reason }} f jecha {{ letter.effective_date }} irraa eeggalee <b>{{ letter.from_branch }}</b> irraa gara <b>{{ letter.to_branch }}</b> tti <b>{{ letter.job_position }}</b> akka hojjetan murtaa'ee jira.
+        <br><br>
+        Bu'uuruma kanaan mindaa Gonfoo ............................................................. <b>{{ "{:,.2f}".format(letter.salary) }}</b><br>
+        Durgoo nyaataa ..................................................................................... <b>{{ "{:,.2f}".format(letter.food_allowance) }}</b><br>
+        <b>Ida'ama ................................................................................................ {{ "{:,.2f}".format(letter.salary + letter.food_allowance) }}</b>
+        <br><br>
+        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akkas hojjetan sin beeksifna.
+        <br><br>
+        <b>{{ letter.from_branch }}</b> miseensa isin bira jijjiiraman qabeenya mootummaa harka isaanii jiru harkaa fuchuudhaan gara jijjiiramanitti akka gaggeessitan isin beeksifna.
+        <br><br>
+        <b>Waaj/Mall/{{ letter.from_branch_short }}</b> hanga mindaa isin biratti kaffalame ibsamee kiliraansiin akka barreeffamuuf ni yaadachiifna.
+        <br><br>
+        <b>{{ letter.to_branch }}</b> kanuma hubachuudhaan mindaa miseensichaa baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        <br><br>
+        <b>Wa/Mall/{{ letter.to_branch_short }}</b> kanuma beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+    </div>
+    {% endif %}
+
+    <!-- 3. UNKA YAALAA -->
+    {% if letter.letter_type == 'yaala' %}
+    <p><b>{{ letter.to_hospital_office }}</b><br><u>{{ letter.location_city }}</u></p>
+    <p><b>Dhimmi isaa:- <u>Miseensa Yaala Isaani Xumuran Erguu Ta’a</u></b></p>
+
+    <div class="content">
+        Akkuma armaan olitti ibsuudhaaf yaalameeti miseensa waajira keessan kan ta’an <b>{{ letter.emp_rank_name }}</b> jedhamu sababa dhukkubsatan yaala ol’aanaa dhaaf Xalayaa Lakk <b>{{ letter.ref_referral }}</b> gaafa guyyaa <b>{{ letter.referral_date }}</b> Rifariin nuuf erguun keessan ni yaadatama.
+        <br><br>
+        Bu’uurumaa kanaan yeroo amma yaala isaani kan xumuran waan ta’ef beelama gaafa <b>{{ letter.appointment_date }}</b> kan qaban ta’u isaa ibsaa gaafa <b>{{ letter.return_date }}</b> irra eegale gara kessanitti kan ergine ta’u isaa xalayaa kanaa isiin beeksifna.
+        <br><br>
+        Da/Bi/Bul/Faayinaansii komishinii keenyaas akkata daanbii ittin bulmaata KMSO 168/2006 Kew/27-(5) jalatti tumameen akka bakka bustaniif isiin beeksifna .
+    </div>
+    {% endif %}
+
+    <!-- Nagaa Wajjin fi Mallattoo -->
+    <div class="signature-section">
+        <p>Nagaa wajjin</p>
+        <br>
+        <p><b>{{ letter.signer_name if letter.signer_name else 'Amanu\'eel Makuriyaa' }}</b></p>
+        <p><b>{{ letter.signer_rank if letter.signer_rank else 'Saj.Ol' }}</b></p>
+    </div>
+
+    <!-- Garaagaltoo (G/G) -->
+    <div class="gg-section">
+        <p><b>G/G</b></p>
+        {% for gg in letter.gg_list %}
+            <p>Ø {{ gg }}</p>
+        {% endfor %}
+    </div>
+
+    <!-- Print Button -->
+    <div style="text-align: center; margin-top: 30px;" class="no-print">
+        <button onclick="window.print()" style="background: #1e3a8a; color: white; padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">
+            🖨️ Xalayaa Kana Print Gochuu
+        </button>
+    </div>
+</div>
+
+</body>
+</html>

@@ -302,7 +302,6 @@ def dashboard():
                            clean_count=clean_count,
                            ethiopian_today=ethiopian_today)
 
-# 2. Filter API Endpoint (Filtarii yeroo jijjiirtu data damee sanaa fidu)
 @app.route('/api/dashboard-stats/<branch_id>')
 @login_required
 def get_branch_stats(branch_id):
@@ -1112,6 +1111,51 @@ def export_promotions_excel():
         as_attachment=True, 
         download_name='Gaaffii_Gulantaa_Gonfoo.xlsx'
     )
+
+# Route haaraa Xalayaalee Print Gochuuf dabalamte
+@app.route('/generate-letter', methods=['POST'])
+@login_required
+def generate_letter():
+    letter_type = request.form.get('letter_type')  # 'ramaddii', 'jijjiirraa', ykn 'yaala'
+    
+    letter_data = {
+        'letter_type': letter_type,
+        'ref_no': request.form.get('ref_no'),
+        'date': request.form.get('date'),
+        'emp_rank_name': request.form.get('emp_rank_name'),
+        'salary': float(request.form.get('salary', 0) or 0),
+        'food_allowance': float(request.form.get('food_allowance', 1200) or 1200),
+        'budget_name': request.form.get('budget_name'),
+        
+        # Ramaddii Specific
+        'meeting_date': request.form.get('meeting_date'),
+        'effective_date': request.form.get('effective_date'),
+        'branch_name': request.form.get('branch_name'),
+        'branch_short': request.form.get('branch_short'),
+        'job_position': request.form.get('job_position'),
+        
+        # Jijjiirraa Specific
+        'reason': request.form.get('reason'),
+        'from_branch': request.form.get('from_branch'),
+        'to_branch': request.form.get('to_branch'),
+        'from_branch_short': request.form.get('from_branch_short'),
+        'to_branch_short': request.form.get('to_branch_short'),
+        
+        # Yaala Specific
+        'to_hospital_office': request.form.get('to_hospital_office'),
+        'location_city': request.form.get('location_city'),
+        'ref_referral': request.form.get('ref_referral'),
+        'referral_date': request.form.get('referral_date'),
+        'appointment_date': request.form.get('appointment_date'),
+        'return_date': request.form.get('return_date'),
+        
+        # Signer & G/G
+        'signer_name': request.form.get('signer_name', "Amanu'eel Makuriyaa"),
+        'signer_rank': request.form.get('signer_rank', "Saj.Ol"),
+        'gg_list': request.form.getlist('gg_list')  # List of G/G entries
+    }
+
+    return render_template('official_letters_print.html', letter=letter_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
