@@ -12,10 +12,14 @@
         <header class="bg-indigo-900 text-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <!-- Buttoon Deebi'i (Back) miidhagaan dabalamteetti -->
+                    <!-- Buttoon Deebi'i (Back) -->
                     <a href="{{ url_for('dashboard') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-2 rounded-lg transition text-white flex items-center gap-1 font-semibold">
                         <i class="fas fa-arrow-left"></i> Deebi'i
                     </a>
+                    <!-- Logo Komishinii Manneen Sirreessaa Oromiyaa -->
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                         alt="HRKMSO Logo" 
+                         style="width: 40px; height: 40px; object-fit: contain; background: white; padding: 2px; border-radius: 50%;">
                     <h1 class="text-lg font-bold">HRKMSO - Tarree Miseensotaa</h1>
                 </div>
                 <a href="{{ url_for('logout') }}" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg transition text-white font-semibold">Bahi (Logout)</a>
