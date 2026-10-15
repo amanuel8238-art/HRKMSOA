@@ -44,7 +44,7 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
             
-            <!-- Navigation Tabs (Menu) -->
+            <!-- Navigation Tabs (Menu) - Xalayaalee (Ramaddii/Jijjiirraa) dabalate -->
             <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold">
                 <a href="{{ url_for('dashboard') }}" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Dashboordii</a>
                 <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
@@ -60,6 +60,9 @@
                 {% elif endpoint_exists('rank') %}
                     <a href="{{ url_for('rank') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
                 {% endif %}
+
+                <!-- Buttoon Xalayaalee Navigation Tabs keessatti -->
+                <a href="#" onclick="alert('Fuula unka xalayaaleeitiif qophaa'aa jira')" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Xalayaalee (Ramaddii/Jijjiirraa)</a>
 
                 {% if current_user.role == 'admin' and endpoint_exists('settings') %}
                 <a href="{{ url_for('settings') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Useroota (Users)</a>
@@ -222,7 +225,7 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions & Evaluation Link Card -->
+                <!-- Quick Actions & Evaluation Link Card - Buttoonota Xalayaalee Ramaddii, Jijjiirraa, Yaalaa dabalate -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 lg:col-span-2 flex flex-col justify-between">
                         <div>
@@ -233,6 +236,11 @@
                             <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-users mr-1"></i> Miseensota Ilaali</a>
                             <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-building mr-1"></i> Dameewwan Ilaali</a>
                             
+                            <!-- Buttoonota Xalayaalee Haaraa Quick Actions keessatti -->
+                            <a href="#ramaddiiModal" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-file-alt mr-1"></i> Xalayaa Ramaddii</a>
+                            <a href="#jijjiirraaModal" class="bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-exchange-alt mr-1"></i> Xalayaa Jijjiirraa</a>
+                            <a href="#yaalaModal" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-notes-medical mr-1"></i> Xalayaa Yaalaa</a>
+
                             {% if endpoint_exists('promotions') %}
                             <a href="{{ url_for('promotions') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gaaffii Gonfoo (Promotions)</a>
                             {% endif %}
