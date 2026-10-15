@@ -10,9 +10,14 @@
 <body class="bg-light d-flex align-items-center justify-content-center vh-100">
 
     <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
-        <div class="text-center mb-4">
-            <h3 class="fw-bold text-primary">HRKMSO Login</h3>
-            <p class="text-muted">Human Resources Management System</p>
+        <!-- Logo fi Mata Duree Itti Dabalamte -->
+        <div class="text-center mb-3">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                 alt="HRKMSO Logo" 
+                 style="width: 85px; height: 85px; object-fit: contain; background-color: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);" 
+                 class="mb-2">
+            <h4 class="fw-bold text-primary">Komishinii Manneen Sirreessaa Oromiyaa</h4>
+            <p class="text-muted small">Human Resources Management System</p>
         </div>
 
         <!-- Flash Messages (Ergaa dogoggoraa yoo jiraate agarsiisuuf) -->

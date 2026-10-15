@@ -14,8 +14,15 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="{{ url_for('dashboard') }}">
-                <i class="fas fa-users-cog me-2"></i> HRKMSO - Sirna Hooggansa Humna Namaa
+            <!-- Logo fi Maqaa Komishinii Walitti Qabsiisuun Asitti Galchame -->
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                     alt="HRKMSO Logo" 
+                     style="height: 40px; width: 40px; object-fit: contain; background: #fff; padding: 2px; border-radius: 50%; border: 1px solid #ccc;" 
+                     class="me-2">
+                <span>
+                    <i class="fas fa-users-cog me-2"></i> HRKMSO - Sirna Hooggansa Humna Namaa
+                </span>
             </a>
             
             <!-- Mobile Toggle Button (Responsive Menu) -->
