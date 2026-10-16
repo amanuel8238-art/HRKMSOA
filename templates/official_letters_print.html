@@ -7,7 +7,7 @@
     <style>
         @page {
             size: A4;
-            margin: 10mm 15mm 10mm 15mm;
+            margin: 0;
         }
 
         body {
@@ -20,82 +20,23 @@
             line-height: 1.5;
         }
 
+        /* Fuula A4 kan Letterhead background qabu */
         .page {
             width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
+            height: 297mm;
             margin: 10mm auto;
-            border: 1px solid #ccc;
-            background: white;
+            background: #fff url("static/images/letterhead.jpg") no-repeat center top;
+            background-size: 100% 100%;
             box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
             position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .main-content {
-            flex: 1;
-        }
-
-        /* Header Style matching official image with exact colors */
-        .header-table {
-            width: 100%;
-            border-bottom: 2px solid #004080;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-            border-collapse: collapse;
-        }
-
-        .header-table td {
-            vertical-align: middle;
-        }
-
-        .header-left {
-            font-size: 9.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #003366;
-            line-height: 1.2;
-            width: 38%;
-        }
-
-        .header-center {
-            text-align: center;
-            width: 24%;
-        }
-
-        .logo-circle {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            background: #003366;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 10pt;
-            margin: 0 auto;
-            border: 2px solid #fff;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-        }
-
-        .header-right {
-            text-align: right;
-            font-size: 9.5pt;
-            font-weight: bold;
-            color: #003366;
-            line-height: 1.2;
-            width: 38%;
+            padding: 55mm 20mm 25mm 20mm; /* Headariif mm 55, Footariif mm 25 iddoo dhiisa */
         }
 
         .recipient-section {
             font-size: 12pt;
             font-weight: bold;
-            margin-bottom: 15px;
-            margin-top: 5px;
+            margin-bottom: 20px;
         }
 
         .subject {
@@ -107,13 +48,13 @@
 
         .content {
             text-align: justify;
-            text-indent: 25px;
+            text-indent: 30px;
             margin-bottom: 12px;
         }
 
         .salary-table {
             width: 85%;
-            margin: 10px auto;
+            margin: 15px auto;
             border-collapse: collapse;
         }
 
@@ -138,7 +79,7 @@
         }
 
         .signature-section {
-            margin-top: 25px;
+            margin-top: 30px;
             float: right;
             width: 250px;
             text-align: center;
@@ -150,32 +91,17 @@
 
         .gg-section {
             clear: both;
-            padding-top: 25px;
+            padding-top: 30px;
             font-size: 10.5pt;
         }
 
         .gg-section ol {
-            margin: 3px 0;
+            margin: 5px 0;
             padding-left: 20px;
         }
 
         .gg-section li {
             margin-bottom: 2px;
-        }
-
-        /* Footer styling matching official image */
-        .footer-table {
-            width: 100%;
-            border-top: 1.5px solid #000;
-            padding-top: 8px;
-            margin-top: 30px;
-            font-size: 9.5pt;
-            color: #000;
-            border-collapse: collapse;
-        }
-
-        .footer-table td {
-            vertical-align: top;
         }
 
         @media print {
@@ -185,9 +111,12 @@
             .page {
                 border: none;
                 margin: 0;
-                padding: 10mm 15mm;
-                width: 100%;
+                width: 210mm;
+                height: 297mm;
                 box-shadow: none;
+                /* Yaro print gootan letterhead fakkii waliin print akka ta'uuf */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
             .no-print {
                 display: none !important;
@@ -214,137 +143,93 @@
 </div>
 
 <div class="page">
-    <div class="main-content">
-        <!-- Header Table -->
-        <table class="header-table">
-            <tr>
-                <td class="header-left">
-                    BULCHINSA MOOTUMMAA<br>
-                    NAANNOO OROMIYAATTI<br>
-                    KOMISHINII<br>
-                    MANNEEN SIRREESSAA<br>
-                    FINFINNEE
-                </td>
-                <td class="header-center">
-                    {% if letter.logo_url %}
-                        <img src="{{ letter.logo_url }}" alt="KMSO Logo" style="width: 65px; height: 65px; border-radius: 50%; object-fit: contain;">
-                    {% else %}
-                        <div class="logo-circle">KMSO</div>
-                    {% endif %}
-                </td>
-                <td class="header-right">
-                    በኦሮሚያ ክልላዊ መንግስት<br>
-                    प्रशासन<br>
-                    የማረሚያ ቤቶች ኮሚሽን<br>
-                    አዲስ አበባ
-                </td>
-            </tr>
-        </table>
 
-        <!-- Recipient Section (Lakk/Guyyaa header irraa waan jiruuf achirraa fuudhameera) -->
-        <div class="recipient-section">
-            {% if letter.letter_type == 'yaala' %}
-                <b>{{ letter.to_hospital_office }}</b><br><u>{{ letter.location_city }}</u>
-            {% else %}
-                <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
-            {% endif %}
-        </div>
-
-        <!-- 1. UNKA RAMADDII -->
-        {% if letter.letter_type == 'ramaddii' %}
-        <div class="subject">
-            Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
-        </div>
-
-        <div class="content">
-            Akkuma armaan olitti ibsuuf yaalametti koreen manaajimentii koomishinii walga'ii gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen hojiif hojjetaa wal simsiisuuf jecha sababa <b>{{ letter.reason if letter.reason else 'hojiin wal simsiisuuf' }}</b> tiin <b>{{ letter.effective_date }}</b> irraa eeggalee <b>{{ letter.branch_name if letter.branch_name else 'Head Office (Finfinnee)' }}</b> tti <b>{{ letter.job_position if letter.job_position else 'Raawwataa Hojii Eegumsaa' }}</b> ta’uun akka hojjetan murtaa'ee jira.
-        </div>
-
-        <p style="margin-bottom: 5px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
-        <table class="salary-table">
-            {% if letter.salary is defined and letter.salary %}
-            <tr>
-                <td>Mindaa Gonfoo</td>
-                <td class="dots"></td>
-                <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
-            </tr>
-            {% endif %}
-            {% if letter.position_allowance is defined and letter.position_allowance %}
-            <tr>
-                <td>Mindaa Kaffaltii Iddoo</td>
-                <td class="dots"></td>
-                <td class="amount">{{ "{:,.2f}".format(letter.position_allowance) }} Birr</td>
-            </tr>
-            {% endif %}
-            {% if letter.salary_difference is defined and letter.salary_difference %}
-            <tr>
-                <td>Garagarummaa Kaffaltii</td>
-                <td class="dots"></td>
-                <td class="amount">{{ "{:,.2f}".format(letter.salary_difference) }} Birr</td>
-            </tr>
-            {% endif %}
-            {% if letter.food_allowance is defined and letter.food_allowance %}
-            <tr>
-                <td>Durgoo Nyaataa</td>
-                <td class="dots"></td>
-                <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
-            </tr>
-            {% endif %}
-            <tr class="total-row">
-                <td>Ida'ama</td>
-                <td class="dots"></td>
-                <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.position_allowance or 0) + (letter.salary_difference or 0) + (letter.food_allowance or 0)) }} Birr</td>
-            </tr>
-        </table>
-
-        <div class="content" style="text-indent: 0; margin-top: 10px;">
-            Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjetan sin beeksifna.
-        </div>
-        <div class="content" style="text-indent: 0;">
-            <b>{{ letter.branch_name if letter.branch_name else 'Head Office (Finfinnee)' }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
-        </div>
-        <div class="content" style="text-indent: 0;">
-            Waaj/Ma/{{ letter.branch_short if letter.branch_short else 'Finfinnee' }} kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
-        </div>
+    <!-- Recipient Section -->
+    <div class="recipient-section">
+        {% if letter.letter_type == 'yaala' %}
+            <b>{{ letter.to_hospital_office }}</b><br><u>{{ letter.location_city }}</u>
+        {% else %}
+            <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
         {% endif %}
-
-        <!-- Signature Section -->
-        <div class="signature-section">
-            <p>Nagaa wajjin</p>
-            <br><br>
-            <p><b>{{ letter.signer_name if letter.signer_name else "Amanu'eel Makuriyaa" }}</b></p>
-            <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
-        </div>
-
-        <!-- Copy To (G/G) Section - Line by Line numbering -->
-        <div class="gg-section">
-            <p><b>G/G:</b></p>
-            <ol>
-                {% for gg in letter.gg_list %}
-                    <li>{{ gg }}</li>
-                {% endfor %}
-            </ol>
-        </div>
     </div>
 
-    <!-- Footer matching official document layout -->
-    <table class="footer-table">
+    <!-- 1. UNKA RAMADDII -->
+    {% if letter.letter_type == 'ramaddii' %}
+    <div class="subject">
+        Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
+    </div>
+
+    <div class="content">
+        Akkuma armaan olitti ibsuuf yaalametti koreen manaajimentii koomishinii walga'ii gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen hojiif hojjetaa wal simsiisuuf jecha {% if letter.reason %}sababa <b>{{ letter.reason }}</b> tiin{% endif %} <b>{{ letter.effective_date }}</b> irraa eeggalee <b>{{ letter.branch_name if letter.branch_name else 'Head Office (Finfinnee)' }}</b> tti <b>{{ letter.job_position if letter.job_position else 'Raawwataa Hojii Eegumsaa' }}</b> ta’uun akka hojjetan murtaa'ee jira.
+    </div>
+
+    <p style="margin-bottom: 5px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
+    
+    <table class="salary-table">
+        {% if letter.salary is defined and letter.salary %}
         <tr>
-            <td style="width: 33%;">
-                L.B 011 4 66 54 63<br>
-                is.ki 011-4 66 54 33<br>
-                E-Mail.orpricom@ethionet.com
-            </td>
-            <td style="width: 34%; text-align: center;">
-                L.S.P<br>
-                T.Y.Ø 59119
-            </td>
-            <td style="width: 33%; text-align: right;">
-                Fax<br>
-                Fkhn 011-4 66 54 81
-            </td>
+            <td>Mindaa Gonfoo</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
+        </tr>
+        {% endif %}
+        {% if letter.position_allowance is defined and letter.position_allowance %}
+        <tr>
+            <td>Mindaa Kaffaltii Iddoo</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.position_allowance) }} Birr</td>
+        </tr>
+        {% endif %}
+        {% if letter.salary_difference is defined and letter.salary_difference %}
+        <tr>
+            <td>Garagarummaa Kaffaltii</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary_difference) }} Birr</td>
+        </tr>
+        {% endif %}
+        {% if letter.food_allowance is defined and letter.food_allowance %}
+        <tr>
+            <td>Durgoo Nyaataa</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
+        </tr>
+        {% endif %}
+        <tr class="total-row">
+            <td>Ida'ama</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.position_allowance or 0) + (letter.salary_difference or 0) + (letter.food_allowance or 0)) }} Birr</td>
         </tr>
     </table>
+
+    <div class="content" style="text-indent: 0; margin-top: 10px;">
+        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjetan sin beeksifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        <b>{{ letter.branch_name if letter.branch_name else 'Head Office (Finfinnee)' }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        Waaj/Ma/{{ letter.branch_short if letter.branch_short else 'Finfinnee' }} kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+    </div>
+    {% endif %}
+
+    <!-- Signature Section -->
+    <div class="signature-section">
+        <p>Nagaa wajjin</p>
+        <br><br>
+        <p><b>{{ letter.signer_name if letter.signer_name else "Amanu'eel Makuriyaa" }}</b></p>
+        <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
+    </div>
+
+    <!-- Copy To (G/G) Section - Line by Line Numbered -->
+    <div class="gg-section">
+        <p><b>G/G:</b></p>
+        <ol>
+            {% for gg in letter.gg_list %}
+                <li>{{ gg }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+
 </div>
 
 </body>
