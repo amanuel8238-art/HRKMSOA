@@ -1,0 +1,87 @@
+<!-- UNKA XALAYAA RAMADDII QOPHEESSUU -->
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title">Unka Xalayaa Ramaddii Qopheessuu</h5>
+    </div>
+    
+    <form action="/create-letter" method="POST">
+        <!-- Letter Type -->
+        <input type="hidden" name="letter_type" value="ramaddii">
+
+        <div class="modal-body">
+            
+            <!-- Maqaa & Gulantaa Hojjetaa -->
+            <div class="form-group mb-3">
+                <label for="emp_rank_name">Maqaa & Gulantaa Hojjetaa (fkn: Saj.Ol Tasfaayee Libaan tiif):</label>
+                <input type="text" class="form-control" id="emp_rank_name" name="emp_rank_name" placeholder="Saj.Ol Tasfaayee Libaan tiif" required>
+            </div>
+
+            <!-- Maqaa Qaama Gaafate/Qaama Walga'ii fi Guyyaa Walga'ii -->
+            <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label for="requesting_body">Qaama Ramaddii Gaafate (fkn: Koreen Manaajimentii Komishinii):</label>
+                    <input type="text" class="form-control" id="requesting_body" name="requesting_body" placeholder="fkn: Koreen Manaajimentii Komishinii" required>
+                </div>
+                <div class="col-md-6 form-group mb-3">
+                    <label for="meeting_date">Guyyaa Walga'ii/Xalayaa Gaaffii:</label>
+                    <input type="text" class="form-control" id="meeting_date" name="meeting_date" placeholder="fkn: 10/01/2019" required>
+                </div>
+            </div>
+
+            <!-- Guyyaa Hojii Eegaluu, Maqaa Mana Sirreessaa/Damee fi Gita Hojii -->
+            <div class="row">
+                <div class="col-md-4 form-group mb-3">
+                    <label for="effective_date">Guyyaa Hojii Eegaluu (Effective Date):</label>
+                    <input type="text" class="form-control" id="effective_date" name="effective_date" placeholder="fkn: 01/02/2019" required>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="branch_name">Maqaa Mana Sirreessaa / Damee (fkn: Mag/Shanoo):</label>
+                    <input type="text" class="form-control" id="branch_name" name="branch_name" placeholder="fkn: Mag/Shanoo" required>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="job_position">Gita Hojii (Job Position):</label>
+                    <input type="text" class="form-control" id="job_position" name="job_position" placeholder="fkn: Raawwataa Hojii Eegumsaa" required>
+                </div>
+            </div>
+
+            <!-- Mindaa Gonfoo/Kaffaltii Iddoo, Durgoo Nyaataa fi Mindaa Kaffaltii Iddoo (Option) -->
+            <div class="row">
+                <div class="col-md-4 form-group mb-3">
+                    <label for="salary">Mindaa Gonfoo / Kaffaltii Iddoo:</label>
+                    <input type="number" step="0.01" class="form-control" id="salary" name="salary" placeholder="fkn: 19538.00" required>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="food_allowance">Durgoo Nyaataa:</label>
+                    <input type="number" step="0.01" class="form-control" id="food_allowance" name="food_allowance" placeholder="fkn: 1200.00" required>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="position_allowance">Mindaa Kaffaltii Iddoo (Filannoo/Option):</label>
+                    <input type="number" step="0.01" class="form-control" id="position_allowance" name="position_allowance" placeholder="fkn: 0.00">
+                </div>
+            </div>
+
+            <!-- Maqaa Baajataa & Gabaabduu Damee -->
+            <div class="row">
+                <div class="col-md-8 form-group mb-3">
+                    <label for="budget_name">Maqaa Baajataa (Budget Name):</label>
+                    <input type="text" class="form-control" id="budget_name" name="budget_name" placeholder="fkn: G/Saj. Qanansisaa Huseen" required>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="branch_short">Gabaabduu Damee/Waajjiraa (fkn: Shanoo / Walisoo):</label>
+                    <input type="text" class="form-control" id="branch_short" name="branch_short" placeholder="fkn: Mag/Shanoo" required>
+                </div>
+            </div>
+
+            <!-- Garaagaltoo (G/G) -->
+            <div class="form-group mb-3">
+                <label for="gg_list">Garaagaltoo (G/G) - Sarara sararaan (Line by line) galchi:</label>
+                <textarea class="form-control" id="gg_list" name="gg_list" rows="6" placeholder="Da/Bezii Hog/Qab/Namaa tiif KMSO&#10;Ma/Si/ Go/Mag/Shanoo tiif&#10;Wa/Mall/ Mag/Shanoo tiif Shanoo&#10;Ma/Si/ Go/Ki/Li/Shawaa tiif&#10;Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo"></textarea>
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Xalayaa Ramaddii Qopheessi</button>
+        </div>
+    </form>
+</div>

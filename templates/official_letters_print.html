@@ -36,7 +36,7 @@
         .recipient-section {
             font-size: 12pt;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .subject {
@@ -59,7 +59,7 @@
         }
 
         .salary-table td {
-            padding: 3px 5px;
+            padding: 4px 6px;
         }
 
         .salary-table .dots {
@@ -114,7 +114,7 @@
                 width: 210mm;
                 height: 297mm;
                 box-shadow: none;
-                /* Yaro print gootan letterhead fakkii waliin print akka ta'uuf */
+                /* Yeroo print gootan letterhead fakkii waliin print akka ta'uuf */
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -146,71 +146,58 @@
 
     <!-- Recipient Section -->
     <div class="recipient-section">
-        {% if letter.letter_type == 'yaala' %}
-            <b>{{ letter.to_hospital_office }}</b><br><u>{{ letter.location_city }}</u>
-        {% else %}
-            <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
-        {% endif %}
+        <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
     </div>
 
-    <!-- 1. UNKA RAMADDII -->
-    {% if letter.letter_type == 'ramaddii' %}
+    <!-- Dhimmi Isaa -->
     <div class="subject">
         Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
     </div>
 
+    <!-- Content Text -->
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti koreen manaajimentii koomishinii walga'ii gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen hojiif hojjetaa wal simsiisuuf jecha {% if letter.reason %}sababa <b>{{ letter.reason }}</b> tiin{% endif %} <b>{{ letter.effective_date }}</b> irraa eeggalee <b>{{ letter.branch_name if letter.branch_name else 'Head Office (Finfinnee)' }}</b> tti <b>{{ letter.job_position if letter.job_position else 'Raawwataa Hojii Eegumsaa' }}</b> ta’uun akka hojjetan murtaa'ee jira.
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
     </div>
 
-    <p style="margin-bottom: 5px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
+    <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
     
+    <!-- Salary Breakdown Table -->
     <table class="salary-table">
-        {% if letter.salary is defined and letter.salary %}
         <tr>
-            <td>Mindaa Gonfoo</td>
+            <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
             <td class="dots"></td>
             <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
         </tr>
-        {% endif %}
         {% if letter.position_allowance is defined and letter.position_allowance %}
         <tr>
-            <td>Mindaa Kaffaltii Iddoo</td>
+            <td>Mindaa Kaffaltii Iddoo (Extra)</td>
             <td class="dots"></td>
             <td class="amount">{{ "{:,.2f}".format(letter.position_allowance) }} Birr</td>
         </tr>
         {% endif %}
-        {% if letter.salary_difference is defined and letter.salary_difference %}
-        <tr>
-            <td>Garagarummaa Kaffaltii</td>
-            <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.salary_difference) }} Birr</td>
-        </tr>
-        {% endif %}
-        {% if letter.food_allowance is defined and letter.food_allowance %}
         <tr>
             <td>Durgoo Nyaataa</td>
             <td class="dots"></td>
             <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
         </tr>
-        {% endif %}
         <tr class="total-row">
             <td>Ida'ama</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.position_allowance or 0) + (letter.salary_difference or 0) + (letter.food_allowance or 0)) }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.position_allowance or 0) + (letter.food_allowance or 0)) }} Birr</td>
         </tr>
     </table>
 
     <div class="content" style="text-indent: 0; margin-top: 10px;">
-        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjetan sin beeksifna.
+        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjettan isin beeksifna.
     </div>
+
     <div class="content" style="text-indent: 0;">
-        <b>{{ letter.branch_name if letter.branch_name else 'Head Office (Finfinnee)' }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        <b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
     </div>
+
     <div class="content" style="text-indent: 0;">
-        Waaj/Ma/{{ letter.branch_short if letter.branch_short else 'Finfinnee' }} kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        <b>Waaj/Ma/{{ letter.branch_short }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
-    {% endif %}
 
     <!-- Signature Section -->
     <div class="signature-section">
@@ -220,12 +207,12 @@
         <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
     </div>
 
-    <!-- Copy To (G/G) Section - Line by Line Numbered -->
+    <!-- Copy To (G/G) Section -->
     <div class="gg-section">
-        <p><b>G/G:</b></p>
+        <p><b><u>G/G:</u></b></p>
         <ol>
             {% for gg in letter.gg_list %}
-                <li>{{ gg }}</li>
+                <li>Ø {{ gg }}</li>
             {% endfor %}
         </ol>
     </div>
