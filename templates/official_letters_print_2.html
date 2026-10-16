@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xalayaa Official - HRKMSO</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12pt;
+            color: #000;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            margin: 10mm auto;
+            background: #fff url("static/images/letterhead.jpg") no-repeat center top;
+            background-size: 100% 100%;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            position: relative;
+            padding: 55mm 20mm 25mm 20mm;
+        }
+
+        .recipient-section {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .subject {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            text-align: justify;
+            text-indent: 30px;
+            margin-bottom: 12px;
+        }
+
+        .salary-table {
+            width: 85%;
+            margin: 15px auto;
+            border-collapse: collapse;
+        }
+
+        .salary-table td {
+            padding: 4px 6px;
+        }
+
+        .salary-table .dots {
+            border-bottom: 1px dotted #000;
+        }
+
+        .salary-table .amount {
+            text-align: right;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .total-row td {
+            font-weight: bold;
+            border-top: 1px solid #000;
+            border-bottom: 2px solid #000;
+        }
+
+        .signature-section {
+            margin-top: 30px;
+            float: right;
+            width: 250px;
+            text-align: center;
+        }
+
+        .signature-section p {
+            margin: 2px 0;
+        }
+
+        .gg-section {
+            clear: both;
+            padding-top: 30px;
+            font-size: 10.5pt;
+        }
+
+        .gg-section ol {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+
+        .gg-section li {
+            margin-bottom: 2px;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+            .page {
+                border: none;
+                margin: 0;
+                width: 210mm;
+                height: 297mm;
+                box-shadow: none;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .btn-print {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+<div style="text-align: center; margin: 15px 0;" class="no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Xalayaa Kana Print Gochuu</button>
+</div>
+
+<div class="page">
+
+    <div class="recipient-section">
+        <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
+    </div>
+
+    <div class="subject">
+        Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
+    </div>
+
+    <div class="content">
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+    </div>
+
+    <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
+    
+    <table class="salary-table">
+        <tr>
+            <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
+        </tr>
+        {% if letter.position_allowance is defined and letter.position_allowance %}
+        <tr>
+            <td>Mindaa Kaffaltii Iddoo (Extra)</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.position_allowance) }} Birr</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>Durgoo Nyaataa</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
+        </tr>
+        <tr class="total-row">
+            <td>Ida'ama</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.position_allowance or 0) + (letter.food_allowance or 0)) }} Birr</td>
+        </tr>
+    </table>
+
+    <div class="content" style="text-indent: 0; margin-top: 10px;">
+        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjettan isin beeksifna.
+    </div>
+
+    <div class="content" style="text-indent: 0;">
+        <b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+    </div>
+
+    <div class="content" style="text-indent: 0;">
+        <b>Waaj/Ma/{{ letter.branch_short }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+    </div>
+
+    <div class="signature-section">
+        <p>Nagaa wajjin</p>
+        <br><br>
+        <p><b>{{ letter.signer_name if letter.signer_name else "Amanu'eel Makuriyaa" }}</b></p>
+        <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
+    </div>
+
+    <div class="gg-section">
+        <p><b><u>G/G:</u></b></p>
+        <ol>
+            {% for gg in letter.gg_list %}
+                <li>Ø {{ gg }}</li>
+            {% endfor %}
+        </ol>
+    </div>
+
+</div>
+
+</body>
+</html>
