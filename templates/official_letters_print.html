@@ -94,9 +94,10 @@
             font-size: 10.5pt;
         }
 
-        .gg-section ol {
+        .gg-section ul {
             margin: 5px 0;
             padding-left: 20px;
+            list-style-type: disc;
         }
 
         .gg-section li {
@@ -143,7 +144,7 @@
 <div class="page">
 
     <div class="recipient-section">
-        <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
+        <b>{{ letter.emp_rank_name }}</b><br><u>B/J</u>
     </div>
 
     <div class="subject">
@@ -151,7 +152,7 @@
     </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti Gahee hojii <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
     </div>
 
     <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
@@ -179,27 +180,27 @@
     </div>
 
     <div class="content" style="text-indent: 0;">
-        <b>{{ letter.finance_office if letter.finance_office else "wa/Mallaqaa" }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        <b>{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
     </div>
 
     <div class="content" style="text-indent: 0;">
-        <b>Waaj/Ma/{{ letter.branch_short }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        <b>Waaj/Ma/{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
 
     <div class="signature-section">
         <p>Nagaa wajjin</p>
         <br><br>
-        <p><b>{{ letter.signer_name if letter.signer_name else "Amanu'eel Makuriyaa" }}</b></p>
-        <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
+        <p><b>{{ letter.signer_name if letter.signer_name else "" }}</b></p>
+        <p><b>{{ letter.signer_rank if letter.signer_rank else "" }}</b></p>
     </div>
 
     <div class="gg-section">
         <p><b><u>G/G:</u></b></p>
-        <ol>
+        <ul>
             {% for gg in letter.gg_list %}
-                <li>Ø {{ gg }}</li>
+                <li>{{ gg }}</li>
             {% endfor %}
-        </ol>
+        </ul>
     </div>
 
 </div>
