@@ -1112,13 +1112,12 @@ def export_promotions_excel():
         download_name='Gaaffii_Gulantaa_Gonfoo.xlsx'
     )
 
-# Route xalayaa unka haaraa kanaaf qophaa'e (generate-letter)
+# Route xalayaa unka haaraa kanaaf qophaa'e (generate-letter) - official_letters_print_2.html waama
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
-    letter_type = request.form.get('letter_type')  # 'ramaddii', 'jijjiirraa', ykn 'yaala'
+    letter_type = request.form.get('letter_type')  
     
-    # G/G (Garaagaltoo) form irraa text area ykn list ta'ee dhufuusaa haala mijaawaan qabachuuf:
     raw_gg = request.form.get('gg_list')
     if raw_gg:
         gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()]
