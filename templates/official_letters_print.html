@@ -2,122 +2,382 @@
 <html lang="om">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xalayaa Official - HRKMSO</title>
     <style>
-        body { font-family: 'Times New Roman', serif; font-size: 13pt; color: #000; line-height: 1.5; }
-        .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 5mm auto; border: 1px solid #ccc; background: white; box-sizing: border-box; }
-        .header { text-align: center; margin-bottom: 15px; }
-        .header img { width: 75px; height: 75px; object-fit: contain; }
-        .header h3 { margin: 2px 0; font-size: 15pt; font-weight: bold; }
-        .top-info { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; }
-        .content { text-align: justify; margin-bottom: 15px; }
-        .signature-section { margin-top: 30px; }
-        .gg-section { margin-top: 25px; font-size: 11pt; }
+        @page {
+            size: A4;
+            margin: 10mm 15mm 10mm 15mm;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12pt;
+            color: #000;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 20mm;
+            margin: 10mm auto;
+            border: 1px solid #ccc;
+            background: white;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Header Style from Official Image */
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #004080;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            vertical-align: middle;
+        }
+
+        .header-left {
+            font-size: 10pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #003366;
+            line-height: 1.3;
+            width: 38%;
+        }
+
+        .header-center {
+            text-align: center;
+            width: 24%;
+        }
+
+        .header-center img, .logo-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: contain;
+            margin: 0 auto;
+        }
+
+        .logo-circle {
+            background: #003366;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 10pt;
+            font-weight: bold;
+            color: #003366;
+            line-height: 1.3;
+            width: 38%;
+        }
+
+        /* Reference & Date Table based on uploaded image */
+        .ref-date-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: collapse;
+        }
+
+        .ref-date-table td {
+            vertical-align: top;
+        }
+
+        .ref-box {
+            float: right;
+            width: 260px;
+            font-size: 11pt;
+        }
+
+        .ref-box .line-row {
+            margin-bottom: 4px;
+            border-bottom: 1px dotted #000;
+            padding-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .recipient-section {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .subject {
+            clear: both;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-top: 20px;
+            margin-bottom: 15px;
+        }
+
+        .content {
+            text-align: justify;
+            text-indent: 25px;
+            margin-bottom: 15px;
+        }
+
+        .salary-table {
+            width: 85%;
+            margin: 15px auto;
+            border-collapse: collapse;
+        }
+
+        .salary-table td {
+            padding: 4px 6px;
+        }
+
+        .salary-table .dots {
+            border-bottom: 1px dotted #000;
+        }
+
+        .salary-table .amount {
+            text-align: right;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .total-row td {
+            font-weight: bold;
+            border-top: 1px solid #000;
+            border-bottom: 2px solid #000;
+        }
+
+        .signature-section {
+            margin-top: 30px;
+            float: right;
+            width: 250px;
+            text-align: center;
+        }
+
+        .signature-section p {
+            margin: 2px 0;
+        }
+
+        .gg-section {
+            clear: both;
+            padding-top: 40px;
+            font-size: 11pt;
+        }
+
+        .gg-section p {
+            margin: 3px 0;
+        }
+
         @media print {
-            body { background: none; }
-            .page { border: none; margin: 0; padding: 15mm; width: 100%; }
-            .no-print { display: none; }
+            body {
+                background: none;
+            }
+            .page {
+                border: none;
+                margin: 0;
+                padding: 10mm 15mm;
+                width: 100%;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .btn-print {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
 
-<div class="page">
-    <!-- Header Logo fi Mata Duree KMSO -->
-    <div class="header">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="HRKMSO Logo">
-        <h3>KOMISHINII MANNEEN SIRREESSAA OROMIYAA</h3>
-        <p style="margin: 0; font-size: 10pt;">OROMIA CORRECTIONAL FACILITIES COMMISSION - HRKMSO</p>
-        <hr style="border: 1px solid #000; margin-top: 8px;">
-    </div>
+<div style="text-align: center; margin: 15px 0;" class="no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Xalayaa Kana Print Gochuu</button>
+</div>
 
-    <!-- Lakk fi Guyyaa -->
-    <div class="top-info">
-        <div>Lakk: <u>{{ letter.ref_no }}</u></div>
-        <div>Guyyaa: <u>{{ letter.date }}</u></div>
-    </div>
+<div class="page">
+
+    <!-- Header Table (from official image) -->
+    <table class="header-table">
+        <tr>
+            <td class="header-left">
+                BULCHINSA MOOTUMMAA<br>
+                NAANNOO OROMIYAATTI<br>
+                KOMISHINII<br>
+                MANNEEN SIRREESSAA<br>
+                FINFINNEE
+            </td>
+            <td class="header-center">
+                {% if letter.logo_url %}
+                    <img src="{{ letter.logo_url }}" alt="KMSO Logo">
+                {% else %}
+                    <div class="logo-circle">KMSO</div>
+                {% endif %}
+            </td>
+            <td class="header-right">
+                በኦሮሚያ ክልላዊ መንግስት<br>
+                प्रशासन<br>
+                የማረሚያ ቤቶች ኮሚሽን<br>
+                አዲስ አበባ
+            </td>
+        </tr>
+    </table>
+
+    <!-- Reference & Date Table (matching image format) -->
+    <table class="ref-date-table">
+        <tr>
+            <td class="recipient-section">
+                {% if letter.letter_type == 'yaala' %}
+                    <b>{{ letter.to_hospital_office }}</b><br><u>{{ letter.location_city }}</u>
+                {% else %}
+                    <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
+                {% endif %}
+            </td>
+            <td>
+                <div class="ref-box">
+                    <div class="line-row"><span><strong>Lakk:</strong></span> <span>{{ letter.ref_no }}</span></div>
+                    <div class="line-row"><span><strong>ቁጥር:</strong></span> <span>________________</span></div>
+                    <div class="line-row"><span><strong>Guyyaa:</strong></span> <span>{{ letter.date }}</span></div>
+                    <div class="line-row"><span><strong>ቀን:</strong></span> <span>________________</span></div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <!-- 1. UNKA RAMADDII -->
     {% if letter.letter_type == 'ramaddii' %}
-    <p><b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u></p>
-    <p><b>Dhimmi isa:- <u>Ramaddii hojii keessan isin beeksisuu ta'a.</u></b></p>
+    <div class="subject">
+        Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
+    </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti koreen manaajimentii koomishinii walga'ii gaafa guyyaa {{ letter.meeting_date }} gaggeesseen hojiif hojjetaa wal simsiisuuf jecha {{ letter.effective_date }} irraa eeggalee <b>{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjetan murtaa'ee jira. 
-        <br><br>
-        Bu'uuruma kanaan mindaa Kaffaltii Iddoo .................................................... <b>{{ "{:,.2f}".format(letter.salary) }}</b><br>
-        Durgoo nyaataa ..................................................................................... <b>{{ "{:,.2f}".format(letter.food_allowance) }}</b><br>
-        <b>Ida'ama ................................................................................................ {{ "{:,.2f}".format(letter.salary + letter.food_allowance) }}</b>
-        <br><br>
+        Akkuma armaan olitti ibsuuf yaalametti koreen manaajimentii koomishinii walga'ii gaafa guyyaa {{ letter.meeting_date }} gaggeesseen hojiif hojjetaa wal simsiisuuf jecha {{ letter.effective_date }} irraa eeggalee Head Office (Finfinnee) tti Raawwataa hojii Eegumsaan ta’uun akka hojjetan murtaa'ee jira.
+    </div>
+
+    <p style="margin-bottom: 5px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
+    <table class="salary-table">
+        <tr>
+            <td>Kaffaltii Iddoo</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
+        </tr>
+        <tr>
+            <td>Durgoo Nyaataa</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
+        </tr>
+        <tr class="total-row">
+            <td>Ida'ama</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary + letter.food_allowance) }} Birr</td>
+        </tr>
+    </table>
+
+    <div class="content" style="text-indent: 0; margin-top: 15px;">
         Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjetan sin beeksifna.
-        <br><br>
-        <b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
-        <br><br>
-        <b>Waaj/Ma/{{ letter.branch_short }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        Head Office (Finfinnee) kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        Waaj/Ma/Finfinnee kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
     {% endif %}
 
     <!-- 2. UNKA JIJJIIRRAA -->
     {% if letter.letter_type == 'jijjiirraa' %}
-    <p><b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u></p>
-    <p><b>Dhimmi isa:- <u>Jijjiirraa keessan isin beeksisuu ta'a .</u></b></p>
+    <div class="subject">
+        Dhimmi isaa:- Jijjiirraa keessan isin beeksisuu ta'a.
+    </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti sababaa <b>{{ letter.reason }}</b> tiin <b>{{ letter.effective_date }}</b> irraa eeggalee <b>{{ letter.from_branch }}</b> irraa gara <b>{{ letter.to_branch }}</b> tti jijjiiramtanii <b>{{ letter.job_position }}</b> akka hojjetan murtaa'ee jira.
-        <br><br>
-        Bu'uuruma kanaan:<br>
-        mindaa Gonfoo ............................................................. <b>{{ "{:,.2f}".format(letter.salary) }}</b><br>
-        Durgoo nyaataa ..................................................................................... <b>{{ "{:,.2f}".format(letter.food_allowance) }}</b><br>
-        <b>Ida'ama ................................................................................................ {{ "{:,.2f}".format(letter.salary + letter.food_allowance) }}</b>
-        <br><br>
+        Akkuma armaan olitti ibsuuf yaalametti sababaa <b>{{ letter.reason }}</b> tiin {{ letter.effective_date }} irraa eeggalee {{ letter.from_branch }} irraa gara {{ letter.to_branch }} tti jijjiiramtanii {{ letter.job_position }} akka hojjetan murtaa'ee jira.
+    </div>
+
+    <p style="margin-bottom: 5px; text-indent: 0;">Bu'uuruma kanaan:</p>
+    <table class="salary-table">
+        <tr>
+            <td>Mindaa Gonfoo</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
+        </tr>
+        <tr>
+            <td>Durgoo Nyaataa</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
+        </tr>
+        <tr class="total-row">
+            <td>Ida'ama</td>
+            <td class="dots"></td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary + letter.food_allowance) }} Birr</td>
+        </tr>
+    </table>
+
+    <div class="content" style="text-indent: 0; margin-top: 15px;">
         Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjetan sin beeksifna.
-        <br><br>
-        <b>{{ letter.from_branch }}</b> miseensa isin bira jijjiiraman qabeenya mootummaa harka isaanii jiru harkaa fuchuudhaan gara jijjiiramanitti akka gaggeessitan isin beeksifna.
-        <br><br>
-        <b>Waaj/Mall/{{ letter.from_branch_short }}</b> hanga mindaa isin biratti kaffalame ibsamee kiliraansiin akka barreeffamuuf ni yaadachiifna.
-        <br><br>
-        <b>{{ letter.to_branch }}</b> kanuma hubachuudhaan mindaa miseensichaa baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
-        <br><br>
-        <b>Wa/Mall/{{ letter.to_branch_short }}</b> kanuma beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        {{ letter.from_branch }} miseensa isin bira jijjiiraman qabeenya mootummaa harka isaanii jiru harkaa fuchuudhaan gara jijjiiramanitti akka gaggeessitan isin beeksifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        Waaj/Mall/{{ letter.from_branch_short }} hanga mindaa isin biratti kaffalame ibsamee kiliraansiin akka barreeffamuuf ni yaadachiifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        {{ letter.to_branch }} kanuma hubachuudhaan mindaa miseensichaa baajata maqaa {{ letter.budget_name }} qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+    </div>
+    <div class="content" style="text-indent: 0;">
+        Wa/Mall/{{ letter.to_branch_short }} kanuma beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
     {% endif %}
 
     <!-- 3. UNKA YAALAA -->
     {% if letter.letter_type == 'yaala' %}
-    <p><b>{{ letter.to_hospital_office }}</b><br><u>{{ letter.location_city }}</u></p>
-    <p><b>Dhimmi isaa:- <u>Miseensa Yaala Isaani Xumuran Erguu Ta’a</u></b></p>
+    <div class="subject">
+        Dhimmi isaa:- Miseensa Yaala Isaani Xumuran Erguu Ta’a.
+    </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuudhaaf yaalameeti miseensa waajira keessan kan ta’an <b>{{ letter.emp_rank_name }}</b> jedhamu sababa dhukkubsatan yaala ol’aanaa dhaaf Xalayaa Lakk <b>{{ letter.ref_referral }}</b> gaafa guyyaa <b>{{ letter.referral_date }}</b> Rifariin nuuf erguun keessan ni yaadatama.
+        Akkuma armaan olitti ibsuudhaaf yaalameeti miseensa waajira keessan kan ta’an <b>{{ letter.emp_rank_name }}</b> jedhamu sababa dhukkubsatan yaala ol’aanaa dhaaf Xalayaa Lakk {{ letter.ref_referral }} gaafa guyyaa {{ letter.referral_date }} Rifariin nuuf erguun keessan ni yaadatama.
         <br><br>
-        Bu’uurumaa kanaan yeroo amma yaala isaani kan xumuran waan ta’ef beelama gaafa <b>{{ letter.appointment_date }}</b> kan qaban ta’u isaa ibsaa gaafa <b>{{ letter.return_date }}</b> irra eegale gara kessanitti kan ergine ta’u isaa xalayaa kanaa isiin beeksifna.
+        Bu’uurumaa kanaan yeroo amma yaala isaani kan xumuran waan ta’ef beelama gaafa {{ letter.appointment_date }} kan qaban ta’u isaa ibsaa gaafa {{ letter.return_date }} irra eegale gara kessanitti kan ergine ta’u isaa xalayaa kanaa isiin beeksifna.
         <br><br>
-        Da/Bi/Bul/Faayinaansii komishinii keenyaas akkata daanbii ittin bulmaata KMSO 168/2006 Kew/27-(5) jalatti tumameen akka bakka bustaniif isiin beeksifna .
+        Da/Bi/Bul/Faayinaansii komishinii keenyaas akkata daanbii ittin bulmaata KMSO 168/2006 Kew/27-(5) jalatti tumameen akka bakka bustaniif isiin beeksifna.
     </div>
     {% endif %}
 
-    <!-- Nagaa Wajjin fi Mallattoo -->
+    <!-- Signature Section -->
     <div class="signature-section">
         <p>Nagaa wajjin</p>
-        <br>
-        <p><b>{{ letter.signer_name if letter.signer_name else 'Amanu\'eel Makuriyaa' }}</b></p>
-        <p><b>{{ letter.signer_rank if letter.signer_rank else 'Saj.Ol' }}</b></p>
+        <br><br>
+        <p><b>{{ letter.signer_name if letter.signer_name else "Amanu'eel Makuriyaa" }}</b></p>
+        <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
     </div>
 
-    <!-- Garaagaltoo (G/G) -->
+    <!-- Copy To (G/G) Section -->
     <div class="gg-section">
-        <p><b>G/G</b></p>
+        <p><b>G/G:</b></p>
         {% for gg in letter.gg_list %}
             <p>Ø {{ gg }}</p>
         {% endfor %}
     </div>
 
-    <!-- Print Button -->
-    <div style="text-align: center; margin-top: 30px;" class="no-print">
-        <button onclick="window.print()" style="background: #1e3a8a; color: white; padding: 10px 25px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">
-            🖨️ Xalayaa Kana Print Gochuu
-        </button>
-    </div>
 </div>
 
 </body>
