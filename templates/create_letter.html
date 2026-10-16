@@ -12,65 +12,70 @@
             
             <!-- Maqaa & Gulantaa Hojjetaa -->
             <div class="form-group mb-3">
-                <label for="emp_rank_name">Maqaa & Gulantaa Hojjetaa (fkn: Saj.Ol Tasfaayee Libaan tiif):</label>
-                <input type="text" class="form-control" id="emp_rank_name" name="emp_rank_name" placeholder="Saj.Ol Tasfaayee Libaan tiif" required>
+                <label for="emp_rank_name">Maqaa & Gulantaa Hojjetaa (fkn: Saj.Ol Talilaa Gutamaa tiif):</label>
+                <input type="text" class="form-control" id="emp_rank_name" name="emp_rank_name" placeholder="Saj.Ol Talilaa Gutamaa tiif" required>
             </div>
 
-            <!-- Mindaa Gonfoo (Salary) -->
+            <!-- Qaama Gaafate & Guyyaa Walga'ii -->
             <div class="row">
                 <div class="col-md-6 form-group mb-3">
-                    <label for="salary">Mindaa Gonfoo (Salary):</label>
-                    <input type="number" step="0.01" class="form-control" id="salary" name="salary" placeholder="fkn: 19538.00" required>
+                    <label for="requesting_body">Qaama Gaafate / Manaajimentii (Bakka Duwwaa 1ffaa):</label>
+                    <input type="text" class="form-control" id="requesting_body" name="requesting_body" placeholder="fkn: Koreen Manaajimentii Komishinii" required>
                 </div>
-
-                <!-- Durgoo Nyaataa (Food Allowance) -->
-                <div class="col-md-6 form-group mb-3">
-                    <label for="food_allowance">Durgoo Nyaataa (Food Allowance):</label>
-                    <input type="number" step="0.01" class="form-control" id="food_allowance" name="food_allowance" placeholder="fkn: 1200.00" required>
-                </div>
-            </div>
-
-            <!-- Maqaa Baajataa (Budget Name) -->
-            <div class="form-group mb-3">
-                <label for="budget_name">Maqaa Baajataa (Budget Name):</label>
-                <input type="text" class="form-control" id="budget_name" name="budget_name" placeholder="fkn: G/Saj. Qanansisaa Huseen" required>
-            </div>
-
-            <!-- Guyyaa Walga'ii Manaajimentii & Guyyaa Hojii Eegaluu -->
-            <div class="row">
                 <div class="col-md-6 form-group mb-3">
                     <label for="meeting_date">Guyyaa Walga'ii Manaajimentii:</label>
                     <input type="text" class="form-control" id="meeting_date" name="meeting_date" placeholder="fkn: 10/01/2019" required>
                 </div>
+            </div>
 
-                <div class="col-md-6 form-group mb-3">
+            <!-- Guyyaa Hojii Eegaluu, Maqaa Mana Sirreessaa & Gita Hojii -->
+            <div class="row">
+                <div class="col-md-4 form-group mb-3">
                     <label for="effective_date">Guyyaa Hojii Eegaluu (Effective Date):</label>
                     <input type="text" class="form-control" id="effective_date" name="effective_date" placeholder="fkn: 01/02/2019" required>
                 </div>
-            </div>
-
-            <!-- Maqaa Damee Ramaddii & Gabaabduu Damee -->
-            <div class="row">
-                <div class="col-md-8 form-group mb-3">
-                    <label for="branch_name">Maqaa Damee Ramaddii:</label>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="branch_name">Maqaa Mana Sirreessaa (Ma/Sir/_____):</label>
                     <input type="text" class="form-control" id="branch_name" name="branch_name" placeholder="fkn: Mag/Shanoo" required>
                 </div>
-
                 <div class="col-md-4 form-group mb-3">
-                    <label for="branch_short">Gabaabduu Damee (Branch Short):</label>
-                    <input type="text" class="form-control" id="branch_short" name="branch_short" placeholder="fkn: Shanoo" required>
+                    <label for="job_position">Gahee Hojii (Job Position):</label>
+                    <input type="text" class="form-control" id="job_position" name="job_position" placeholder="fkn: Raawwataa Hojii Eegumsaa" required>
                 </div>
             </div>
 
-            <!-- Gita Hojii -->
-            <div class="form-group mb-3">
-                <label for="job_position">Gita Hojii:</label>
-                <input type="text" class="form-control" id="job_position" name="job_position" placeholder="fkn: Raawwataa Hojii Eegumsaa" required>
+            <!-- Mindaa Gonfoo (Salary) & Durgoo Nyaataa -->
+            <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label for="salary">Mindaa Gonfoo / Kaffaltii Iddoo (Birr):</label>
+                    <input type="number" step="0.01" class="form-control" id="salary" name="salary" placeholder="fkn: 19538.00" required>
+                </div>
+
+                <div class="col-md-6 form-group mb-3">
+                    <label for="food_allowance">Durgoo Nyaataa (Birr):</label>
+                    <input type="number" step="0.01" class="form-control" id="food_allowance" name="food_allowance" placeholder="fkn: 1200.00" required>
+                </div>
+            </div>
+
+            <!-- Maqaa Baajataa, Waajjira Mallaqaa & Gabaabduu Damee -->
+            <div class="row">
+                <div class="col-md-4 form-group mb-3">
+                    <label for="budget_name">Maqaa Baajataa (Budget Name):</label>
+                    <input type="text" class="form-control" id="budget_name" name="budget_name" placeholder="fkn: G/Saj. Qanansisaa Huseen" required>
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="finance_office">Waajjira Mallaqaa (wa/Mallaqaa _____):</label>
+                    <input type="text" class="form-control" id="finance_office" name="finance_office" placeholder="fkn: Waaj/Mallaqaa Shanoo">
+                </div>
+                <div class="col-md-4 form-group mb-3">
+                    <label for="branch_short">Waaj/Ma/ Mana Sirreessaa (Branch Short):</label>
+                    <input type="text" class="form-control" id="branch_short" name="branch_short" placeholder="fkn: Mag/Shanoo" required>
+                </div>
             </div>
 
             <!-- Garaagaltoo (G/G) -->
             <div class="form-group mb-3">
-                <label for="gg_list">Garaagaltoo (G/G) - Lakkofsa G/G lakkoofsa sararaatiin (Line by line) galchi:</label>
+                <label for="gg_list">Garaagaltoo (G/G) - Sarara sararaan (Line by line) galchi:</label>
                 <textarea class="form-control" id="gg_list" name="gg_list" rows="6" placeholder="Da/Bezii Hog/Qab/Namaa tiif KMSO&#10;Ma/Si/ Go/Mag/Shanoo tiif&#10;Wa/Mall/ Mag/Shanoo tiif Shanoo&#10;Ma/Si/ Go/Ki/Li/Shawaa tiif&#10;Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo"></textarea>
             </div>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xalayaa Official - HRKMSO</title>
+    <title>Xalayaa Ramaddii Hojii - HRKMSO</title>
     <style>
         @page {
             size: A4;
@@ -17,10 +17,9 @@
             background-color: #f5f5f5;
             margin: 0;
             padding: 0;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
-        /* Fuula A4 kan Letterhead background qabu */
         .page {
             width: 210mm;
             height: 297mm;
@@ -30,7 +29,7 @@
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0,0,0,0.15);
             position: relative;
-            padding: 55mm 20mm 25mm 20mm; /* Headariif mm 55, Footariif mm 25 iddoo dhiisa */
+            padding: 55mm 20mm 25mm 20mm;
         }
 
         .recipient-section {
@@ -114,7 +113,6 @@
                 width: 210mm;
                 height: 297mm;
                 box-shadow: none;
-                /* Yeroo print gootan letterhead fakkii waliin print akka ta'uuf */
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -144,37 +142,26 @@
 
 <div class="page">
 
-    <!-- Recipient Section -->
     <div class="recipient-section">
         <b>{{ letter.emp_rank_name }}</b> tiif<br><u>B/J</u>
     </div>
 
-    <!-- Dhimmi Isaa -->
     <div class="subject">
         Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
     </div>
 
-    <!-- Content Text -->
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti Gahee hojii <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
     </div>
 
     <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
     
-    <!-- Salary Breakdown Table -->
     <table class="salary-table">
         <tr>
             <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
             <td class="dots"></td>
             <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
         </tr>
-        {% if letter.position_allowance is defined and letter.position_allowance %}
-        <tr>
-            <td>Mindaa Kaffaltii Iddoo (Extra)</td>
-            <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.position_allowance) }} Birr</td>
-        </tr>
-        {% endif %}
         <tr>
             <td>Durgoo Nyaataa</td>
             <td class="dots"></td>
@@ -183,7 +170,7 @@
         <tr class="total-row">
             <td>Ida'ama</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.position_allowance or 0) + (letter.food_allowance or 0)) }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.food_allowance or 0)) }} Birr</td>
         </tr>
     </table>
 
@@ -192,14 +179,13 @@
     </div>
 
     <div class="content" style="text-indent: 0;">
-        <b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        <b>{{ letter.finance_office if letter.finance_office else "wa/Mallaqaa" }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
     </div>
 
     <div class="content" style="text-indent: 0;">
         <b>Waaj/Ma/{{ letter.branch_short }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
 
-    <!-- Signature Section -->
     <div class="signature-section">
         <p>Nagaa wajjin</p>
         <br><br>
@@ -207,7 +193,6 @@
         <p><b>{{ letter.signer_rank if letter.signer_rank else "Saj.Ol" }}</b></p>
     </div>
 
-    <!-- Copy To (G/G) Section -->
     <div class="gg-section">
         <p><b><u>G/G:</u></b></p>
         <ol>
