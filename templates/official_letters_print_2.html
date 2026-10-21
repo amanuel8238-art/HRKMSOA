@@ -159,7 +159,11 @@
     </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "_____________________________________" }}</b> gaafa guyyaa <b>{{ letter.meeting_date if letter.meeting_date else "________________________" }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru.
+    </div>
+
+    <div class="content">
+        Bu'uuruma kanaan <b>{{ letter.effective_date if letter.effective_date else "______________________" }}</b> irraa eeggalee Ma/Sir/<b>{{ letter.branch_name if letter.branch_name else "_____________" }}</b> tti Gitaa hojii <b>{{ letter.job_position if letter.job_position else "_______________________________" }}</b> akka hojjettan murtaa'ee jira.
     </div>
 
     <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
@@ -168,17 +172,17 @@
         <tr>
             <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary) if letter.salary else "19,538.00" }} Birr</td>
         </tr>
         <tr>
             <td>Durgoo Nyaataa</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) if letter.food_allowance else "1,200.00" }} Birr</td>
         </tr>
         <tr class="total-row">
             <td>Ida'ama</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.food_allowance or 0)) }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format((letter.salary or 19538.0) + (letter.food_allowance or 1200.0)) }} Birr</td>
         </tr>
     </table>
 
@@ -187,11 +191,11 @@
     </div>
 
     <div class="content" style="text-indent: 0;">
-        <b>{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        Ma/Sir/<b>{{ letter.branch_name if letter.branch_name else "_______________" }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name if letter.budget_name else "________________________" }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
     </div>
 
     <div class="content" style="text-indent: 0;">
-        <b>Waaj/Ma/{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        Waaj/Ma/<b>{{ letter.branch_name if letter.branch_name else "________________" }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
 
     <div class="signature-section">
