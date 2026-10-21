@@ -104,13 +104,6 @@
             margin-bottom: 2px;
         }
 
-        .gg-location {
-            list-style-type: none !important;
-            margin-left: 20px;
-            text-decoration: underline;
-            font-weight: bold;
-        }
-
         @media print {
             body {
                 background: none;
@@ -159,11 +152,11 @@
     </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "_____________________________________" }}</b> gaafa guyyaa <b>{{ letter.meeting_date if letter.meeting_date else "________________________" }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru.
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru.
     </div>
 
     <div class="content">
-        Bu'uuruma kanaan <b>{{ letter.effective_date if letter.effective_date else "______________________" }}</b> irraa eeggalee Ma/Sir/<b>{{ letter.branch_name if letter.branch_name else "_____________" }}</b> tti Gitaa hojii <b>{{ letter.job_position if letter.job_position else "_______________________________" }}</b> akka hojjettan murtaa'ee jira.
+        Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee Ma/Sir/<b>{{ letter.branch_name }}</b> tti Gitaa hojii <b>{{ letter.job_position }}</b> akka hojjettan murtaa'ee jira.
     </div>
 
     <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
@@ -172,17 +165,17 @@
         <tr>
             <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.salary) if letter.salary else "19,538.00" }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
         </tr>
         <tr>
             <td>Durgoo Nyaataa</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) if letter.food_allowance else "1,200.00" }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
         </tr>
         <tr class="total-row">
             <td>Ida'ama</td>
             <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format((letter.salary or 19538.0) + (letter.food_allowance or 1200.0)) }} Birr</td>
+            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.food_allowance or 0)) }} Birr</td>
         </tr>
     </table>
 
@@ -191,30 +184,29 @@
     </div>
 
     <div class="content" style="text-indent: 0;">
-        Ma/Sir/<b>{{ letter.branch_name if letter.branch_name else "_______________" }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name if letter.budget_name else "________________________" }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        Ma/Sir/<b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
     </div>
 
     <div class="content" style="text-indent: 0;">
-        Waaj/Ma/<b>{{ letter.branch_name if letter.branch_name else "________________" }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        Waaj/Ma/<b>{{ letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
 
     <div class="signature-section">
         <p>Nagaa wajjin</p>
         <br><br>
-        <p><b>{{ letter.signer_name if letter.signer_name else "" }}</b></p>
-        <p><b>{{ letter.signer_rank if letter.signer_rank else "" }}</b></p>
+        {% if letter.signer_name %}
+            <p><b>{{ letter.signer_name }}</b></p>
+        {% endif %}
+        {% if letter.signer_rank %}
+            <p><b>{{ letter.signer_rank }}</b></p>
+        {% endif %}
     </div>
 
     <div class="gg-section">
         <p><b><u>G/G:</u></b></p>
         <ul>
-            {% for group in letter.copies_grouped %}
-                {% for office in group.offices %}
-                    <li>{{ office }}</li>
-                {% endfor %}
-                {% if group.location %}
-                    <li class="gg-location">{{ group.location }}</li>
-                {% endif %}
+            {% for gg in letter.gg_list %}
+                <li>{{ gg }}</li>
             {% endfor %}
         </ul>
     </div>
