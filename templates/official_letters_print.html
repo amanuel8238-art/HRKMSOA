@@ -1,209 +1,84 @@
-<!DOCTYPE html>
-<html lang="om">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xalayaa Ramaddii Hojii - HRKMSO</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 0;
-        }
+<!-- Modal / Form Xalayaa Qopheessuu -->
+<div class="modal fade" id="officialLetterModal2" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-envelope-open-text me-2"></i>Unka Xalayaa Ramaddii Qopheessuu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('generate_letter') }}" method="POST" target="_blank">
+                <input type="hidden" name="letter_type" value="official_letter_2">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Maqaa & Gulantaa Hojjetaa (fkn: Saj.Ol Talilaa Gutamaa tiif):</label>
+                            <input type="text" name="emp_rank_name" class="form-control" placeholder="fkn: Saj.Ol Talilaa Gutamaa tiif" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Mindaa Gonfoo (Salary):</label>
+                            <input type="number" step="0.01" name="salary" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Durgoo Nyaataa (Food Allowance):</label>
+                            <input type="number" step="0.01" name="food_allowance" class="form-control" placeholder="0.00">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Maqaa Baajataa (Budget Name):</label>
+                            <input type="text" name="budget_name" class="form-control" placeholder="fkn: G/Saj. Qanansisaa Huseen" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Qaama Gaafate / Manaajimentii:</label>
+                            <input type="text" name="requesting_body" class="form-control" placeholder="fkn: Koreen Manaajimentii Komishinii">
+                        </div>
 
-        body {
-            font-family: "Times New Roman", Times, serif;
-            font-size: 12pt;
-            color: #000;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Guyyaa Walga'ii Manaajimentii:</label>
+                            <input type="text" name="meeting_date" class="form-control" placeholder="DD/MM/YYYY" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Guyyaa Hojii Eegaluu (Effective Date):</label>
+                            <input type="text" name="effective_date" class="form-control" placeholder="DD/MM/YYYY" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Maqaa Mana Sirreessaa (Ma/Sir/_____):</label>
+                            <input type="text" name="branch_name" class="form-control" placeholder="fkn: Mag/Shanoo" required>
+                        </div>
 
-        .page {
-            width: 210mm;
-            height: 297mm;
-            margin: 10mm auto;
-            background: #fff url("static/images/letterhead.jpg") no-repeat center top;
-            background-size: 100% 100%;
-            box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0,0,0,0.15);
-            position: relative;
-            padding: 55mm 20mm 25mm 20mm;
-        }
+                        <!-- BIRaAn SIRREEFFAME: value="Rawwataa hojii Eegumsaan" haqameera -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Gahee Hojii (Job Position):</label>
+                            <input type="text" name="job_position" class="form-control" placeholder="Fkn: Rawwataa hojii Eegumsaan / Itti Gaafatamaa Galmee" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Waaj/Ma/ Mana Sirreessaa (Branch Short):</label>
+                            <input type="text" name="branch_short" class="form-control" placeholder="fkn: Mag/Shanoo">
+                        </div>
 
-        .recipient-section {
-            font-size: 12pt;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Maqaa Mallatteessaa (Signer Name):</label>
+                            <input type="text" name="signer_name" class="form-control" placeholder="Maqaa Mallaatteessaa">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Aangoo/Rank Mallatteessaa (Signer Rank):</label>
+                            <input type="text" name="signer_rank" class="form-control" placeholder="fkn: Komaandara">
+                        </div>
 
-        .subject {
-            font-weight: bold;
-            text-decoration: underline;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        .content {
-            text-align: justify;
-            text-indent: 30px;
-            margin-bottom: 12px;
-        }
-
-        .salary-table {
-            width: 85%;
-            margin: 15px auto;
-            border-collapse: collapse;
-        }
-
-        .salary-table td {
-            padding: 4px 6px;
-        }
-
-        .salary-table .dots {
-            border-bottom: 1px dotted #000;
-        }
-
-        .salary-table .amount {
-            text-align: right;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .total-row td {
-            font-weight: bold;
-            border-top: 1px solid #000;
-            border-bottom: 2px solid #000;
-        }
-
-        .signature-section {
-            margin-top: 30px;
-            float: right;
-            width: 250px;
-            text-align: center;
-        }
-
-        .signature-section p {
-            margin: 2px 0;
-        }
-
-        .gg-section {
-            clear: both;
-            padding-top: 30px;
-            font-size: 10.5pt;
-        }
-
-        .gg-section ul {
-            margin: 5px 0;
-            padding-left: 20px;
-            list-style-type: disc;
-        }
-
-        .gg-section li {
-            margin-bottom: 2px;
-        }
-
-        @media print {
-            body {
-                background: none;
-            }
-            .page {
-                border: none;
-                margin: 0;
-                width: 210mm;
-                height: 297mm;
-                box-shadow: none;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .no-print {
-                display: none !important;
-            }
-        }
-
-        .btn-print {
-            background-color: #0d6efd;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            font-size: 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-    </style>
-</head>
-<body>
-
-<div style="text-align: center; margin: 15px 0;" class="no-print">
-    <button class="btn-print" onclick="window.print()">🖨️ Xalayaa Kana Print Gochuu</button>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Garaagaltoo (G/G) - Sarara sararaan (Line by line) galchi:</label>
+                            <textarea name="gg_list" class="form-control" rows="5" placeholder="Da/Bezii Hog/Qab/Namaa tiif KMSO
+Ma/Si/ Go/Mag/Shanoo tiif
+Wa/Mall/ Mag/Shanoo tiif
+Shanoo"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cufi</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-print me-1"></i> Xalayaa Qopheessi & Print</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-
-<div class="page">
-
-    <div class="recipient-section">
-        <b>{{ letter.emp_rank_name }}</b><br><u>B/J</u>
-    </div>
-
-    <div class="subject">
-        Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
-    </div>
-
-    <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
-    </div>
-
-    <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
-    
-    <table class="salary-table">
-        <tr>
-            <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
-            <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
-        </tr>
-        <tr>
-            <td>Durgoo Nyaataa</td>
-            <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format(letter.food_allowance) }} Birr</td>
-        </tr>
-        <tr class="total-row">
-            <td>Ida'ama</td>
-            <td class="dots"></td>
-            <td class="amount">{{ "{:,.2f}".format((letter.salary or 0) + (letter.food_allowance or 0)) }} Birr</td>
-        </tr>
-    </table>
-
-    <div class="content" style="text-indent: 0; margin-top: 10px;">
-        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjettan isin beeksifna.
-    </div>
-
-    <div class="content" style="text-indent: 0;">
-        <b>{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
-    </div>
-
-    <div class="content" style="text-indent: 0;">
-        <b>Waaj/Ma/{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
-    </div>
-
-    <div class="signature-section">
-        <p>Nagaa wajjin</p>
-        <br><br>
-        <p><b>{{ letter.signer_name if letter.signer_name else "" }}</b></p>
-        <p><b>{{ letter.signer_rank if letter.signer_rank else "" }}</b></p>
-    </div>
-
-    <div class="gg-section">
-        <p><b><u>G/G:</u></b></p>
-        <ul>
-            {% for gg in letter.gg_list %}
-                <li>{{ gg }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-</div>
-
-</body>
-</html>
