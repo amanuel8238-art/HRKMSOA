@@ -196,12 +196,13 @@
 
     <div class="gg-section">
         <p style="margin: 0;"><b><u>G/G:</u></b></p>
-        <ul>
+        <ul style="padding-left: 18px; margin: 3px 0;">
             {% for gg in letter.gg_list %}
-                {% if gg.strip().startswith(('KMSO', 'Shanoo', 'Walisoo')) %}
-                    <li style="list-style-type: none; margin-left: 15px;"><b><u>{{ gg.strip() }}</u></b></li>
+                {% set line = gg.strip() %}
+                {% if line in ['KMSO', 'Shanoo', 'Walisoo'] or line.startswith(('KMSO', 'Shanoo', 'Walisoo')) %}
+                    <li style="list-style-type: none; margin-left: -5px; margin-bottom: 3px;"><b><u>{{ line }}</u></b></li>
                 {% else %}
-                    <li>{{ gg }}</li>
+                    <li style="margin-bottom: 1px;">{{ line }}</li>
                 {% endif %}
             {% endfor %}
         </ul>
