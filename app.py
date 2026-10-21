@@ -1118,15 +1118,15 @@ def export_promotions_excel():
 def generate_letter():
     letter_type = request.form.get('letter_type')  
     
-    # G/G unka (form) irraa ergame akka sirriitti qabamu
+    # G/G unka irraa ergame qindeessuu
     raw_gg = request.form.get('gg_list', '')
     if raw_gg:
         gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()]
     else:
         gg_entries = request.form.getlist('gg_list')
 
-    # Gita hojii unka irraa dhufe sirriitti qabachuuf
-    job_position_val = request.form.get('job_position') or request.form.get('job_title') or '_______________________________'
+    # Kan kanaan duraa balleessinee, unka keessaa kallattiitti gita hojii (job_position) dhufe qofa akka fudhatu gochuu
+    job_position_val = request.form.get('job_position') or '_______________________________'
 
     letter_data = {
         'letter_type': letter_type,
@@ -1135,7 +1135,7 @@ def generate_letter():
         'meeting_date': request.form.get('meeting_date', '________________________'),
         'effective_date': request.form.get('effective_date', '______________________'),
         'branch_name': request.form.get('branch_name', '_____________'),
-        'job_position': job_position_val,
+        'job_position': job_position_val,  # As irratti kallattiitti kan unka irraa dhufe qofa qabata
         'salary': float(request.form.get('salary', 0) or 0),
         'food_allowance': float(request.form.get('food_allowance', 0) or 0),
         'budget_name': request.form.get('budget_name', '________________________'),
