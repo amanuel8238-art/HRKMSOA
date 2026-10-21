@@ -1118,14 +1118,31 @@ def export_promotions_excel():
 def generate_letter():
     letter_type = request.form.get('letter_type')
     
-    # 1. Garaagaltoo (G/G) unka irraa ergame adda baasuu
-    raw_gg = request.form.get('gg_list', '')
-    if raw_gg:
-        gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()]
-    else:
-        gg_entries = request.form.getlist('gg_list')
+    # Gita hojii unka irraa ergame dynamic ta'uun fudhachuuf
+    job_position_val = request.form.get('job_position') or request.form.get('job_title') or '_______________________________'
 
-    # 2. Dynamic Data unka irraa qabamu
+    # Garaagaltoo (G/G) qindaa'aa magaalaa jala sararamu wajjin
+    copies_grouped = [
+        {
+            'offices': ['Da/Bezii Hog/Qab/Namaa tiif KMSO'],
+            'location': None
+        },
+        {
+            'offices': [
+                'Ma/Si/ Go/Mag/Shanoo tiif',
+                'Wa/Mall/ Mag/Shanoo tiif'
+            ],
+            'location': 'Shanoo'
+        },
+        {
+            'offices': [
+                'Ma/Si/ Go/Ki/Li/Shawaa tiif',
+                'Wa/Mall/ Go/ Ki/Li/Shawaa tiif'
+            ],
+            'location': 'Walisoo'
+        }
+    ]
+
     letter_data = {
         'letter_type': letter_type,
         'emp_rank_name': request.form.get('emp_rank_name', '______________________________________ tiif'),
@@ -1133,13 +1150,13 @@ def generate_letter():
         'meeting_date': request.form.get('meeting_date', '________________________'),
         'effective_date': request.form.get('effective_date', '______________________'),
         'branch_name': request.form.get('branch_name', '_____________'),
-        'job_position': request.form.get('job_position', '_______________________________'),
+        'job_position': job_position_val,
         'salary': float(request.form.get('salary', 0) or 0),
         'food_allowance': float(request.form.get('food_allowance', 0) or 0),
         'budget_name': request.form.get('budget_name', '________________________'),
-        'signer_name': request.form.get('signer_name', ''), # Maqaan yoo hin guutamne duwwaa ta'a
-        'signer_rank': request.form.get('signer_rank', ''), # Aangoon yoo hin guutamne duwwaa ta'a
-        'gg_list': gg_entries
+        'signer_name': request.form.get('signer_name', ''),
+        'signer_rank': request.form.get('signer_rank', ''),
+        'copies_grouped': copies_grouped
     }
 
     return render_template('official_letters_print_2.html', letter=letter_data)
