@@ -29,7 +29,7 @@
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0,0,0,0.15);
             position: relative;
-            padding: 50mm 20mm 15mm 20mm; /* Spacing gubbaa fi jalaa xiqqeessuuf */
+            padding: 50mm 20mm 15mm 20mm;
         }
 
         .recipient-section {
@@ -198,7 +198,11 @@
         <p style="margin: 0;"><b><u>G/G:</u></b></p>
         <ul>
             {% for gg in letter.gg_list %}
-                <li>{{ gg }}</li>
+                {% if gg.strip().startswith(('KMSO', 'Shanoo', 'Walisoo')) %}
+                    <li style="list-style-type: none; margin-left: 15px;"><b><u>{{ gg.strip() }}</u></b></li>
+                {% else %}
+                    <li>{{ gg }}</li>
+                {% endif %}
             {% endfor %}
         </ul>
     </div>
