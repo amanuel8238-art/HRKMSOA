@@ -91,37 +91,17 @@
         .gg-section {
             clear: both;
             padding-top: 25px;
-            font-size: 11pt;
+            font-size: 10.5pt;
         }
 
         .gg-list {
-            list-style: none;
+            list-style-type: none;
             padding-left: 0;
             margin: 5px 0;
         }
 
         .gg-list li {
-            position: relative;
-            padding-left: 20px;
             margin-bottom: 2px;
-        }
-
-        .gg-list li::before {
-            content: "Ø ";
-            position: absolute;
-            left: 0;
-        }
-
-        /* Magaala/Llocation jala bu'ee sararamuuf */
-        .gg-location {
-            padding-left: 35px !important;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 8px !important;
-        }
-
-        .gg-location::before {
-            content: "" !important; /* Ø akka irratti hin baaneef */
         }
 
         @media print {
@@ -225,20 +205,9 @@
     <div class="gg-section">
         <p><b><u>G/G:</u></b></p>
         <ul class="gg-list">
-            {% if letter.copies_grouped %}
-                {% for group in letter.copies_grouped %}
-                    {% for office in group.offices %}
-                        <li>{{ office }}</li>
-                    {% endfor %}
-                    {% if group.location %}
-                        <li class="gg-location">{{ group.location }}</li>
-                    {% endif %}
-                {% endfor %}
-            {% else %}
-                {% for gg in letter.gg_list %}
-                    <li>{{ gg }}</li>
-                {% endfor %}
-            {% endif %}
+            {% for gg in letter.gg_list %}
+                <li>{{ gg }}</li>
+            {% endfor %}
         </ul>
     </div>
 

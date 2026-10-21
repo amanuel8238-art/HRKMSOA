@@ -1116,32 +1116,17 @@ def export_promotions_excel():
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
-    letter_type = request.form.get('letter_type')
+    letter_type = request.form.get('letter_type')  
     
-    # Gita hojii unka irraa ergame dynamic ta'uun fudhachuuf
-    job_position_val = request.form.get('job_position') or request.form.get('job_title') or '_______________________________'
+    # G/G unka (form) irraa ergame akka sirriitti qabamu
+    raw_gg = request.form.get('gg_list', '')
+    if raw_gg:
+        gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()]
+    else:
+        gg_entries = request.form.getlist('gg_list')
 
-    # Garaagaltoo (G/G) qindaa'aa magaalaa jala sararamu wajjin
-    copies_grouped = [
-        {
-            'offices': ['Da/Bezii Hog/Qab/Namaa tiif KMSO'],
-            'location': None
-        },
-        {
-            'offices': [
-                'Ma/Si/ Go/Mag/Shanoo tiif',
-                'Wa/Mall/ Mag/Shanoo tiif'
-            ],
-            'location': 'Shanoo'
-        },
-        {
-            'offices': [
-                'Ma/Si/ Go/Ki/Li/Shawaa tiif',
-                'Wa/Mall/ Go/ Ki/Li/Shawaa tiif'
-            ],
-            'location': 'Walisoo'
-        }
-    ]
+    # Gita hojii unka irraa dhufe sirriitti qabachuuf
+    job_position_val = request.form.get('job_position') or request.form.get('job_title') or '_______________________________'
 
     letter_data = {
         'letter_type': letter_type,
@@ -1156,7 +1141,7 @@ def generate_letter():
         'budget_name': request.form.get('budget_name', '________________________'),
         'signer_name': request.form.get('signer_name', ''),
         'signer_rank': request.form.get('signer_rank', ''),
-        'copies_grouped': copies_grouped
+        'gg_list': gg_entries
     }
 
     return render_template('official_letters_print_2.html', letter=letter_data)
