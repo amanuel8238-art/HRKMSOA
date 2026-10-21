@@ -12,53 +12,53 @@
 
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 12pt;
+            font-size: 11.5pt;
             color: #000;
             background-color: #f5f5f5;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
+            line-height: 1.4;
         }
 
         .page {
             width: 210mm;
             height: 297mm;
-            margin: 10mm auto;
+            margin: 5mm auto;
             background: #fff url("static/images/letterhead.jpg") no-repeat center top;
             background-size: 100% 100%;
             box-sizing: border-box;
             box-shadow: 0 0 10px rgba(0,0,0,0.15);
             position: relative;
-            padding: 55mm 20mm 25mm 20mm;
+            padding: 50mm 20mm 15mm 20mm; /* Spacing gubbaa fi jalaa xiqqeessuuf */
         }
 
         .recipient-section {
-            font-size: 12pt;
+            font-size: 11.5pt;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .subject {
             font-weight: bold;
             text-decoration: underline;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
 
         .content {
             text-align: justify;
-            text-indent: 30px;
-            margin-bottom: 12px;
+            text-indent: 25px;
+            margin-bottom: 8px;
         }
 
         .salary-table {
             width: 85%;
-            margin: 15px auto;
+            margin: 8px auto;
             border-collapse: collapse;
         }
 
         .salary-table td {
-            padding: 4px 6px;
+            padding: 3px 5px;
         }
 
         .salary-table .dots {
@@ -78,30 +78,30 @@
         }
 
         .signature-section {
-            margin-top: 30px;
+            margin-top: 15px;
             float: right;
-            width: 250px;
+            width: 230px;
             text-align: center;
         }
 
         .signature-section p {
-            margin: 2px 0;
+            margin: 1px 0;
         }
 
         .gg-section {
             clear: both;
-            padding-top: 25px;
-            font-size: 10.5pt;
+            padding-top: 10px;
+            font-size: 10pt;
         }
 
-        .gg-list {
-            list-style-type: none;
-            padding-left: 0;
-            margin: 5px 0;
+        .gg-section ul {
+            margin: 3px 0;
+            padding-left: 18px;
+            list-style-type: disc;
         }
 
-        .gg-list li {
-            margin-bottom: 2px;
+        .gg-section li {
+            margin-bottom: 1px;
         }
 
         @media print {
@@ -126,7 +126,7 @@
             background-color: #0d6efd;
             color: white;
             border: none;
-            padding: 10px 25px;
+            padding: 8px 20px;
             font-size: 14px;
             border-radius: 6px;
             cursor: pointer;
@@ -137,7 +137,7 @@
 </head>
 <body>
 
-<div style="text-align: center; margin: 15px 0;" class="no-print">
+<div style="text-align: center; margin: 10px 0;" class="no-print">
     <button class="btn-print" onclick="window.print()">🖨️ Xalayaa Kana Print Gochuu</button>
 </div>
 
@@ -152,14 +152,10 @@
     </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru.
+        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
     </div>
 
-    <div class="content">
-        Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee Ma/Sir/<b>{{ letter.branch_name }}</b> tti Gitaa hojii <b>{{ letter.job_position }}</b> akka hojjettan murtaa'ee jira.
-    </div>
-
-    <p style="margin-bottom: 5px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
+    <p style="margin-bottom: 4px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
     
     <table class="salary-table">
         <tr>
@@ -179,32 +175,28 @@
         </tr>
     </table>
 
-    <div class="content" style="text-indent: 0; margin-top: 10px;">
+    <div class="content" style="text-indent: 0; margin-top: 6px;">
         Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjettan isin beeksifna.
     </div>
 
     <div class="content" style="text-indent: 0;">
-        Ma/Sir/<b>{{ letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
+        <b>{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
     </div>
 
     <div class="content" style="text-indent: 0;">
-        Waaj/Ma/<b>{{ letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        <b>Waaj/Ma/{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
     </div>
 
     <div class="signature-section">
         <p>Nagaa wajjin</p>
         <br><br>
-        {% if letter.signer_name %}
-            <p><b>{{ letter.signer_name }}</b></p>
-        {% endif %}
-        {% if letter.signer_rank %}
-            <p><b>{{ letter.signer_rank }}</b></p>
-        {% endif %}
+        <p><b>{{ letter.signer_name if letter.signer_name else "" }}</b></p>
+        <p><b>{{ letter.signer_rank if letter.signer_rank else "" }}</b></p>
     </div>
 
     <div class="gg-section">
-        <p><b><u>G/G:</u></b></p>
-        <ul class="gg-list">
+        <p style="margin: 0;"><b><u>G/G:</u></b></p>
+        <ul>
             {% for gg in letter.gg_list %}
                 <li>{{ gg }}</li>
             {% endfor %}
