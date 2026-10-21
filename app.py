@@ -1124,6 +1124,28 @@ def generate_letter():
     else:
         gg_entries = request.form.getlist('gg_list')
 
+    # Qindaa'ina Garaagaltoo (G/G) magaalaan walitti qabame
+    copies_grouped = [
+        {
+            'offices': ['Da/Bezii Hog/Qab/Namaa tiif KMSO'],
+            'location': None
+        },
+        {
+            'offices': [
+                'Ma/Si/ Go/Mag/Shanoo tiif',
+                'Wa/Mall/ Mag/Shanoo tiif'
+            ],
+            'location': 'Shanoo'
+        },
+        {
+            'offices': [
+                'Ma/Si/ Go/Ki/Li/Shawaa tiif',
+                'Wa/Mall/ Go/ Ki/Li/Shawaa tiif'
+            ],
+            'location': 'Walisoo'
+        }
+    ]
+
     letter_data = {
         'letter_type': letter_type,
         'emp_rank_name': request.form.get('emp_rank_name'),
@@ -1139,7 +1161,8 @@ def generate_letter():
         'branch_short': request.form.get('branch_short'),
         'signer_name': request.form.get('signer_name', "Amanu'eel Makuriyaa"),
         'signer_rank': request.form.get('signer_rank', "Saj.Ol"),
-        'gg_list': gg_entries
+        'gg_list': gg_entries,
+        'copies_grouped': copies_grouped
     }
 
     return render_template('official_letters_print_2.html', letter=letter_data)
