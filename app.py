@@ -527,6 +527,72 @@ def evaluate_employee(id):
 
     return render_template('evaluate_employee.html', employee=emp)
 
+@app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            emp.full_name = request.form.get('full_name', emp.full_name)
+            emp.unique_id = request.form.get('unique_id', emp.unique_id)
+            emp.pension_number = request.form.get('pension_number', emp.pension_number)
+            emp.phone_number = request.form.get('phone_number', emp.phone_number)
+            emp.gender = request.form.get('gender', emp.gender)
+            if current_user.role == 'admin':
+                b_id = request.form.get('branch_id')
+                if b_id:
+                    emp.branch_id = int(b_id)
+            
+            rank_id = request.form.get('rank_id')
+            if rank_id and str(rank_id).isdigit():
+                emp.rank_id = int(rank_id)
+                
+            emp.job_position = request.form.get('job_position', emp.job_position)
+            emp.education_level = request.form.get('education_level', emp.education_level)
+            emp.field_of_study = request.form.get('field_of_study', emp.field_of_study)
+            emp.rank_salary = float(request.form.get('rank_salary', 0) or 0)
+            emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
+            emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
+            emp.hire_date = request.form.get('hire_date', emp.hire_date)
+            emp.birth_date = request.form.get('birth_date', emp.birth_date)
+            emp.rank_date = request.form.get('rank_date', emp.rank_date)
+            emp.status = request.form.get('status', emp.status)
+
+            db.session.commit()
+            flash("Odeeffannoon hojjetaa milkaa'inaan fooyya'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    all_branches = Branch.query.all()
+    all_ranks = Rank.query.all()
+    return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
+
+@app.route('/delete_employee/<int:id>', methods=['POST'])
+@login_required
+def delete_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+        
+    try:
+        create_local_backup()
+        db.session.delete(emp)
+        db.session.commit()
+        flash("Hojjetaan milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
+    return redirect(url_for('employees'))
+
 @app.route('/branches')
 @login_required
 def branches():
