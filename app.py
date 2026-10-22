@@ -497,6 +497,36 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
+@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
+@login_required
+def evaluate_employee(id):
+    emp = Employee.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    if request.method == 'POST':
+        try:
+            create_local_backup()
+            emp.perf_score = float(request.form.get('perf_score', 0) or 0)
+            emp.edu_score = float(request.form.get('edu_score', 0) or 0)
+            emp.discipline_score = float(request.form.get('discipline_score', 0) or 0)
+            emp.law_score = float(request.form.get('law_score', 0) or 0)
+            emp.experience_score = float(request.form.get('experience_score', 0) or 0)
+            emp.service_score = float(request.form.get('service_score', 0) or 0)
+            
+            emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
+                               emp.law_score + emp.experience_score + emp.service_score)
+            
+            db.session.commit()
+            flash("Qabxiin madaallii hojjetaa milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('employees'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return render_template('evaluate_employee.html', employee=emp)
+
 @app.route('/branches')
 @login_required
 def branches():
