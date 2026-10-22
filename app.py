@@ -1116,7 +1116,7 @@ def export_promotions_excel():
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
-    letter_type = request.form.get('letter_type')  # 'jijjiirraa' ykn 'ramaddii'
+    letter_type = request.form.get('letter_type')  # 'jijjiirraa', 'ramaddii', ykn 'gonfoo'
     
     # G/G unka irraa ergame qindeessuu
     raw_gg = request.form.get('gg_list', '')
@@ -1130,9 +1130,16 @@ def generate_letter():
     letter_data = {
         'letter_type': letter_type,
         'emp_rank_name': request.form.get('emp_rank_name', '______________________________________ tiif'),
+        'directive_no': request.form.get('directive_no', '________________________'),
+        'effective_date': request.form.get('effective_date', '______________________'),
+        'from_rank': request.form.get('from_rank', '________________________'),
+        'to_rank': request.form.get('to_rank', '________________________'),
+        'rank_salary': float(request.form.get('rank_salary', 0) or 0),
+        'previous_salary': float(request.form.get('previous_salary', 0) or 0),
+        'salary_diff': float(request.form.get('salary_diff', 0) or 0),
+        'food_allowance': float(request.form.get('food_allowance', 0) or 0),
         'requesting_body': request.form.get('requesting_body', 'Koreen Manaajimentii Komishinii'),
         'meeting_date': request.form.get('meeting_date', '________________________'),
-        'effective_date': request.form.get('effective_date', '______________________'),
         'branch_name': request.form.get('branch_name', '_____________'),
         'from_branch': request.form.get('from_branch', '_____________'),
         'to_branch': request.form.get('to_branch', '_____________'),
@@ -1141,7 +1148,6 @@ def generate_letter():
         'reason': request.form.get('reason', '________________________'),
         'job_position': job_position_val,
         'salary': float(request.form.get('salary', 0) or 0),
-        'food_allowance': float(request.form.get('food_allowance', 0) or 0),
         'budget_name': request.form.get('budget_name', '________________________'),
         'signer_name': request.form.get('signer_name', ''),
         'signer_rank': request.form.get('signer_rank', ''),
