@@ -421,7 +421,6 @@ def warnings():
     
     query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
     
-    # Yoo status filter jiraate (fkn. status=mana_sirreessaa, status=godinaa, status=komishinii, status=murtaae)
     if status_filter:
         if status_filter == 'mana_sirreessaa':
             query = query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None))
@@ -498,7 +497,6 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
-# Route-iwwan biroo (employees, branches, transfers, promotions, etc.)
 @app.route('/branches')
 @login_required
 def branches():
@@ -594,6 +592,96 @@ def penalties():
     records = query.all()
     all_branches = Branch.query.all()
     return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
+
+@app.route('/export_employees_excel')
+@login_required
+def export_employees_excel():
+    branch_id = request.args.get('branch_id')
+    rank = request.args.get('rank')
+    gender = request.args.get('gender')
+    search_query = request.args.get('search', '')
+    education_level = request.args.get('education_level', '')
+    field_of_study = request.args.get('field_of_study', '')
+    status_filter = request.args.get('status', 'Active')
+    sort_order = request.args.get('sort', 'az')
+
+    query = Employee.query
+    if status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+
+    if current_user.role != 'admin':
+        branch_id = current_user.branch_id
+        query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
+    elif branch_id:
+        query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
+
+    if rank:
+        if str(rank).isdigit():
+            query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == int(rank)))
+        else:
+            query = query.join(Employee.rank).filter(Rank.name == rank)
+    
+    if gender:
+        if gender in ['Dhalaa', 'Dubartii']:
+            query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
+        elif gender in ['Dhiira', 'Dhiirra']:
+            query = query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra'))
+        else:
+            query = query.filter_by(gender=gender)
+
+    if education_level:
+        query = query.filter(Employee.education_level.ilike(f'%{education_level}%'))
+
+    if field_of_study:
+        query = query.filter(Employee.field_of_study.ilike(f'%{field_of_study}%'))
+
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{search_query}%'),
+                Employee.unique_id.ilike(f'%{search_query}%'),
+                Employee.job_position.ilike(f'%{search_query}%')
+            )
+        )
+
+    if sort_order == 'za':
+        query = query.order_by(Employee.full_name.desc())
+    else:
+        query = query.order_by(Employee.full_name.asc())
+
+    emps = query.all()
+    if not emps:
+        flash("Odeeffannoon ykn daataan hojjettootaa filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
+        return redirect(url_for('employees'))
+
+    data = []
+    for idx, e in enumerate(emps, start=1):
+        branch_name = e.branch.name if e.branch else 'N/A'
+        rank_name = e.rank.name if e.rank else 'N/A'
+        data.append({
+            'Lakk.': idx,
+            'ID Addaa': e.unique_id if e.unique_id else '-',
+            'Maqaa Guutuu': e.full_name,
+            'Saala': e.gender if e.gender else '-',
+            'Damee (Branch)': branch_name,
+            'Gulantaa / Rank': rank_name,
+            'Gita Hojii': e.job_position if e.job_position else '-',
+            'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
+            'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
+            'Status': e.status if e.status else '-'
+        })
+        
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(output, index=False, sheet_name='Miseensota')
+    output.seek(0)
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='HRKMSO_Report.xlsx'
+    )
 
 @app.route('/generate-letter', methods=['POST'])
 @login_required
