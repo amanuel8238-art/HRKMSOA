@@ -77,6 +77,14 @@ class DisciplineRecord(db.Model):
     penalty_type = db.Column(db.String(150), nullable=False)
     reason = db.Column(db.Text, nullable=True)
     date_given = db.Column(db.String(50), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    
+    # Kolomoota Hordoffii Naamusaa Haaraa Dabalaman
+    local_committee_date = db.Column(db.String(50), nullable=True)  # Guyyaa Koreen M/Sirreessaa itti murteesse
+    zone_committee_date = db.Column(db.String(50), nullable=True)   # Guyyaa Koreen Godinaa itti murteesse
+    commission_sent_date = db.Column(db.String(50), nullable=True)  # Guyyaa Komishiniitti ergame
+    discipline_status = db.Column(db.String(100), default='mana_sirreessaa') # mana_sirreessaa, godinaa, komishinii, murtaae
+    final_decision = db.Column(db.Text, nullable=True)               # Murtee Dhumaa
 
 class Transfer(db.Model):
     __tablename__ = 'transfer'

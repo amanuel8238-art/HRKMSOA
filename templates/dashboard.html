@@ -210,6 +210,64 @@
                     </div>
                 </div>
 
+                <!-- GOSA NAMUSAA & ADEEMSA MURTEE CARDS SECTION (HORDOFFII HAARAA) -->
+                <div class="mt-4">
+                    <h3 class="text-sm font-bold text-slate-700 mb-3">Hordoffii Adeemsa Naamusaa (Discipline Tracking Flow)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Koree M/Sirreessaa</p>
+                                    <h3 id="statLocalCommittee" class="text-xl font-bold text-amber-600 mt-1">{{ local_committee_count if local_committee_count is defined else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">🏢</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('warnings') }}?status=mana_sirreessaa" class="text-xs text-indigo-600 font-semibold">Ilaali &rarr;</a>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Koree Godinaa</p>
+                                    <h3 id="statZoneCommittee" class="text-xl font-bold text-blue-600 mt-1">{{ zone_committee_count if zone_committee_count is defined else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-blue-50 text-blue-600 rounded-lg text-lg">📍</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('warnings') }}?status=godinaa" class="text-xs text-indigo-600 font-semibold">Ilaali &rarr;</a>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Komishiniitti Ergame</p>
+                                    <h3 id="statCommissionPending" class="text-xl font-bold text-purple-600 mt-1">{{ commission_pending_count if commission_pending_count is defined else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-purple-50 text-purple-600 rounded-lg text-lg">📤</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('warnings') }}?status=komishinii" class="text-xs text-indigo-600 font-semibold">Adeemsa Ilaali &rarr;</a>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-medium">Murtee Argate</p>
+                                    <h3 id="statFinalDecided" class="text-xl font-bold text-emerald-600 mt-1">{{ final_decided_count if final_decided_count is defined else 0 }}</h3>
+                                </div>
+                                <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">⚖️</span>
+                            </div>
+                            <div class="mt-4 pt-2 border-t border-slate-100">
+                                <a href="{{ url_for('warnings') }}?status=murtaae" class="text-xs text-indigo-600 font-semibold">Gabaasa Ilaali &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quick Actions & Letter Generation Trigger Card -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 lg:col-span-2 flex flex-col justify-between">
@@ -478,7 +536,11 @@ Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo</textarea>
                 warning: {{ warning_count if warning_count is defined else 0 }},
                 penalty: {{ penalty_count if penalty_count is defined else 0 }},
                 promotions: {{ reward_count if reward_count is defined else 0 }},
-                clean: {{ clean_count if clean_count is defined else 0 }}
+                clean: {{ clean_count if clean_count is defined else 0 }},
+                local_committee: {{ local_committee_count if local_committee_count is defined else 0 }},
+                zone_committee: {{ zone_committee_count if zone_committee_count is defined else 0 }},
+                commission_pending: {{ commission_pending_count if commission_pending_count is defined else 0 }},
+                final_decided: {{ final_decided_count if final_decided_count is defined else 0 }}
             };
 
             updateDashboardUI(initialData);
@@ -545,6 +607,10 @@ Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo</textarea>
             updateElementText('statPenalty', data.penalty);
             updateElementText('statReward', data.promotions);
             updateElementText('statClean', data.clean);
+            updateElementText('statLocalCommittee', data.local_committee);
+            updateElementText('statZoneCommittee', data.zone_committee);
+            updateElementText('statCommissionPending', data.commission_pending);
+            updateElementText('statFinalDecided', data.final_decided);
 
             const canvasEl = document.getElementById('genderChart');
             if (canvasEl) {
