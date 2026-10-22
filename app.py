@@ -114,6 +114,8 @@ with app.app_context():
     import sqlalchemy as sa
     engine = db.engine
     inspector = sa.inspect(engine)
+    
+    # Employee columns check & migration
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
@@ -147,6 +149,23 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_date VARCHAR(50)"))
             if 'last_promotion_date' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN last_promotion_date VARCHAR(50)"))
+
+    # DisciplineRecord columns check & migration (Safely adding missing columns without losing data)
+    if 'discipline_record' in inspector.get_table_names():
+        disc_columns = [col['name'] for col in inspector.get_columns('discipline_record')]
+        with engine.begin() as conn:
+            if 'description' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN description TEXT"))
+            if 'local_committee_date' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN local_committee_date VARCHAR(50)"))
+            if 'zone_committee_date' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN zone_committee_date VARCHAR(50)"))
+            if 'commission_sent_date' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN commission_sent_date VARCHAR(50)"))
+            if 'discipline_status' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN discipline_status VARCHAR(100) DEFAULT 'mana_sirreessaa'"))
+            if 'final_decision' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN final_decision TEXT"))
 
     if not User.query.filter_by(username='admin').first():
         hashed_pw = generate_password_hash('admin123')
@@ -1112,13 +1131,11 @@ def export_promotions_excel():
         download_name='Gaaffii_Gulantaa_Gonfoo.xlsx'
     )
 
-# Route xalayaa unka haaraa kanaaf qophaa'e (generate-letter) - official_letters_print_2.html waama
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
-    letter_type = request.form.get('letter_type')  # 'jijjiirraa', 'ramaddii', ykn 'gonfoo'
+    letter_type = request.form.get('letter_type')
     
-    # G/G unka irraa ergame qindeessuu
     raw_gg = request.form.get('gg_list', '')
     if raw_gg:
         gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()]
