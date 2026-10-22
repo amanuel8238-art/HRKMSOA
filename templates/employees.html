@@ -16,9 +16,11 @@
             <button class="btn btn-success shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                 <i class="fas fa-user-plus me-1"></i> Miseensa Haaraa Galchi
             </button>
+            {% if endpoint_exists('export_employees_excel') %}
             <a href="{{ url_for('export_employees_excel', branch_id=request.args.get('branch_id'), rank=request.args.get('rank'), gender=request.args.get('gender'), search=request.args.get('search'), education_level=request.args.get('education_level'), field_of_study=request.args.get('field_of_study'), status=request.args.get('status', 'Active'), sort=request.args.get('sort', 'az')) }}" class="btn btn-outline-primary shadow-sm">
                 <i class="fas fa-file-excel me-1"></i> Excel-tti Buusi (Export)
             </a>
+            {% endif %}
         </div>
     </div>
 
