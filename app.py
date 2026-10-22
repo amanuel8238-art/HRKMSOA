@@ -115,7 +115,6 @@ with app.app_context():
     engine = db.engine
     inspector = sa.inspect(engine)
     
-    # Employee columns check & migration
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
@@ -150,7 +149,6 @@ with app.app_context():
             if 'last_promotion_date' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN last_promotion_date VARCHAR(50)"))
 
-    # DisciplineRecord columns check & migration (Safely adding missing columns without losing data)
     if 'discipline_record' in inspector.get_table_names():
         disc_columns = [col['name'] for col in inspector.get_columns('discipline_record')]
         with engine.begin() as conn:
@@ -267,6 +265,11 @@ def dashboard():
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
         resigned_count = Employee.query.filter(Employee.status.in_(inactive_statuses)).count()
         all_emps = Employee.query.filter_by(status='Active').all()
+        
+        local_committee_count = DisciplineRecord.query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
+        zone_committee_count = DisciplineRecord.query.filter_by(discipline_status='godinaa').count()
+        commission_pending_count = DisciplineRecord.query.filter_by(discipline_status='komishinii').count()
+        final_decided_count = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
@@ -288,8 +291,14 @@ def dashboard():
                 conditions.append(db.cast(to_col, db.String) == b_str)
             branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
             transfer_count = len([t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)])
+            
+            local_committee_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
+            zone_committee_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, DisciplineRecord.discipline_status == 'godinaa').count()
+            commission_pending_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, DisciplineRecord.discipline_status == 'komishinii').count()
+            final_decided_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, DisciplineRecord.discipline_status == 'murtaae').count()
         else:
             transfer_count = 0
+            local_committee_count = zone_committee_count = commission_pending_count = final_decided_count = 0
 
     retired_count = len(get_retired_employees_list(all_emps))
     warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
@@ -319,6 +328,10 @@ def dashboard():
                            penalty_count=penalty_count,
                            reward_count=reward_count,
                            clean_count=clean_count,
+                           local_committee_count=local_committee_count,
+                           zone_committee_count=zone_committee_count,
+                           commission_pending_count=commission_pending_count,
+                           final_decided_count=final_decided_count,
                            ethiopian_today=ethiopian_today)
 
 @app.route('/api/dashboard-stats/<branch_id>')
@@ -331,6 +344,11 @@ def get_branch_stats(branch_id):
         trans_query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
         warning_query = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
+        
+        local_committee = DisciplineRecord.query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
+        zone_committee = DisciplineRecord.query.filter_by(discipline_status='godinaa').count()
+        commission_pending = DisciplineRecord.query.filter_by(discipline_status='komishinii').count()
+        final_decided = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
     else:
         b_id_str = str(branch_id)
         
@@ -359,6 +377,11 @@ def get_branch_stats(branch_id):
             db.cast(Employee.branch_id, db.String) == b_id_str,
             db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         )
+        
+        local_committee = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
+        zone_committee = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, DisciplineRecord.discipline_status == 'godinaa').count()
+        commission_pending = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, DisciplineRecord.discipline_status == 'komishinii').count()
+        final_decided = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, DisciplineRecord.discipline_status == 'murtaae').count()
 
     retired_count = len(get_retired_employees_list(all_active_for_retired))
 
@@ -382,258 +405,62 @@ def get_branch_stats(branch_id):
         "promotions": promo_query.count(),
         "warning": warning_query.count(),
         "penalty": penalty_query.count(),
-        "clean": emp_query.count()
+        "clean": emp_query.count(),
+        "local_committee": local_committee,
+        "zone_committee": zone_committee,
+        "commission_pending": commission_pending,
+        "final_decided": final_decided
     }
     return jsonify(data)
 
-@app.route('/branches')
+@app.route('/warnings')
 @login_required
-def branches():
-    all_branches = Branch.query.all()
-    return render_template('branches.html', branches=all_branches)
-
-@app.route('/transfers')
-@login_required
-def transfers():
-    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
-    branches = Branch.query.all()
+def warnings():
+    branch_id_filter = request.args.get('branch_id')
+    status_filter = request.args.get('status')
     
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
+    
+    # Yoo status filter jiraate (fkn. status=mana_sirreessaa, status=godinaa, status=komishinii, status=murtaae)
+    if status_filter:
+        if status_filter == 'mana_sirreessaa':
+            query = query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None))
+        else:
+            query = query.filter(DisciplineRecord.discipline_status == status_filter)
+
     if current_user.role == 'admin':
-        employees = Employee.query.filter_by(status='Active').all()
-    else:
-        employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
-        
-    return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
-
-@app.route('/add_transfer', methods=['POST'])
-@login_required
-def add_transfer():
-    try:
-        create_local_backup()
-        employee_id = request.form.get('employee_id')
-        to_branch_id = request.form.get('to_branch_id')
-        reason = request.form.get('reason')
-        transfer_date = request.form.get('transfer_date') or "2019-01-28"
-
-        emp = Employee.query.get(employee_id) if employee_id and str(employee_id).isdigit() else None
-        from_b_id = emp.branch_id if emp else None
-
-        new_transfer = Transfer(
-            employee_id=int(employee_id) if employee_id and str(employee_id).isdigit() else None,
-            from_branch_id=from_b_id,
-            to_branch_id=int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else to_branch_id,
-            reason=reason,
-            transfer_date=transfer_date,
-            status='Pending'
-        )
-        db.session.add(new_transfer)
-        db.session.commit()
-        flash("Gaaffiin jijjiirraa milkaa'inaan galmaa'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('transfers'))
-
-@app.route('/update_transfer_status/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def update_transfer_status(id):
-    t_record = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        new_status = request.form.get('status')
-        t_record.status = new_status
-        t_record.approval_reason = request.form.get('approval_reason')
-        
-        if new_status == 'Approved' and t_record.employee_id and t_record.to_branch_id:
-            emp = Employee.query.get(t_record.employee_id)
-            if emp:
-                emp.branch_id = t_record.to_branch_id
-                
-        db.session.commit()
-        flash("Murteen jijjiirraa milkaa'inaan galmaa'eera, hojjetaanis gara damee haaraatti jijjiirameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('transfers'))
-
-@app.route('/retired_employees')
-@login_required
-def retired_employees():
-    if current_user.role == 'admin':
-        all_active = Employee.query.filter_by(status='Active').all()
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.filter(Employee.branch_id == int(branch_id_filter))
     else:
         user_b = current_user.branch_id
-        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        all_active = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
-    retired_list = get_retired_employees_list(all_active)
-    return render_template('retired_employees.html', retired_list=retired_list)
-
-@app.route('/resigned_employees')
-@login_required
-def resigned_employees():
-    inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
-    query = Employee.query.filter(Employee.status.in_(inactive_statuses))
-    if current_user.role != 'admin':
-        user_b = current_user.branch_id
-        branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        query = query.filter_by(branch_id=branch_id_val) if user_b else query.filter(False)
-    resigned_list = query.all()
-    return render_template('resigned_employees.html', employees=resigned_list)
-
-@app.route('/activate_employee/<int:id>', methods=['POST'])
-@login_required
-def activate_employee(id):
-    emp = Employee.query.get_or_404(id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-    try:
-        create_local_backup()
-        emp.status = 'Active'
-        if hasattr(emp, 'resignation_reason'):
-            emp.resignation_reason = None
-        if hasattr(emp, 'resignation_date'):
-            emp.resignation_date = None
-        db.session.commit()
-        flash(f'Hojjetaan {emp.full_name} ammaa jalqabee deebi\'ee gara "Active"tti galfameera!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(request.referrer or url_for('employees'))
-
-@app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
-@login_required
-def edit_employee(id):
-    emp = Employee.query.get_or_404(id)
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
-        abort(403)
-
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            emp.full_name = request.form.get('full_name')
-            emp.unique_id = request.form.get('unique_id') or None
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
             
-            p_val = request.form.get('pension_number')
-            emp.pension_number = p_val.strip() if p_val and p_val.strip() != '' and p_val.strip() != '-' else None
-            
-            phone_val = request.form.get('phone_number')
-            if phone_val and phone_val.strip() != '' and phone_val.strip() != '-':
-                emp.phone_number = phone_val.strip()
-            else:
-                emp.phone_number = None
-
-            emp.gender = request.form.get('gender')
-            
-            if current_user.role == 'admin':
-                b_id = request.form.get('branch_id')
-                if b_id:
-                    emp.branch_id = int(b_id) if str(b_id).isdigit() else b_id
-
-            rank_input = request.form.get('rank_id') or request.form.get('rank')
-            if rank_input:
-                emp.rank_id = resolve_rank_id(rank_input)
-
-            emp.rank_date = request.form.get('rank_date') or emp.rank_date
-            emp.hire_date = request.form.get('hire_date') or emp.hire_date
-            emp.birth_date = request.form.get('birth_date') or emp.birth_date
-            emp.last_promotion_date = request.form.get('last_promotion_date') or emp.last_promotion_date
-            emp.status = request.form.get('status') or emp.status
-            
-            emp.rank_salary = float(request.form.get('rank_salary') or 0.0)
-            emp.location_allowance = float(request.form.get('location_allowance') or 0.0)
-            emp.food_allowance = float(request.form.get('food_allowance') or 0.0)
-            emp.responsibility_allowance = float(request.form.get('responsibility_allowance') or 0.0)
-            emp.other_allowance = float(request.form.get('other_allowance') or 0.0)
-            
-            emp.education_level = request.form.get('education_level') or emp.education_level
-            emp.field_of_study = request.form.get('field_of_study') or emp.field_of_study
-            emp.job_position = request.form.get('job_position') or emp.job_position
-
-            db.session.commit()
-            flash("Odeeffannoon hojjetaa milkaa'inaan fooyya'eera!", 'success')
-            return redirect(url_for('employees'))
-        except IntegrityError:
-            db.session.rollback()
-            flash("ID Addaa (Unique ID) kun duraanuu hojjetaa biraaf kennameera! Maaloo ID adda ta'e fayyadami.", 'danger')
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
+    records = query.all()
     all_branches = Branch.query.all()
-    all_ranks = Rank.query.all()
-    return render_template('edit_employee.html', employee=emp, branches=all_branches, ranks=all_ranks)
+    return render_template('warnings.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter, selected_status=status_filter)
 
-@app.route('/delete_employee/<int:id>', methods=['POST'])
+@app.route('/delete_discipline/<int:id>', methods=['POST'])
 @login_required
-@admin_required
-def delete_employee(id):
-    emp = Employee.query.get_or_404(id)
-    try:
-        create_local_backup()
-        db.session.delete(emp)
-        db.session.commit()
-        flash("Hojjetaan milkaa'inaan haqameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('employees'))
-
-@app.route('/update_rank_status/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def update_rank_status(id):
-    rank_rec = Rank.query.get_or_404(id)
-    try:
-        create_local_backup()
-        new_name = request.form.get('name')
-        new_desc = request.form.get('description')
-        if new_name:
-            rank_rec.name = new_name
-        if new_desc is not None:
-            rank_rec.description = new_desc
-        db.session.commit()
-        flash("Gulantaan (Rank) milkaa'inaan fooyya'eera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('ranks'))
-
-@app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
-@login_required
-def evaluate_employee(id):
-    emp = Employee.query.get_or_404(id)
+def delete_discipline(id):
+    record = DisciplineRecord.query.get_or_404(id)
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+    if current_user.role != 'admin' and record.employee and record.employee.branch_id != user_b_val:
         abort(403)
-
-    if request.method == 'POST':
-        try:
-            create_local_backup()
-            reason_text = request.form.get('reason', 'Gaaffii Gonfoo (Promotion Evaluation)')
-            transfer_date = request.form.get('transfer_date') or "2019-01-28"
-
-            new_promotion = Transfer(
-                employee_id=emp.id,
-                from_branch_id=emp.branch_id,
-                to_branch_id=emp.branch_id,
-                reason=f"Gaaffii Gonfoo: {reason_text}",
-                transfer_date=transfer_date,
-                status='Pending'
-            )
-            db.session.add(new_promotion)
-            db.session.commit()
-            flash("Madaalliin gonfoo milkaa'inaan galmaa'ee gara gaaffiiwwan gonfootti ergameera!", 'success')
-            return redirect(url_for('promotions'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    all_ranks = Rank.query.all()
-    return render_template('evaluate_employee.html', employee=emp, ranks=all_ranks)
+        
+    try:
+        create_local_backup()
+        db.session.delete(record)
+        db.session.commit()
+        flash("Galmeen naamusaa milkaa'inaan tarree irraa haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
+    return redirect(request.referrer or url_for('warnings'))
 
 @app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
@@ -654,78 +481,41 @@ def add_discipline(employee_id):
                 employee_id=emp.id,
                 penalty_type=penalty_type,
                 description=description,
-                date_given=d_date
+                date_given=d_date,
+                local_committee_date=request.form.get('local_committee_date'),
+                zone_committee_date=request.form.get('zone_committee_date'),
+                commission_sent_date=request.form.get('commission_sent_date'),
+                discipline_status=request.form.get('discipline_status', 'mana_sirreessaa'),
+                final_decision=request.form.get('final_decision')
             )
             db.session.add(new_record)
             db.session.commit()
             flash("Odeeffannoon naamusa hojjetaa milkaa'inaan galmaa'eera!", 'success')
-            return redirect(url_for('employees'))
+            return redirect(url_for('warnings'))
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
     return render_template('add_discipline.html', employee=emp)
 
-@app.route('/warnings')
+# Route-iwwan biroo (employees, branches, transfers, promotions, etc.)
+@app.route('/branches')
 @login_required
-def warnings():
-    branch_id_filter = request.args.get('branch_id')
-    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
-        DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')
-    )
-    if current_user.role == 'admin':
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            query = query.filter(Employee.branch_id == int(branch_id_filter))
-    else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_val = int(user_b) if str(user_b).isdigit() else user_b
-            query = query.filter(Employee.branch_id == b_val)
-        else:
-            query = query.filter(False)
-    records = query.all()
+def branches():
     all_branches = Branch.query.all()
-    return render_template('warnings.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
+    return render_template('branches.html', branches=all_branches)
 
-@app.route('/penalties')
+@app.route('/transfers')
 @login_required
-def penalties():
-    branch_id_filter = request.args.get('branch_id')
-    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
-        db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
-    )
+def transfers():
+    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
+    branches = Branch.query.all()
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     if current_user.role == 'admin':
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            query = query.filter(Employee.branch_id == int(branch_id_filter))
+        employees = Employee.query.filter_by(status='Active').all()
     else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_val = int(user_b) if str(user_b).isdigit() else user_b
-            query = query.filter(Employee.branch_id == b_val)
-        else:
-            query = query.filter(False)
-    records = query.all()
-    all_branches = Branch.query.all()
-    return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
-
-@app.route('/disciplined_employees')
-@login_required
-def disciplined_employees():
-    branch_id_filter = request.args.get('branch_id')
-    query = Employee.query.join(DisciplineRecord, Employee.id == DisciplineRecord.employee_id).distinct()
-    if current_user.role == 'admin':
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            query = query.filter(Employee.branch_id == int(branch_id_filter))
-    else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_val = int(user_b) if str(user_b).isdigit() else user_b
-            query = query.filter(Employee.branch_id == b_val)
-        else:
-            query = query.filter(False)
-    employees = query.all()
-    all_branches = Branch.query.all()
-    return render_template('disciplined_employees.html', employees=employees, all_branches=all_branches, selected_branch=branch_id_filter)
+        employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
+    return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/employees')
 @login_required
@@ -734,10 +524,7 @@ def employees():
     rank = request.args.get('rank')
     gender = request.args.get('gender')
     search_query = request.args.get('search', '')
-    education_level = request.args.get('education_level', '')
-    field_of_study = request.args.get('field_of_study', '')
     status_filter = request.args.get('status', 'Active')
-    sort_order = request.args.get('sort', 'az')
 
     query = Employee.query
     if status_filter != 'All':
@@ -748,26 +535,6 @@ def employees():
         query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
-
-    if rank:
-        if str(rank).isdigit():
-            query = query.join(Employee.rank).filter(db.or_(Rank.name == rank, Rank.id == int(rank)))
-        else:
-            query = query.join(Employee.rank).filter(Rank.name == rank)
-    
-    if gender:
-        if gender in ['Dhalaa', 'Dubartii']:
-            query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
-        elif gender in ['Dhiira', 'Dhiirra']:
-            query = query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra'))
-        else:
-            query = query.filter_by(gender=gender)
-
-    if education_level:
-        query = query.filter(Employee.education_level.ilike(f'%{education_level}%'))
-
-    if field_of_study:
-        query = query.filter(Employee.field_of_study.ilike(f'%{field_of_study}%'))
 
     if search_query:
         query = query.filter(
@@ -778,83 +545,10 @@ def employees():
             )
         )
 
-    if sort_order == 'za':
-        query = query.order_by(Employee.full_name.desc())
-    else:
-        query = query.order_by(Employee.full_name.asc())
-
-    all_employees = query.all()
-    if current_user.role == 'admin':
-        all_branches = Branch.query.all()
-    else:
-        b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-        all_branches = Branch.query.filter_by(id=b_val).all()
-        
+    all_employees = query.order_by(Employee.full_name.asc()).all()
+    all_branches = Branch.query.all() if current_user.role == 'admin' else Branch.query.filter_by(id=current_user.branch_id).all()
     all_ranks = Rank.query.all()
     return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
-
-@app.route('/add_employee', methods=['POST'])
-@login_required
-def add_employee():
-    full_name = request.form.get('full_name')
-    u_id = request.form.get('unique_id')
-    gender = request.form.get('gender')
-    
-    unique_id_val = u_id.strip() if u_id and u_id.strip() != '' else None
-
-    if current_user.role == 'admin':
-        branch_id = request.form.get('branch_id')
-    else:
-        branch_id = current_user.branch_id
-
-    rank_input = request.form.get('rank_id') or request.form.get('rank')
-    rank_id = resolve_rank_id(rank_input)
-
-    if not full_name:
-        flash("Maqaa guutuu hojjetaa galchuun dirqama!", "danger")
-        return redirect(url_for('employees'))
-
-    try:
-        create_local_backup()
-        
-        p_val = request.form.get('pension_number')
-        clean_pension = p_val.strip() if p_val and p_val.strip() != '' and p_val.strip() != '-' else None
-        
-        phone_val = request.form.get('phone_number')
-        clean_phone = phone_val.strip() if phone_val and phone_val.strip() != '' and phone_val.strip() != '-' else None
-
-        new_emp = Employee(
-            full_name=full_name,
-            unique_id=unique_id_val,
-            pension_number=clean_pension,
-            phone_number=clean_phone,
-            gender=gender or 'Dhiira',
-            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id,
-            rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
-            rank_date=request.form.get('rank_date') or None,
-            hire_date=request.form.get('hire_date') or None,
-            birth_date=request.form.get('birth_date') or None,
-            rank_salary=float(request.form.get('rank_salary') or 0.0),
-            location_allowance=float(request.form.get('location_allowance') or 0.0),
-            food_allowance=float(request.form.get('food_allowance') or 0.0),
-            responsibility_allowance=float(request.form.get('responsibility_allowance') or 0.0),
-            other_allowance=float(request.form.get('other_allowance') or 0.0),
-            education_level=request.form.get('education_level') or None,
-            field_of_study=request.form.get('field_of_study') or None,
-            job_position=request.form.get('job_position') or None,
-            status='Active'
-        )
-        db.session.add(new_emp)
-        db.session.commit()
-        flash("Hojjetaan haaraan milkaa'inaan galmaa'eera!", 'success')
-    except IntegrityError:
-        db.session.rollback()
-        flash("ID Addaa (Unique ID) kun duraanuu hojjetaa biraaf kennameera! Maaloo ID adda ta'e fayyadami.", 'danger')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-        
-    return redirect(url_for('employees'))
 
 @app.route('/ranks')
 @login_required
@@ -862,95 +556,12 @@ def ranks():
     all_ranks = Rank.query.all()
     return render_template('ranks.html', ranks=all_ranks)
 
-@app.route('/export_ranks_excel')
-@login_required
-def export_ranks_excel():
-    ranks_data = Rank.query.all()
-    if not ranks_data:
-        flash("Odeeffannoon ykn daataan gulantaalee (ranks) waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
-        return redirect(url_for('ranks'))
-
-    data = []
-    for idx, r in enumerate(ranks_data, start=1):
-        data.append({
-            'Lakk.': idx,
-            'Maqaa Gulantaa (Rank)': r.name,
-            'Ibsaa': r.description if hasattr(r, 'description') and r.description else '-'
-        })
-        
-    df = pd.DataFrame(data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
-    output.seek(0)
-    return send_file(
-        output, 
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
-        as_attachment=True, 
-        download_name='HRKMSO_Ranks_Report.xlsx'
-    )
-
-@app.route('/export_employees_excel')
-@login_required
-def export_employees_excel():
-    branch_id = request.args.get('branch_id')
-    search_query = request.args.get('search', '')
-    status_filter = request.args.get('status', 'Active')
-
-    query = Employee.query
-    if status_filter != 'All':
-        query = query.filter_by(status=status_filter)
-
-    if current_user.role != 'admin':
-        branch_id = current_user.branch_id
-        query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
-    elif branch_id:
-        query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
-
-    if search_query:
-        query = query.filter(Employee.full_name.ilike(f'%{search_query}%'))
-
-    emps = query.all()
-    if not emps:
-        flash("Odeeffannoon ykn daataan hojjettootaa filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
-        return redirect(url_for('employees'))
-
-    data = []
-    for idx, e in enumerate(emps, start=1):
-        branch_name = e.branch.name if e.branch else 'N/A'
-        rank_name = e.rank.name if e.rank else 'N/A'
-        data.append({
-            'Lakk.': idx,
-            'ID Addaa': e.unique_id if e.unique_id else '-',
-            'Maqaa Guutuu': e.full_name,
-            'Saala': e.gender if e.gender else '-',
-            'Damee (Branch)': branch_name,
-            'Gulantaa / Rank': rank_name,
-            'Gita Hojii': e.job_position if e.job_position else '-',
-            'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
-            'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
-            'Status': e.status if e.status else '-'
-        })
-        
-    df = pd.DataFrame(data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Miseensota')
-    output.seek(0)
-    return send_file(
-        output, 
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
-        as_attachment=True, 
-        download_name='HRKMSO_Report.xlsx'
-    )
-
 @app.route('/promotions')
 @login_required
 def promotions():
     branch_id_filter = request.args.get('branch_id')
     status_filter = request.args.get('status', 'Pending') 
     all_branches = Branch.query.all()
-    
     query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
     
     if status_filter and status_filter != 'All':
@@ -960,217 +571,61 @@ def promotions():
         if branch_id_filter and str(branch_id_filter).isdigit():
             b_id_int = int(branch_id_filter)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                db.or_(
-                    Employee.branch_id == b_id_int,
-                    Transfer.to_branch_id == b_id_int
-                )
+                db.or_(Employee.branch_id == b_id_int, Transfer.to_branch_id == b_id_int)
             )
         promotions_list = query.all()
     else:
         user_b = current_user.branch_id
-        if user_b:
-            branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
-            promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                Employee.branch_id == branch_id_val
-            ).all()
-        else:
-            promotions_list = []
+        promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
 
-    return render_template(
-        'promotions.html', 
-        promotions=promotions_list, 
-        all_branches=all_branches, 
-        selected_branch=branch_id_filter,
-        selected_status=status_filter
-    )
+    return render_template('promotions.html', promotions=promotions_list, all_branches=all_branches, selected_branch=branch_id_filter, selected_status=status_filter)
 
-@app.route('/approve_promotion/<int:id>', methods=['POST'])
+@app.route('/penalties')
 @login_required
-@admin_required
-def approve_promotion(id):
-    transfer_record = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        transfer_record.status = 'Approved'
-        db.session.commit()
-        flash("Gaaffiin gonfoo milkaa'inaan eeyyamameera (Approved)!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('promotions'))
-
-@app.route('/reject_promotion/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def reject_promotion(id):
-    transfer_record = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        transfer_record.status = 'Rejected'
-        db.session.commit()
-        flash("Gaaffiin gonfoo dhorkameera (Rejected).", 'warning')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('promotions'))
-
-@app.route('/delete_promotion/<int:id>', methods=['POST'])
-@login_required
-@admin_required
-def delete_promotion(id):
-    transfer_record = Transfer.query.get_or_404(id)
-    try:
-        create_local_backup()
-        db.session.delete(transfer_record)
-        db.session.commit()
-        flash("Gaaffiin gonfoo milkaa'inaan haqameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-    return redirect(url_for('promotions'))
-
-@app.route('/export_promotions_excel')
-@login_required
-def export_promotions_excel():
+def penalties():
     branch_id_filter = request.args.get('branch_id')
-    status_filter = request.args.get('status', 'Pending')
-
-    query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
-    
-    if status_filter and status_filter != 'All':
-        query = query.filter_by(status=status_filter)
-
+    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
     if current_user.role == 'admin':
         if branch_id_filter and str(branch_id_filter).isdigit():
-            b_id_int = int(branch_id_filter)
-            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                db.or_(
-                    Employee.branch_id == b_id_int,
-                    Transfer.to_branch_id == b_id_int
-                )
-            )
-        promotions_list = query.all()
+            query = query.filter(Employee.branch_id == int(branch_id_filter))
     else:
         user_b = current_user.branch_id
-        if user_b:
-            branch_id_val = int(user_b) if str(user_b).isdigit() else user_b
-            promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(
-                Employee.branch_id == branch_id_val
-            ).all()
-        else:
-            promotions_list = []
-
-    if not promotions_list:
-        flash("Odeeffannoon ykn daataan gaaffii gonfoo filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
-        return redirect(url_for('promotions'))
-
-    current_eth_year = 2019
-
-    data = []
-    for index, tr in enumerate(promotions_list, start=1):
-        emp = tr.employee
-        b_name = '-'
-        if emp and emp.branch:
-            b_name = emp.branch.name
-
-        age = '-'
-        if emp and emp.birth_date:
-            try:
-                b_str = str(emp.birth_date).strip().split()[0]
-                b_year = None
-                if '-' in b_str:
-                    parts = b_str.split('-')
-                    b_year = int(parts[0]) if len(parts[0]) == 4 else int(parts[2])
-                elif '/' in b_str:
-                    parts = b_str.split('/')
-                    if len(parts) == 3:
-                        y = int(parts[2]) if len(parts[2]) == 4 else int(parts[0])
-                        if y < 100:
-                            y += 1900 if y > 30 else 2000
-                        b_year = y
-                elif b_str.isdigit() and len(b_str) == 4:
-                    b_year = int(b_str)
-                
-                if b_year:
-                    age = current_eth_year - b_year
-            except Exception:
-                pass
-
-        data.append({
-            "Lak": index,
-            "Gonfa Ammaa Qabu": emp.rank.name if emp and emp.rank else '-',
-            "Maqaa Miseensotaa": emp.full_name if emp else '-',
-            "Bakka Hojii": b_name,
-            "Gahee Hojii": emp.job_position if emp and emp.job_position else '-',
-            "Saala": emp.gender if emp and emp.gender else '-',
-            "Umrii": age,
-            "Bara Gonfaa Dura Yeroo Itti Argate": emp.rank_date if emp and emp.rank_date else '-',
-            "Gonfaa Itti Aanu Yeroo Itti Argatu": emp.next_promotion_date if emp and emp.next_promotion_date else (str(tr.transfer_date) if tr.transfer_date else '-'),
-            "Sadarkaa Barumsaa": emp.education_level if emp and emp.education_level else '-',
-            "Gosa Barumsaa": emp.field_of_study if emp and emp.field_of_study else '-',
-            "Bu'uura Raawwii Hojii (25%)": emp.perf_score if emp and emp.perf_score is not None else '0.00',
-            "Sadarkaa Barumsaa (20%)": emp.edu_score if emp and emp.edu_score is not None else '0.00',
-            "Naamusaa Poolisii (20%)": emp.discipline_score if emp and emp.discipline_score is not None else '0.00',
-            "Seera fi Heera (10%)": emp.law_score if emp and emp.law_score is not None else '0.00',
-            "Muxannoo Hojii (10%)": emp.experience_score if emp and emp.experience_score is not None else '0.00',
-            "Mira Tajaajiltummaa (15%)": emp.service_score if emp and emp.service_score is not None else '0.00',
-            "Ida'amaa": f"{emp.total_score}%" if emp and emp.total_score is not None else '0.00%',
-            "Gonfoo Itti Guddatuu": emp.next_promotion_status if emp and emp.next_promotion_status else '-',
-            "Haala (Status)": tr.status if tr.status else 'Pending'
-        })
-        
-    df = pd.DataFrame(data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Promotions')
-    output.seek(0)
-    return send_file(
-        output, 
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
-        as_attachment=True, 
-        download_name='Gaaffii_Gulantaa_Gonfoo.xlsx'
-    )
+        query = query.filter(Employee.branch_id == user_b) if user_b else query.filter(False)
+    records = query.all()
+    all_branches = Branch.query.all()
+    return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
 
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
     letter_type = request.form.get('letter_type')
-    
     raw_gg = request.form.get('gg_list', '')
-    if raw_gg:
-        gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()]
-    else:
-        gg_entries = request.form.getlist('gg_list')
-
-    job_position_val = request.form.get('job_position') or '_______________________________'
+    gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()] if raw_gg else request.form.getlist('gg_list')
 
     letter_data = {
         'letter_type': letter_type,
-        'emp_rank_name': request.form.get('emp_rank_name', '______________________________________ tiif'),
-        'directive_no': request.form.get('directive_no', '________________________'),
-        'effective_date': request.form.get('effective_date', '______________________'),
-        'from_rank': request.form.get('from_rank', '________________________'),
-        'to_rank': request.form.get('to_rank', '________________________'),
+        'emp_rank_name': request.form.get('emp_rank_name', ''),
+        'directive_no': request.form.get('directive_no', ''),
+        'effective_date': request.form.get('effective_date', ''),
+        'from_rank': request.form.get('from_rank', ''),
+        'to_rank': request.form.get('to_rank', ''),
         'rank_salary': float(request.form.get('rank_salary', 0) or 0),
         'previous_salary': float(request.form.get('previous_salary', 0) or 0),
         'salary_diff': float(request.form.get('salary_diff', 0) or 0),
         'food_allowance': float(request.form.get('food_allowance', 0) or 0),
-        'requesting_body': request.form.get('requesting_body', 'Koreen Manaajimentii Komishinii'),
-        'meeting_date': request.form.get('meeting_date', '________________________'),
-        'branch_name': request.form.get('branch_name', '_____________'),
-        'from_branch': request.form.get('from_branch', '_____________'),
-        'to_branch': request.form.get('to_branch', '_____________'),
-        'from_branch_short': request.form.get('from_branch_short', '_____________'),
-        'to_branch_short': request.form.get('to_branch_short', '_____________'),
-        'reason': request.form.get('reason', '________________________'),
-        'job_position': job_position_val,
+        'requesting_body': request.form.get('requesting_body', ''),
+        'meeting_date': request.form.get('meeting_date', ''),
+        'branch_name': request.form.get('branch_name', ''),
+        'from_branch': request.form.get('from_branch', ''),
+        'to_branch': request.form.get('to_branch', ''),
+        'from_branch_short': request.form.get('from_branch_short', ''),
+        'to_branch_short': request.form.get('to_branch_short', ''),
+        'reason': request.form.get('reason', ''),
+        'job_position': request.form.get('job_position', ''),
         'salary': float(request.form.get('salary', 0) or 0),
-        'budget_name': request.form.get('budget_name', '________________________'),
-        'signer_name': request.form.get('signer_name', ''),
-        'signer_rank': request.form.get('signer_rank', ''),
+        'budget_name': request.form.get('budget_name', ''),
         'gg_list': gg_entries
     }
-
     return render_template('official_letters_print_2.html', letter=letter_data)
 
 if __name__ == '__main__':

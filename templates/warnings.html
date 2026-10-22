@@ -1,57 +1,164 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Akeekkachiisa Naamusa Hojjettootaa (Warnings)</h2>
-    </div>
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galmee Of-eeggannoo & Hordoffii Naamusaa - HRKMSO</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 text-slate-800">
 
-    <!-- Filter by Branch -->
-    {% if current_user.role == 'admin' %}
-    <form method="GET" action="{{ url_for('warnings') }}" class="row g-3 mb-4">
-        <div class="col-md-4">
-            <select name="branch_id" class="form-select" onchange="this.form.submit()">
-                <option value="">Damee Hunda (All Branches)</option>
-                {% for b in all_branches %}
-                <option value="{{ b.id }}" {% if selected_branch == b.id|string %}selected{% endif %}>{{ b.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </form>
-    {% endif %}
-
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Lakk.</th>
-                            <th>Maqaa Hojjetaa</th>
-                            <th>Damee (Branch)</th>
-                            <th>Gosa Akeekkachiisaa</th>
-                            <th>Ibsaa / Sababa</th>
-                            <th>Guyyaa Kenname</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in records %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
-                            <td>{{ r.employee.full_name if r.employee else 'N/A' }}</td>
-                            <td>{{ r.employee.branch.name if r.employee and r.employee.branch else 'N/A' }}</td>
-                            <td><span class="badge bg-warning text-dark">{{ r.penalty_type }}</span></td>
-                            <td>{{ r.description if r.description else '-' }}</td>
-                            <td>{{ r.date_given }}</td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">Odeeffannoon akeekkachiisaa hin jiru.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-indigo-900 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                         alt="HRKMSO Logo" 
+                         style="width: 45px; height: 45px; object-fit: contain; background: white; padding: 2px; border-radius: 50%;">
+                    <div>
+                        <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
+                        <p class="text-xs text-indigo-200">Galmee Of-eeggannoo & Hordoffii Adeemsa Naamusaa</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 text-sm">
+                    <a href="{{ url_for('dashboard') }}" class="text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1 rounded transition text-white">
+                        <i class="fas fa-arrow-left mr-1"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition text-white">Bahi (Logout)</a>
+                </div>
             </div>
-        </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+            
+            <!-- Navigation Menu -->
+            <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200">
+                <a href="{{ url_for('dashboard') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dashboordii</a>
+                <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
+                <a href="{{ url_for('warnings') }}" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Galmee Of-eeggannoo & Hordoffii</a>
+                <a href="{{ url_for('penalties') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Adabbii</a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-3 rounded-lg text-white text-xs {% if category == 'danger' %}bg-red-500{% else %}bg-emerald-600{% endif %} shadow">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Tarree Galmee Of-eeggannoo & Hordoffii Naamusaa</h2>
+                        <p class="text-xs text-slate-500">Miseensota adeemsa murtee naamusaa irra jiran fi adabbii argatan.</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        {% if current_user.role == 'admin' and all_branches %}
+                        <form method="GET" action="{{ url_for('warnings') }}" class="flex items-center gap-2">
+                            {% if selected_status %}
+                            <input type="hidden" name="status" value="{{ selected_status }}">
+                            {% endif %}
+                            <label class="text-xs font-bold text-slate-700">Filter Damee:</label>
+                            <select name="branch_id" onchange="this.form.submit()" class="border text-xs p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">-- Dameewwan Hunda --</option>
+                                {% for b in all_branches %}
+                                    <option value="{{ b.id }}" {% if selected_branch and selected_branch|string == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Status Filter Badges (Kaardii Hordoffii Naamusaa) -->
+                <div class="flex flex-wrap gap-2 pt-1 pb-3">
+                    <a href="{{ url_for('warnings') }}" class="px-3 py-1 text-xs font-semibold rounded-full border transition {% if not selected_status %}bg-indigo-600 text-white border-indigo-600{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300{% endif %}">
+                        Hunda Ilaali
+                    </a>
+                    <a href="{{ url_for('warnings') }}?status=mana_sirreessaa" class="px-3 py-1 text-xs font-semibold rounded-full border transition {% if selected_status == 'mana_sirreessaa' %}bg-amber-600 text-white border-amber-600{% else %}bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200{% endif %}">
+                        🏢 Koree M/Sirreessaa
+                    </a>
+                    <a href="{{ url_for('warnings') }}?status=godinaa" class="px-3 py-1 text-xs font-semibold rounded-full border transition {% if selected_status == 'godinaa' %}bg-blue-600 text-white border-blue-600{% else %}bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200{% endif %}">
+                        📍 Koree Godinaa
+                    </a>
+                    <a href="{{ url_for('warnings') }}?status=komishinii" class="px-3 py-1 text-xs font-semibold rounded-full border transition {% if selected_status == 'komishinii' %}bg-purple-600 text-white border-purple-600{% else %}bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200{% endif %}">
+                        📤 Komishiniitti Ergame
+                    </a>
+                    <a href="{{ url_for('warnings') }}?status=murtaae" class="px-3 py-1 text-xs font-semibold rounded-full border transition {% if selected_status == 'murtaae' %}bg-emerald-600 text-white border-emerald-600{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200{% endif %}">
+                        ⚖️ Murtee Argate
+                    </a>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b">
+                                <th class="p-3 font-semibold">Lakk.</th>
+                                <th class="p-3 font-semibold">Maqaa Guutuu</th>
+                                <th class="p-3 font-semibold">Damee</th>
+                                <th class="p-3 font-semibold">Gosa Balleessaa / Penalty</th>
+                                <th class="p-3 font-semibold">Status / Sadarkaa</th>
+                                <th class="p-3 font-semibold">Guyyaa Kenname</th>
+                                <th class="p-3 font-semibold">Ibsa / Reasons</th>
+                                <th class="p-3 font-semibold text-center">Tarkaanfii (Action)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            {% if records %}
+                                {% for r in records %}
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="p-3 text-slate-500">{{ loop.index }}</td>
+                                    <td class="p-3 font-bold text-indigo-900">{{ r.employee.full_name if r.employee else '-' }}</td>
+                                    <td class="p-3 text-slate-600">{{ r.employee.branch.name if r.employee and r.employee.branch else '-' }}</td>
+                                    <td class="p-3">
+                                        <span class="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-1 rounded">
+                                            {{ r.penalty_type if r.penalty_type else 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="p-3">
+                                        {% if r.discipline_status == 'godinaa' %}
+                                            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">Koree Godinaa</span>
+                                        {% elif r.discipline_status == 'komishinii' %}
+                                            <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-1 rounded">Komishiniitti Ergame</span>
+                                        {% elif r.discipline_status == 'murtaae' %}
+                                            <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2 py-1 rounded">Murtee Argate</span>
+                                        {% else %}
+                                            <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2 py-1 rounded">Koree M/Sirreessaa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="p-3 text-slate-600">{{ r.date_given if r.date_given else '-' }}</td>
+                                    <td class="p-3 text-slate-600">{{ r.description if r.description else '-' }}</td>
+                                    <td class="p-3 text-center">
+                                        <!-- Form & Button Galmee Naamusaa Tarree Irraa Haquuf -->
+                                        <form action="{{ url_for('delete_discipline', id=r.id) }}" method="POST" onsubmit="return confirm('Galmee naamusaa kana tarree irraa haquu akka barbaaddu mirkaneeffadhu?');" class="inline-block">
+                                            <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold text-xs px-3 py-1 rounded-lg transition flex items-center gap-1 shadow-sm">
+                                                <i class="fas fa-trash-alt"></i> Haqii
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="p-4 text-center text-slate-400">Galmeen of-eeggannoo ykn naamusaa tokko illee hin argamne.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
-</div>
-{% endblock %}
+</body>
+</html>
