@@ -296,11 +296,6 @@
                                 <i class="fas fa-award mr-1"></i> Xalayaa Gonfoo
                             </button>
 
-                            <!-- Trigger Modal Xalayaa Yaalaa -->
-                            <button onclick="openLetterModal('yaala')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-                                <i class="fas fa-notes-medical mr-1"></i> Xalayaa Yaalaa
-                            </button>
-
                             {% if endpoint_exists('promotions') %}
                             <a href="{{ url_for('promotions') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gaaffii Gonfoo</a>
                             {% endif %}
@@ -469,38 +464,6 @@
                     </div>
                 </div>
 
-                <!-- 4. Yaala Fields -->
-                <div id="yaalaFields" class="space-y-3 hidden border-t pt-3">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Waajira Buufata Fayyaa / Hospitaala:</label>
-                        <input type="text" name="to_hospital_office" value="Hospitaala Waliigalaa Asallaatiif" class="w-full border rounded-lg p-2">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Bakki / Magaalaa:</label>
-                        <input type="text" name="location_city" value="Asallaa" class="w-full border rounded-lg p-2">
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Lakk. Rifaarii (Ref Referral):</label>
-                            <input type="text" name="ref_referral" value="REF-987/2019" class="w-full border rounded-lg p-2">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Guyyaa Rifaarii:</label>
-                            <input type="text" name="referral_date" value="10/01/2019" class="w-full border rounded-lg p-2">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Guyyaa Beelama:</label>
-                            <input type="text" name="appointment_date" value="20/02/2019" class="w-full border rounded-lg p-2">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Guyyaa Deebii:</label>
-                            <input type="text" name="return_date" value="22/02/2019" class="w-full border rounded-lg p-2">
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Garaagaltoo (G/G) Add-ons -->
                 <div class="border-t pt-2">
                     <label class="block font-semibold text-slate-700 mb-1">Garaagaltoo (G/G) - Sarara sararaan (Line by line) galchi:</label>
@@ -552,7 +515,6 @@ Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo</textarea>
 
             const jijjiirraaSec = document.getElementById('jijjiirraaFields');
             const ramaddiiSec = document.getElementById('ramaddiiFields');
-            const yaalaSec = document.getElementById('yaalaFields');
             const gonfooSec = document.getElementById('gonfooFields');
             const commonSalary = document.getElementById('commonSalaryFields');
             const commonBudget = document.getElementById('commonBudgetField');
@@ -561,7 +523,6 @@ Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo</textarea>
             // 1. Dursa hundumaa dhoksi (Hide all sections first)
             if (jijjiirraaSec) jijjiirraaSec.classList.add('hidden');
             if (ramaddiiSec) ramaddiiSec.classList.add('hidden');
-            if (yaalaSec) yaalaSec.classList.add('hidden');
             if (gonfooSec) gonfooSec.classList.add('hidden');
             if (commonSalary) commonSalary.classList.remove('hidden');
             if (commonBudget) commonBudget.classList.remove('hidden');
@@ -577,11 +538,6 @@ Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo</textarea>
                 modalTitle.innerText = "Unka Xalayaa Guddina Gonfoo Qopheessuu";
                 if (gonfooSec) gonfooSec.classList.remove('hidden');
                 if (commonSalary) commonSalary.classList.add('hidden');
-            } else if (type === 'yaala') {
-                modalTitle.innerText = "Unka Xalayaa Yaalaa Qopheessuu";
-                if (yaalaSec) yaalaSec.classList.remove('hidden');
-                if (commonSalary) commonSalary.classList.add('hidden');
-                if (commonBudget) commonBudget.classList.add('hidden');
             }
         }
 
