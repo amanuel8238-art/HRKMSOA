@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xalayaa Ramaddii Hojii - HRKMSO</title>
+    <title>Xalayaa Official - HRKMSO</title>
     <style>
         @page {
             size: A4;
@@ -100,14 +100,8 @@
             list-style-type: disc;
         }
 
-        .gg-section li {
-            margin-bottom: 1px;
-        }
-
         @media print {
-            body {
-                background: none;
-            }
+            body { background: none; }
             .page {
                 border: none;
                 margin: 0;
@@ -117,9 +111,7 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .no-print {
-                display: none !important;
-            }
+            .no-print { display: none !important; }
         }
 
         .btn-print {
@@ -148,18 +140,26 @@
     </div>
 
     <div class="subject">
-        Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
+        {% if letter.letter_type == 'jijjiirraa' %}
+            Dhimmi isaa:- Jijjiirraa keessan isin beeksisuu ta'a.
+        {% else %}
+            Dhimmi isaa:- Ramaddii hojii keessan isin beeksisuu ta'a.
+        {% endif %}
     </div>
 
     <div class="content">
-        Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body if letter.requesting_body else "Koreen Manaajimentii Komishinii" }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Ma/Sir/{{ letter.branch_name }}</b> tti <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+        {% if letter.letter_type == 'jijjiirraa' %}
+            Akkuma armaan olitti mata duree irratti ibsuuf yaalame, <b>{{ letter.reason }}</b> tiin, Mana Sirreessaa <b>{{ letter.from_branch }}</b> irraa gara Mana Sirreessaa <b>{{ letter.to_branch }}</b> tti jijjiiramtaanii gita hojii <b>{{ letter.job_position }}</b> ta'uun akka hojjetan murtaa'ee jira.
+        {% else %}
+            Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Mana Sirreessaa {{ letter.branch_name }}</b> tti gita hojii <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+        {% endif %}
     </div>
 
-    <p style="margin-bottom: 4px; text-indent: 0;">Kanafuu kaffaltiin mindaa keessaniis akka armaan gadiitti kan raawwatamu ta'a:</p>
+    <p style="margin-bottom: 4px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa fi durgoo keessanii akka armaan gadiitti murtaa'eera:</p>
     
     <table class="salary-table">
         <tr>
-            <td>Mindaa Gonfoo/Kaffaltii Iddoo</td>
+            <td>Mindaa Iddoo</td>
             <td class="dots"></td>
             <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
         </tr>
@@ -176,16 +176,23 @@
     </table>
 
     <div class="content" style="text-indent: 0; margin-top: 6px;">
-        Isiniif kaffalamaa hojii itti ramadamtan itti gaafatamummaan akka hojjettan isin beeksifna.
+        Isiniif kaffalamaa hojii itti ramadamtan irratti itti gaafatamummaa fi ciminaan akka hojjetan sin beeksifna.
     </div>
 
-    <div class="content" style="text-indent: 0;">
-        <b>{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanuma hubachuudhaan mindaa isaanii baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.
-    </div>
-
-    <div class="content" style="text-indent: 0;">
-        <b>Waaj/Ma/{{ letter.branch_short if letter.branch_short else letter.branch_name }}</b> kanumaa beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
-    </div>
+    {% if letter.letter_type == 'jijjiirraa' %}
+        <div class="content" style="text-indent: 0; margin-top: 10px;">
+            <b><u>Xalayaa Deeggarsaa / Hubachiisa Jijjiirraa:</u></b><br>
+            1. <b>Mana Sirreessaa {{ letter.from_branch_short if letter.from_branch_short else letter.from_branch }} tiif:</b> Miseensa isin biraa jijjiirame kana qabeenya mootummaa harka isaa/ishee jiru harkaa fuudhuudhaan gara iddoo jijjiiramee/titti akka gaggeessitan isin beeksifna.<br>
+            2. <b>Waajjira Maallaqaa {{ letter.from_branch_short if letter.from_branch_short else letter.from_branch }} tiif:</b> Hanga mindaa isin biratti kaffalame ibsamee waraqaan qulqullinaa (kiliraansiin) akka barreeffamuuf ni yaadachiifna.<br>
+            3. <b>Mana Sirreessaa {{ letter.to_branch_short if letter.to_branch_short else letter.to_branch }} tiif:</b> Kanuma hubachuudhaan mindaan miseensichaa baajata maqaa <b>{{ letter.budget_name }}</b> tiin qabamee jiru irraa akka kaffalamuuf ni beeksifna.<br>
+            4. <b>Waajjira Maallaqaa {{ letter.to_branch_short if letter.to_branch_short else letter.to_branch }} tiif:</b> Kanuma beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        </div>
+    {% else %}
+        <div class="content" style="text-indent: 0; margin-top: 10px;">
+            <b>Mana Sirreessaa {{ letter.branch_name }}</b> kanuma hubachuudhaan mindaan miseensichaa baajata maqaa <b>{{ letter.budget_name }}</b> qabamee jiru irraa akka kaffalamuuf ni beeksifna.<br>
+            <b>Waaj/Maallaqaa {{ letter.branch_name }}</b> kanuma beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
+        </div>
+    {% endif %}
 
     <div class="signature-section">
         <p>Nagaa wajjin</p>
@@ -198,12 +205,7 @@
         <p style="margin: 0;"><b><u>G/G:</u></b></p>
         <ul style="padding-left: 18px; margin: 3px 0;">
             {% for gg in letter.gg_list %}
-                {% set line = gg.strip() %}
-                {% if line in ['KMSO', 'Shanoo', 'Walisoo'] or line.startswith(('KMSO', 'Shanoo', 'Walisoo')) %}
-                    <li style="list-style-type: none; margin-left: -5px; margin-bottom: 3px;"><b><u>{{ line }}</u></b></li>
-                {% else %}
-                    <li style="margin-bottom: 1px;">{{ line }}</li>
-                {% endif %}
+                <li style="margin-bottom: 1px;">{{ gg }}</li>
             {% endfor %}
         </ul>
     </div>

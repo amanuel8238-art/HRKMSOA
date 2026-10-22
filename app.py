@@ -1116,7 +1116,7 @@ def export_promotions_excel():
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
-    letter_type = request.form.get('letter_type')  
+    letter_type = request.form.get('letter_type')  # 'jijjiirraa' ykn 'ramaddii'
     
     # G/G unka irraa ergame qindeessuu
     raw_gg = request.form.get('gg_list', '')
@@ -1125,17 +1125,21 @@ def generate_letter():
     else:
         gg_entries = request.form.getlist('gg_list')
 
-    # Kan kanaan duraa balleessinee, unka keessaa kallattiitti gita hojii (job_position) dhufe qofa akka fudhatu gochuu
     job_position_val = request.form.get('job_position') or '_______________________________'
 
     letter_data = {
         'letter_type': letter_type,
         'emp_rank_name': request.form.get('emp_rank_name', '______________________________________ tiif'),
-        'requesting_body': request.form.get('requesting_body', '_____________________________________'),
+        'requesting_body': request.form.get('requesting_body', 'Koreen Manaajimentii Komishinii'),
         'meeting_date': request.form.get('meeting_date', '________________________'),
         'effective_date': request.form.get('effective_date', '______________________'),
         'branch_name': request.form.get('branch_name', '_____________'),
-        'job_position': job_position_val,  # As irratti kallattiitti kan unka irraa dhufe qofa qabata
+        'from_branch': request.form.get('from_branch', '_____________'),
+        'to_branch': request.form.get('to_branch', '_____________'),
+        'from_branch_short': request.form.get('from_branch_short', '_____________'),
+        'to_branch_short': request.form.get('to_branch_short', '_____________'),
+        'reason': request.form.get('reason', '________________________'),
+        'job_position': job_position_val,
         'salary': float(request.form.get('salary', 0) or 0),
         'food_allowance': float(request.form.get('food_allowance', 0) or 0),
         'budget_name': request.form.get('budget_name', '________________________'),
