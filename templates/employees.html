@@ -17,7 +17,7 @@
                 <i class="fas fa-user-plus me-1"></i> Miseensa Haaraa Galchi
             </button>
             {% if endpoint_exists('export_employees_excel') %}
-            <a href="{{ url_for('export_employees_excel', branch_id=request.args.get('branch_id'), rank=request.args.get('rank'), gender=request.args.get('gender'), search=request.args.get('search'), education_level=request.args.get('education_level'), field_of_study=request.args.get('field_of_study'), status=request.args.get('status', 'Active'), sort=request.args.get('sort', 'az')) }}" class="btn btn-outline-primary shadow-sm">
+            <a href="{{ url_for('export_employees_excel', branch_id=request.args.get('branch_id'), rank=request.args.get('rank'), gender=request.args.get('gender'), search=request.args.get('search'), education_level=request.args.get('education_level'), field_of_study=request.args.get('field_of_study'), status=request.args.get('status', 'Active'), sort=request.args.get('sort', 'az'), rank_status=request.args.get('rank_status'), position_status=request.args.get('position_status'), allowance_status=request.args.get('allowance_status')) }}" class="btn btn-outline-primary shadow-sm">
                 <i class="fas fa-file-excel me-1"></i> Excel-tti Buusi (Export)
             </a>
             {% endif %}
@@ -88,6 +88,34 @@
                     <select name="sort" class="form-select form-select-sm">
                         <option value="az" {% if request.args.get('sort', 'az') == 'az' %}selected{% endif %}>A - Z (Qubeen)</option>
                         <option value="za" {% if request.args.get('sort') == 'za' %}selected{% endif %}>Z - A (Duubatti)</option>
+                    </select>
+                </div>
+
+                <!-- Filteroota Haaraa Dabalamani -->
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Ramaddii (Rank Status)</label>
+                    <select name="rank_status" class="form-select form-select-sm">
+                        <option value="">Hunda (All)</option>
+                        <option value="with" {% if request.args.get('rank_status') == 'with' %}selected{% endif %}>Ramaddii Qaban</option>
+                        <option value="without" {% if request.args.get('rank_status') == 'without' %}selected{% endif %}>Ramaddii Kan Hin Qabne</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Gita Hojii (Position Status)</label>
+                    <select name="position_status" class="form-select form-select-sm">
+                        <option value="">Hunda (All)</option>
+                        <option value="with" {% if request.args.get('position_status') == 'with' %}selected{% endif %}>Gita Hojii Qaban</option>
+                        <option value="without" {% if request.args.get('position_status') == 'without' %}selected{% endif %}>Gita Hojii Kan Hin Qabne</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Location Allowance</label>
+                    <select name="allowance_status" class="form-select form-select-sm">
+                        <option value="">Hunda (All)</option>
+                        <option value="with" {% if request.args.get('allowance_status') == 'with' %}selected{% endif %}>Allowance Qaban</option>
+                        <option value="without" {% if request.args.get('allowance_status') == 'without' %}selected{% endif %}>Mindaa Gonfoo Qofaa</option>
                     </select>
                 </div>
 
