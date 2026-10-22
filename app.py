@@ -497,6 +497,61 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
+@app.route('/add_employee', methods=['POST'])
+@login_required
+def add_employee():
+    try:
+        create_local_backup()
+        full_name = request.form.get('full_name')
+        unique_id = request.form.get('unique_id')
+        pension_number = request.form.get('pension_number')
+        phone_number = request.form.get('phone_number')
+        gender = request.form.get('gender')
+        
+        if current_user.role == 'admin':
+            branch_id = request.form.get('branch_id')
+        else:
+            branch_id = current_user.branch_id
+
+        rank_id = request.form.get('rank_id')
+        job_position = request.form.get('job_position')
+        education_level = request.form.get('education_level')
+        field_of_study = request.form.get('field_of_study')
+        rank_salary = float(request.form.get('rank_salary', 0) or 0)
+        location_allowance = float(request.form.get('location_allowance', 0) or 0)
+        food_allowance = float(request.form.get('food_allowance', 0) or 0)
+        hire_date = request.form.get('hire_date')
+        birth_date = request.form.get('birth_date')
+        rank_date = request.form.get('rank_date')
+
+        new_emp = Employee(
+            full_name=full_name,
+            unique_id=unique_id,
+            pension_number=pension_number,
+            phone_number=phone_number,
+            gender=gender,
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
+            rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
+            job_position=job_position,
+            education_level=education_level,
+            field_of_study=field_of_study,
+            rank_salary=rank_salary,
+            location_allowance=location_allowance,
+            food_allowance=food_allowance,
+            hire_date=hire_date,
+            birth_date=birth_date,
+            rank_date=rank_date,
+            status='Active'
+        )
+        db.session.add(new_emp)
+        db.session.commit()
+        flash("Hojjetaan haaraan milkaa'inaan galmaa'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return redirect(url_for('employees'))
+
 @app.route('/evaluate_employee/<int:id>', methods=['GET', 'POST'])
 @login_required
 def evaluate_employee(id):
