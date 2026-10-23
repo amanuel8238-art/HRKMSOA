@@ -547,6 +547,56 @@ def add_transfer():
 
     return redirect(url_for('transfers'))
 
+@app.route('/add_rank', methods=['POST'])
+@login_required
+def add_rank():
+    try:
+        create_local_backup()
+        name = request.form.get('name')
+        description = request.form.get('description', '')
+        if name:
+            new_rank = Rank(name=name, description=description)
+            db.session.add(new_rank)
+            db.session.commit()
+            flash("Gulantaan haaraan milkaa'inaan galmaa'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('ranks'))
+
+@app.route('/update_rank_status/<int:id>', methods=['POST'])
+@login_required
+def update_rank_status(id):
+    rank = Rank.query.get_or_404(id)
+    try:
+        create_local_backup()
+        name = request.form.get('name')
+        description = request.form.get('description')
+        if name:
+            rank.name = name
+        if description is not None:
+            rank.description = description
+        db.session.commit()
+        flash("Gulantaan milkaa'inaan fooyya'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('ranks'))
+
+@app.route('/delete_rank/<int:id>', methods=['POST'])
+@login_required
+def delete_rank(id):
+    rank = Rank.query.get_or_404(id)
+    try:
+        create_local_backup()
+        db.session.delete(rank)
+        db.session.commit()
+        flash("Gulantaan milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('ranks'))
+
 @app.route('/add_employee', methods=['POST'])
 @login_required
 def add_employee():
