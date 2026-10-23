@@ -125,24 +125,22 @@
                         <span class="p-3 bg-pink-50 text-pink-600 rounded-lg text-lg">👩</span>
                     </div>
                     
+                    <!-- Kaardii Sooramaa (Retired) -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Retired)</p>
+                            <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Soorama)</p>
                             <h3 id="statRetired" class="text-xl font-bold text-amber-600 mt-1">{{ retired_count if retired_count is defined else 0 }}</h3>
-                            {% if endpoint_exists('retired_employees') %}
-                            <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">Eenyuu fa'a? Ilaali &rarr;</a>
-                            {% endif %}
+                            <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">📋 Eenyufa'i Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
                     </div>
 
+                    <!-- Kaardii Hojii Gadhiisani (Resigned) -->
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
                             <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
                             <h3 id="statResigned" class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count is defined else 0 }}</h3>
-                            {% if endpoint_exists('resigned_employees') %}
-                            <a href="{{ url_for('resigned_employees') }}" class="text-xs text-red-600 hover:underline mt-1 inline-block font-semibold">Ilaali &rarr;</a>
-                            {% endif %}
+                            <a href="{{ url_for('resigned_employees') }}" class="text-xs text-red-600 hover:underline mt-1 inline-block font-semibold">📋 Eenyufa'i Ilaali &rarr;</a>
                         </div>
                         <span class="p-3 bg-red-50 text-red-600 rounded-lg text-lg">🚪</span>
                     </div>
