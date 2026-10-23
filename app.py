@@ -954,6 +954,34 @@ def export_promotions_excel():
         download_name='Gaaffii_Gonfoo_Report.xlsx'
     )
 
+@app.route('/export_ranks_excel')
+@login_required
+def export_ranks_excel():
+    all_ranks = Rank.query.all()
+    if not all_ranks:
+        flash("Odeeffannoon gulantaa Excel-tti buufamu hin jiru!", 'warning')
+        return redirect(url_for('ranks'))
+
+    data = []
+    for idx, r in enumerate(all_ranks, start=1):
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Gulantaa': r.name,
+            'Ibsa': getattr(r, 'description', '-')
+        })
+
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(output, index=False, sheet_name='Gulantaalee')
+    output.seek(0)
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='Ranks_Report.xlsx'
+    )
+
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
