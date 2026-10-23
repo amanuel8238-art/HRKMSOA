@@ -195,10 +195,10 @@
             <b>Waajjira Maallaqaa {{ letter.branch_name }}</b> guddina gonfoo waan argataniif kaffaltiin akkaataa gaaffii Mana Sirreessaatiin akka raawwatamuuf ni yaadachiifna.
         </div>
     {% elif letter.letter_type == 'jijjiirraa' %}
-        <p style="margin-bottom: 4px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa fi durgoo keessanii akka armaan gadiitti murtaa'eera:</p>
+        <p style="margin-bottom: 4px; text-indent: 0;">Bu'uuruma kanaan, kaffaltiin mindaa fi durgoo keessanii akka armaan gadiitti murtaa'eera:</p>
         <table class="salary-table">
             <tr>
-                <td>Mindaa Iddoo</td>
+                <td>Mindaa Kaffaltii Iddoo/Gonfoo</td>
                 <td class="dots"></td>
                 <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
             </tr>
@@ -224,10 +224,10 @@
             4. <b>Waajjira Maallaqaa {{ letter.to_branch_short if letter.to_branch_short else letter.to_branch }} tiif:</b> Kanuma beekuudhaan kaffaltiin mindaa akka raawwatamuuf ni yaadachiifna.
         </div>
     {% else %}
-        <p style="margin-bottom: 4px; text-indent: 0;">Bu'uuruma kanaan kaffaltiin mindaa fi durgoo keessanii akka armaan gadiitti murtaa'eera:</p>
+        <p style="margin-bottom: 4px; text-indent: 0;">Bu'uuruma kanaan, kaffaltiin mindaa fi durgoo keessanii akka armaan gadiitti murtaa'eera:</p>
         <table class="salary-table">
             <tr>
-                <td>Mindaa Iddoo</td>
+                <td>Mindaa Kaffaltii Iddoo/Gonfoo</td>
                 <td class="dots"></td>
                 <td class="amount">{{ "{:,.2f}".format(letter.salary) }} Birr</td>
             </tr>
