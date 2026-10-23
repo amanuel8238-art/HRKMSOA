@@ -96,8 +96,12 @@
 
         .gg-section ul {
             margin: 3px 0;
-            padding-left: 18px;
-            list-style-type: disc;
+            padding-left: 10px;
+            list-style-type: none; /* Bullet-pisteet poistettu */
+        }
+
+        .gg-section li {
+            margin-bottom: 1px;
         }
 
         @media print {
@@ -256,9 +260,9 @@
 
     <div class="gg-section">
         <p style="margin: 0;"><b><u>G/G:</u></b></p>
-        <ul style="padding-left: 18px; margin: 3px 0;">
+        <ul>
             {% for gg in letter.gg_list %}
-                <li style="margin-bottom: 1px;">{{ gg }}</li>
+                <li>{{ gg }}</li>
             {% endfor %}
         </ul>
     </div>

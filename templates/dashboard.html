@@ -349,7 +349,7 @@
 
                 <div id="commonBudgetField">
                     <label class="block font-semibold text-slate-700 mb-1">Maqaa Baajataa (Budget Name):</label>
-                    <input type="text" name="budget_name" value="G/Saj. Qanansisaa Huseen" class="w-full border rounded-lg p-2">
+                    <input type="text" name="budget_name" value="Kom. Isheetuu Xurunaa" class="w-full border rounded-lg p-2">
                 </div>
 
                 <!-- 1. Jijjiirraa Fields -->
@@ -379,8 +379,8 @@
                         <input type="text" name="reason" value="hanqinaa Namusaaf jecha Onkolooleessaa 1/2019 irraa eeggalee" class="w-full border rounded-lg p-2">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Gita Hojii (Job Position):</label>
-                        <input type="text" name="job_position" value="" placeholder="Fkn: Rawwataa hojii Eegumsaan" class="w-full border rounded-lg p-2">
+                        <label class="block font-semibold text-slate-700 mb-1">Gahee Hojii (Job Position):</label>
+                        <input type="text" name="job_position" placeholder="Fkn: Rawwataa hojii Eegumsaan" class="w-full border rounded-lg p-2">
                     </div>
                 </div>
 
@@ -389,36 +389,36 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Qaama Gaafate / Manaajimentii:</label>
-                            <input type="text" name="requesting_body" value="Koreen Manaajimentii Komishinii" class="w-full border rounded-lg p-2">
+                            <input type="text" name="requesting_body" value="Wajjirii keessaan qaboo ya'ii lakk.DHN-722/2019" class="w-full border rounded-lg p-2">
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Guyyaa Walga'ii Manaajimentii:</label>
-                            <input type="text" name="meeting_date" value="10/01/2019" class="w-full border rounded-lg p-2">
+                            <input type="text" name="meeting_date" value="11/02/2019" class="w-full border rounded-lg p-2">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Guyyaa Hojii Eegaluu (Effective Date):</label>
-                            <input type="text" name="effective_date" value="01/02/2019" class="w-full border rounded-lg p-2">
+                            <input type="text" name="effective_date" value="01/03/2019" class="w-full border rounded-lg p-2">
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Maqaa Mana Sirreessaa (Ma/Sir/_____):</label>
-                            <input type="text" name="branch_name" value="Mag/Shanoo" class="w-full border rounded-lg p-2">
+                            <input type="text" name="branch_name" value="Aa/Aallee" class="w-full border rounded-lg p-2">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Gahee Hojii (Job Position):</label>
-                            <input type="text" name="job_position" value="" placeholder="Fkn: Itti Gaafatamaa Galmee" class="w-full border rounded-lg p-2">
+                            <input type="text" name="job_position" required placeholder="Fkn: Rawwataa Hojii Eegumsaa / Itti Gaafatamaa" class="w-full border rounded-lg p-2">
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Waajjira Mallaqaa (wa/Mallaqaa _____):</label>
-                            <input type="text" name="finance_office" value="Waaj/Mallaqaa Shanoo" class="w-full border rounded-lg p-2">
+                            <input type="text" name="finance_office" value="Aa/Aallee" class="w-full border rounded-lg p-2">
                         </div>
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Waaj/Ma/ Mana Sirreessaa (Branch Short):</label>
-                        <input type="text" name="branch_short" value="Mag/Shanoo" class="w-full border rounded-lg p-2">
+                        <input type="text" name="branch_short" value="Aa/Aallee" class="w-full border rounded-lg p-2">
                     </div>
                 </div>
 
@@ -460,18 +460,22 @@
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Maqaa Mana Sirreessaa (Branch Name):</label>
-                        <input type="text" name="branch_name" value="Mag/Shanoo" class="w-full border rounded-lg p-2">
+                        <input type="text" name="branch_name" value="Aa/Aallee" class="w-full border rounded-lg p-2">
                     </div>
                 </div>
 
                 <!-- Garaagaltoo (G/G) Add-ons -->
                 <div class="border-t pt-2">
                     <label class="block font-semibold text-slate-700 mb-1">Garaagaltoo (G/G) - Sarara sararaan (Line by line) galchi:</label>
-                    <textarea name="gg_list" rows="4" class="w-full border rounded-lg p-2" placeholder="Da/Bezii Hog/Qab/Namaa tiif KMSO&#10;Ma/Si/ Go/Mag/Shanoo tiif&#10;Wa/Mall/ Mag/Shanoo tiif Shanoo">Da/Bezii Hog/Qab/Namaa tiif KMSO
-Ma/Si/ Go/Mag/Shanoo tiif
-Wa/Mall/ Mag/Shanoo tiif Shanoo
-Ma/Si/ Go/Ki/Li/Shawaa tiif
-Wa/Mall/ Go/ Ki/Li/Shawaa tiif Walisoo</textarea>
+                    <textarea name="gg_list" rows="5" class="w-full border rounded-lg p-2" placeholder="Da/Bezii Hog/Qab/Namaa tiif
+KMSO
+Ma/Si/ Aa/Aallee tiif
+Wa/Mall/ Aa/Aallee tiif
+Goree">Da/Bezii Hog/Qab/Namaa tiif
+KMSO
+Ma/Si/ Aa/Aallee tiif
+Wa/Mall/ Aa/Aallee tiif
+Goree</textarea>
                 </div>
 
                 <div class="flex justify-end gap-2 pt-3 border-t">

@@ -674,6 +674,11 @@ def employees():
     gender = request.args.get('gender')
     search_query = request.args.get('search', '')
     status_filter = request.args.get('status', 'Active')
+    
+    # Filteroota haaraa dabalaman
+    rank_status = request.args.get('rank_status')          # 'with' ykn 'without'
+    position_status = request.args.get('position_status')  # 'with' ykn 'without'
+    allowance_status = request.args.get('allowance_status')# 'with' ykn 'without'
 
     query = Employee.query
     if status_filter != 'All':
@@ -684,6 +689,24 @@ def employees():
         query = query.filter_by(branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else branch_id)
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
+
+    # 1. Ramaddii (Rank) qaban fi hin qabne
+    if rank_status == 'with':
+        query = query.filter(Employee.rank_id != None)
+    elif rank_status == 'without':
+        query = query.filter(Employee.rank_id == None)
+
+    # 2. Gita hojii (Position) qaban fi hin qabne
+    if position_status == 'with':
+        query = query.filter(Employee.job_position != None, Employee.job_position != '')
+    elif position_status == 'without':
+        query = query.filter(db.or_(Employee.job_position == None, Employee.job_position == ''))
+
+    # 3. Location Allowance qaban fi kan hin qabne
+    if allowance_status == 'with':
+        query = query.filter(Employee.location_allowance > 0)
+    elif allowance_status == 'without':
+        query = query.filter(db.or_(Employee.location_allowance == None, Employee.location_allowance == 0))
 
     if search_query:
         query = query.filter(
