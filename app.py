@@ -1032,6 +1032,32 @@ def export_ranks_excel():
         download_name='Ranks_Report.xlsx'
     )
 
+@app.route('/retired_employees')
+@login_required
+def retired_employees():
+    if current_user.role == 'admin':
+        all_emps = Employee.query.filter_by(status='Active').all()
+    else:
+        user_b = current_user.branch_id
+        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        all_emps = Employee.query.filter_by(branch_id=b_val, status='Active').all() if user_b else []
+    
+    retired_list = get_retired_employees_list(all_emps)
+    return render_template('retired_employees.html', retired_list=retired_list)
+
+@app.route('/resigned_employees')
+@login_required
+def resigned_employees():
+    inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
+    if current_user.role == 'admin':
+        resigned_list = Employee.query.filter(Employee.status.in_(inactive_statuses)).all()
+    else:
+        user_b = current_user.branch_id
+        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        resigned_list = Employee.query.filter_by(branch_id=b_val).filter(Employee.status.in_(inactive_statuses)).all() if user_b else []
+        
+    return render_template('resigned_employees.html', resigned_list=resigned_list)
+
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
