@@ -97,7 +97,7 @@
         .gg-section ul {
             margin: 3px 0;
             padding-left: 10px;
-            list-style-type: none; /* Bullet-pisteet poistettu */
+            list-style-type: none; /* Bullet points / tuqaawwan haqamaniiru */
         }
 
         .gg-section li {
@@ -157,9 +157,9 @@
         {% if letter.letter_type == 'gonfoo' %}
             Akkuma armaan olitti ibsametti, qorannoo qajeelfama Guddina Gonfoo lakk <b>{{ letter.directive_no }}</b> bahe irratti hunda'uudhaan ulaagaa calallii taasisameen miseensota qabxii gahaa argataniif guddinni gonfoo itti aanu akka kennamuuf murtaa'ee jira. Kanaafuu, isinis gaafa guyyaa <b>{{ letter.effective_date }}</b> irraa eegalee Gonfoo <b>{{ letter.from_rank }}</b> irraa gara Gonfoo <b>{{ letter.to_rank }}</b> tti kan guddattan waan ta'eef, Mindaan Gonfoo keessanii Birr <b>{{ "{:,.2f}".format(letter.rank_salary) }}</b> yoo ta'u:
         {% elif letter.letter_type == 'jijjiirraa' %}
-            Akkuma armaan olitti mata duree irratti ibsuuf yaalame, <b>{{ letter.reason }}</b> tiin, Mana Sirreessaa <b>{{ letter.from_branch }}</b> irraa gara Mana Sirreessaa <b>{{ letter.to_branch }}</b> tti jijjiiramtaanii gita hojii <b>{{ letter.job_position }}</b> ta'uun akka hojjetan murtaa'ee jira.
+            Akkuma armaan olitti mata duree irratti ibsuuf yaalame, <b>{{ letter.reason }}</b> tiin, Mana Sirreessaa <b>{{ letter.from_branch }}</b> irraa gara Mana Sirreessaa <b>{{ letter.to_branch }}</b> tti jijjiiramtaanii gita hojii <b>{{ letter.job_position if letter.job_position else '' }}</b> ta'uun akka hojjetan murtaa'ee jira.
         {% else %}
-            Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Mana Sirreessaa {{ letter.branch_name }}</b> tti gita hojii <b>{{ letter.job_position }}</b> ta’uun akka hojjettan murtaa'ee jira.
+            Akkuma armaan olitti ibsuuf yaalametti <b>{{ letter.requesting_body }}</b> gaafa guyyaa <b>{{ letter.meeting_date }}</b> gaggeesseen ramaddiin hojii akka isiniif mirkanaa'u nu gaafatanii jiru. Bu'uuruma kanaan <b>{{ letter.effective_date }}</b> irraa eeggalee <b>Mana Sirreessaa {{ letter.branch_name }}</b> tti {% if letter.job_position %}gita hojii <b>{{ letter.job_position }}</b> ta’uun{% else %}gita hojii ta’uun{% endif %} akka hojjettan murtaa'ee jira.
         {% endif %}
     </div>
 
