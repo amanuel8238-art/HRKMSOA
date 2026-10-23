@@ -497,6 +497,22 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
+@app.route('/update_transfer_status/<int:id>', methods=['POST'])
+@login_required
+def update_transfer_status(id):
+    transfer = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        status = request.form.get('status')
+        if status:
+            transfer.status = status
+            db.session.commit()
+            flash("Haalli jijjiirraa milkaa'inaan fooyya'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('transfers'))
+
 @app.route('/add_employee', methods=['POST'])
 @login_required
 def add_employee():
@@ -911,7 +927,6 @@ def generate_letter():
     raw_gg = request.form.get('gg_list', '')
     gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()] if raw_gg else request.form.getlist('gg_list')
 
-    # Gita Hojii (Job Position) sirriitti fi guututti qabachuuf
     job_position_val = ''
     for val in request.form.getlist('job_position'):
         if val and val.strip():
