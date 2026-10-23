@@ -853,6 +853,57 @@ def export_employees_excel():
         download_name='HRKMSO_Report.xlsx'
     )
 
+@app.route('/export_promotions_excel')
+@login_required
+def export_promotions_excel():
+    branch_id = request.args.get('branch_id')
+    status_filter = request.args.get('status', 'Pending')
+
+    query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+
+    if status_filter and status_filter != 'All':
+        query = query.filter_by(status=status_filter)
+
+    if current_user.role == 'admin':
+        if branch_id and str(branch_id).isdigit():
+            b_id_int = int(branch_id)
+            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+                db.or_(Employee.branch_id == b_id_int, Transfer.to_branch_id == b_id_int)
+            )
+        promotions_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
+
+    if not promotions_list:
+        flash("Odeeffannoon gaaffii gonfoo Excel-tti buufamu hin jiru!", 'warning')
+        return redirect(url_for('promotions'))
+
+    data = []
+    for idx, p in enumerate(promotions_list, start=1):
+        emp_name = p.employee.full_name if p.employee else 'N/A'
+        data.append({
+            'Lakk.': idx,
+            'Maqaa Hojjetaa': emp_name,
+            'Gonfoo Duraanii': getattr(p, 'from_rank', '-'),
+            'Gonfoo Haaraa': getattr(p, 'to_rank', '-'),
+            'Sababa': p.reason if p.reason else '-',
+            'Status': getattr(p, 'status', '-')
+        })
+
+    df = pd.DataFrame(data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo')
+    output.seek(0)
+
+    return send_file(
+        output, 
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+        as_attachment=True, 
+        download_name='Gaaffii_Gonfoo_Report.xlsx'
+    )
+
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
@@ -860,7 +911,7 @@ def generate_letter():
     raw_gg = request.form.get('gg_list', '')
     gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()] if raw_gg else request.form.getlist('gg_list')
 
-    # Gita Hojii (Job Position) sirriitti fi guututti qabachuuf (Robust extraction)
+    # Gita Hojii (Job Position) sirriitti fi guututti qabachuuf
     job_position_val = ''
     for val in request.form.getlist('job_position'):
         if val and val.strip():
