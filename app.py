@@ -513,6 +513,40 @@ def update_transfer_status(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('transfers'))
 
+@app.route('/add_transfer', methods=['POST'])
+@login_required
+def add_transfer():
+    try:
+        create_local_backup()
+        employee_id = request.form.get('employee_id')
+        from_branch_id = request.form.get('from_branch_id')
+        to_branch_id = request.form.get('to_branch_id')
+        reason = request.form.get('reason')
+        transfer_date = request.form.get('transfer_date') or request.form.get('date')
+
+        new_transfer = Transfer(
+            employee_id=int(employee_id) if employee_id and str(employee_id).isdigit() else None,
+            from_branch_id=int(from_branch_id) if from_branch_id and str(from_branch_id).isdigit() else None,
+            to_branch_id=int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else None,
+            reason=reason,
+            date_given=transfer_date,
+            status='Pending'
+        )
+        db.session.add(new_transfer)
+        
+        if employee_id and to_branch_id and str(employee_id).isdigit() and str(to_branch_id).isdigit():
+            emp = Employee.query.get(int(employee_id))
+            if emp:
+                emp.branch_id = int(to_branch_id)
+
+        db.session.commit()
+        flash("Jijjiirraan hojjetaa milkaa'inaan galmaa'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return redirect(url_for('transfers'))
+
 @app.route('/add_employee', methods=['POST'])
 @login_required
 def add_employee():
