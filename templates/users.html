@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Bulchiinsa Fayyadamoowwan (User Management) - HRKMSO{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2 class="fw-bold text-dark">Bulchiinsa Fayyadamoowwan (Users Management)</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fas fa-user-plus me-1"></i> Fayyadamaa Dabaluuf
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark text-uppercase fs-7">
+                        <tr>
+                            <th class="py-3 ps-3">#</th>
+                            <th class="py-3">Maqaa Fayyadamaa (Username)</th>
+                            <th class="py-3">Gahee (Role)</th>
+                            <th class="py-3">Damee (Branch)</th>
+                            <th class="py-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for u in users %}
+                            <tr>
+                                <td class="ps-3">{{ loop.index }}</td>
+                                <td><strong>{{ u.username }}</strong></td>
+                                data-bs-target
+                                <td>
+                                    <span class="badge {% if u.role == 'admin' %}bg-danger{% else %}bg-info{% endif %} px-2 py-1">
+                                        {{ u.role }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if u.branch_id %}
+                                        {% for b in all_branches %}
+                                            {% if b.id == u.branch_id %}{{ b.name }}{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">Head Office / Admin</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}">
+                                            <i class="fas fa-edit"></i> Edit / Password
+                                        </button>
+                                        {% if u.id != current_user.id %}
+                                        <form action="{{ url_for('delete_user', id=u.id) }}" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Fayyadamaa kana haquu barbaaddaa?');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Edit User Modal -->
+                            <div class="modal fade" id="editUserModal{{ u.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form action="{{ url_for('edit_user', id=u.id) }}" method="POST">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Fayyadamaa Sirreessuu: {{ u.username }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Maqaa Fayyadamaa (Username)</label>
+                                                    <input type="text" class="form-control" name="username" value="{{ u.username }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Jecha Iccitii Haaraa (Password - yoo jijjiiruu barbaadde)</label>
+                                                    <input type="password" class="form-control" name="password" placeholder="Jecha iccitii haaraa galchi">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Gahee (Role)</label>
+                                                    <select class="form-select" name="role" required>
+                                                        <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                                                        <option value="branch_user" {% if u.role != 'admin' %}selected{% endif %}>Branch User</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Damee (Branch)</label>
+                                                    <select class="form-select" name="branch_id">
+                                                        <option value="">-- Admin (Damee Hunda) --</option>
+                                                        {% for b in all_branches %}
+                                                        <option value="{{ b.id }}" {% if u.branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Duwwaa Lakkisi</button>
+                                                <button type="submit" class="btn btn-primary">Galchii / Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">Fayyadamaan hin jiru.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('add_user') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Fayyadamaa Haaraa Uumuu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-start">
+                    <div class="mb-3">
+                        <label class="form-label">Maqaa Fayyadamaa (Username)</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jecha Iccitii (Password)</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Gahee (Role)</label>
+                        <select class="form-select" name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="branch_user" selected>Branch User</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Damee (Branch)</label>
+                        <select class="form-select" name="branch_id">
+                            <option value="">-- Admin (Damee Hunda) --</option>
+                            {% for b in all_branches %}
+                            <option value="{{ b.id }}">{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Duwwaa Lakkisi</button>
+                    <button type="submit" class="btn btn-primary">Galchi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

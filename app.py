@@ -1058,6 +1058,85 @@ def resigned_employees():
         
     return render_template('resigned_employees.html', resigned_list=resigned_list)
 
+@app.route('/users')
+@login_required
+@admin_required
+def users():
+    all_users = User.query.all()
+    all_branches = Branch.query.all()
+    return render_template('users.html', users=all_users, all_branches=all_branches)
+
+@app.route('/add_user', methods=['POST'])
+@login_required
+@admin_required
+def add_user():
+    try:
+        create_local_backup()
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role = request.form.get('role', 'branch_user')
+        branch_id = request.form.get('branch_id')
+        
+        if User.query.filter_by(username=username).first():
+            flash('Maqaan fayyadamaa kun duraan jira!', 'danger')
+            return redirect(url_for('users'))
+            
+        hashed_pw = generate_password_hash(password)
+        new_user = User(
+            username=username,
+            password=hashed_pw,
+            role=role,
+            branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        flash("Fayyadamaan haaraan milkaa'inaan uumameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('users'))
+
+@app.route('/edit_user/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    try:
+        create_local_backup()
+        user.username = request.form.get('username', user.username)
+        user.role = request.form.get('role', user.role)
+        branch_id = request.form.get('branch_id')
+        user.branch_id = int(branch_id) if branch_id and str(branch_id).isdigit() else None
+        
+        new_password = request.form.get('password')
+        if new_password and new_password.strip():
+            user.password = generate_password_hash(new_password.strip())
+            
+        db.session.commit()
+        flash("Odeeffannoon fayyadamaa milkaa'inaan fooyya'eera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('users'))
+
+@app.route('/delete_user/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(id):
+    if id == current_user.id:
+        flash("Fayyadamaa amma itti fayyadamtu haquun hin danda'amu!", 'danger')
+        return redirect(url_for('users'))
+    user = User.query.get_or_404(id)
+    try:
+        create_local_backup()
+        db.session.delete(user)
+        db.session.commit()
+        flash("Fayyadamaan milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('users'))
+
 @app.route('/generate-letter', methods=['POST'])
 @login_required
 def generate_letter():
