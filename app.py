@@ -675,10 +675,9 @@ def employees():
     search_query = request.args.get('search', '')
     status_filter = request.args.get('status', 'Active')
     
-    # Filteroota haaraa dabalaman
-    rank_status = request.args.get('rank_status')          # 'with' ykn 'without'
-    position_status = request.args.get('position_status')  # 'with' ykn 'without'
-    allowance_status = request.args.get('allowance_status')# 'with' ykn 'without'
+    rank_status = request.args.get('rank_status')          
+    position_status = request.args.get('position_status')  
+    allowance_status = request.args.get('allowance_status')
 
     query = Employee.query
     if status_filter != 'All':
@@ -690,19 +689,16 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
-    # 1. Ramaddii (Rank) qaban fi hin qabne
     if rank_status == 'with':
         query = query.filter(Employee.rank_id != None)
     elif rank_status == 'without':
         query = query.filter(Employee.rank_id == None)
 
-    # 2. Gita hojii (Position) qaban fi hin qabne
     if position_status == 'with':
         query = query.filter(Employee.job_position != None, Employee.job_position != '')
     elif position_status == 'without':
         query = query.filter(db.or_(Employee.job_position == None, Employee.job_position == ''))
 
-    # 3. Location Allowance qaban fi kan hin qabne
     if allowance_status == 'with':
         query = query.filter(Employee.location_allowance > 0)
     elif allowance_status == 'without':
@@ -864,6 +860,15 @@ def generate_letter():
     raw_gg = request.form.get('gg_list', '')
     gg_entries = [line.strip() for line in raw_gg.splitlines() if line.strip()] if raw_gg else request.form.getlist('gg_list')
 
+    # Gita Hojii (Job Position) sirriitti fi guututti qabachuuf (Robust extraction)
+    job_position_val = ''
+    for val in request.form.getlist('job_position'):
+        if val and val.strip():
+            job_position_val = val.strip()
+            break
+    if not job_position_val:
+        job_position_val = request.form.get('job_position', '')
+
     letter_data = {
         'letter_type': letter_type,
         'emp_rank_name': request.form.get('emp_rank_name', ''),
@@ -883,7 +888,7 @@ def generate_letter():
         'from_branch_short': request.form.get('from_branch_short', ''),
         'to_branch_short': request.form.get('to_branch_short', ''),
         'reason': request.form.get('reason', ''),
-        'job_position': request.form.get('job_position', ''),
+        'job_position': job_position_val,
         'salary': float(request.form.get('salary', 0) or 0),
         'budget_name': request.form.get('budget_name', ''),
         'gg_list': gg_entries
