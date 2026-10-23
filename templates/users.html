@@ -32,7 +32,6 @@
                             <tr>
                                 <td class="ps-3">{{ loop.index }}</td>
                                 <td><strong>{{ u.username }}</strong></td>
-                                data-bs-target
                                 <td>
                                     <span class="badge {% if u.role == 'admin' %}bg-danger{% else %}bg-info{% endif %} px-2 py-1">
                                         {{ u.role }}
@@ -78,7 +77,7 @@
                                                     <input type="text" class="form-control" name="username" value="{{ u.username }}" required>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label">Jecha Iccitii Haaraa (Password - yoo jijjiiruu barbaadde)</label>
+                                                    <label class="form-label">Jecha Iccitii Haaraa (Password)</label>
                                                     <input type="password" class="form-control" name="password" placeholder="Jecha iccitii haaraa galchi">
                                                 </div>
                                                 <div class="mb-3">
