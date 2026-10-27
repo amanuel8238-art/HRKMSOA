@@ -161,7 +161,7 @@ with app.app_context():
             if 'commission_sent_date' not in disc_columns:
                 conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN commission_sent_date VARCHAR(50)"))
             if 'discipline_status' not in disc_columns:
-                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN discipline_status VARCHAR(100) DEFAULT 'mana_sirreessaa'"))
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN discipline_status VARCHAR(100) DEFAULT 'pending'"))
             if 'final_decision' not in disc_columns:
                 conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN final_decision TEXT"))
             if 'offense_type' not in disc_columns:
@@ -272,9 +272,9 @@ def dashboard():
         resigned_count = Employee.query.filter(Employee.status.in_(inactive_statuses)).count()
         all_emps = Employee.query.filter_by(status='Active').all()
         
-        local_committee_count = DisciplineRecord.query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
-        zone_committee_count = DisciplineRecord.query.filter_by(discipline_status='godinaa').count()
-        commission_pending_count = DisciplineRecord.query.filter_by(discipline_status='komishinii').count()
+        local_committee_count = DisciplineRecord.query.filter(db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None)).count()
+        zone_committee_count = 0
+        commission_pending_count = 0
         final_decided_count = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
     else:
         user_b = current_user.branch_id
@@ -298,9 +298,9 @@ def dashboard():
             branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
             transfer_count = len([t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)])
             
-            local_committee_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
-            zone_committee_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, DisciplineRecord.discipline_status == 'godinaa').count()
-            commission_pending_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, DisciplineRecord.discipline_status == 'komishinii').count()
+            local_committee_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None)).count()
+            zone_committee_count = 0
+            commission_pending_count = 0
             final_decided_count = DisciplineRecord.query.join(Employee).filter(Employee.branch_id == branch_id_val, DisciplineRecord.discipline_status == 'murtaae').count()
         else:
             transfer_count = 0
@@ -351,9 +351,9 @@ def get_branch_stats(branch_id):
         warning_query = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
         
-        local_committee = DisciplineRecord.query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
-        zone_committee = DisciplineRecord.query.filter_by(discipline_status='godinaa').count()
-        commission_pending = DisciplineRecord.query.filter_by(discipline_status='komishinii').count()
+        local_committee = DisciplineRecord.query.filter(db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None)).count()
+        zone_committee = 0
+        commission_pending = 0
         final_decided = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
     else:
         b_id_str = str(branch_id)
@@ -384,9 +384,9 @@ def get_branch_stats(branch_id):
             db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         )
         
-        local_committee = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None)).count()
-        zone_committee = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, DisciplineRecord.discipline_status == 'godinaa').count()
-        commission_pending = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, DisciplineRecord.discipline_status == 'komishinii').count()
+        local_committee = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None)).count()
+        zone_committee = 0
+        commission_pending = 0
         final_decided = DisciplineRecord.query.join(Employee).filter(db.cast(Employee.branch_id, db.String) == b_id_str, DisciplineRecord.discipline_status == 'murtaae').count()
 
     retired_count = len(get_retired_employees_list(all_active_for_retired))
@@ -428,8 +428,8 @@ def warnings():
     query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
     
     if status_filter:
-        if status_filter == 'mana_sirreessaa':
-            query = query.filter(db.or_(DisciplineRecord.discipline_status == 'mana_sirreessaa', DisciplineRecord.discipline_status == None))
+        if status_filter == 'pending':
+            query = query.filter(db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None))
         else:
             query = query.filter(DisciplineRecord.discipline_status == status_filter)
 
@@ -475,10 +475,15 @@ def update_discipline_decision(id):
     try:
         create_local_backup()
         final_decision = request.form.get('final_decision')
+        discipline_status = request.form.get('discipline_status')
+        
         if final_decision is not None:
             record.final_decision = final_decision.strip()
-            db.session.commit()
-            flash("Murteen dhumaa milkaa'inaan haaromfameera!", 'success')
+        if discipline_status is not None:
+            record.discipline_status = discipline_status.strip()
+            
+        db.session.commit()
+        flash("Murteen dhumaa fi status milkaa'inaan haaromfameera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -506,7 +511,7 @@ def add_discipline(employee_id):
             local_committee_date = request.form.get('local_committee_date')
             zone_committee_date = request.form.get('zone_committee_date')
             commission_sent_date = request.form.get('commission_sent_date')
-            discipline_status = request.form.get('discipline_status', 'mana_sirreessaa')
+            discipline_status = request.form.get('discipline_status', 'pending')
             
             final_decision = request.form.get('final_decision') if current_user.role == 'admin' else None
 
@@ -1035,7 +1040,7 @@ def export_promotions_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo')
+        df.to_excel(output, index=False, sheet_name='Gaaffii Gonfoo')
     output.seek(0)
 
     return send_file(

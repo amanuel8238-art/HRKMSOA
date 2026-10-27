@@ -95,17 +95,11 @@
                     <a href="{{ url_for('warnings') }}" class="px-3 py-1 text-xs font-semibold rounded-full border transition text-decoration-none {% if not selected_status %}bg-indigo-600 text-white border-indigo-600{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300{% endif %}">
                         Hunda Ilaali
                     </a>
-                    <a href="{{ url_for('warnings') }}?status=mana_sirreessaa" class="px-3 py-1 text-xs font-semibold rounded-full border transition text-decoration-none {% if selected_status == 'mana_sirreessaa' %}bg-amber-600 text-white border-amber-600{% else %}bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200{% endif %}">
-                        Sadarkaa Mana Sirreessaa
-                    </a>
-                    <a href="{{ url_for('warnings') }}?status=godinaa" class="px-3 py-1 text-xs font-semibold rounded-full border transition text-decoration-none {% if selected_status == 'godinaa' %}bg-blue-600 text-white border-blue-600{% else %}bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200{% endif %}">
-                        Sadarkaa Godinaa
-                    </a>
-                    <a href="{{ url_for('warnings') }}?status=komishinii" class="px-3 py-1 text-xs font-semibold rounded-full border transition text-decoration-none {% if selected_status == 'komishinii' %}bg-purple-600 text-white border-purple-600{% else %}bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200{% endif %}">
-                        Komishiniitti Ergame (Pending)
+                    <a href="{{ url_for('warnings') }}?status=pending" class="px-3 py-1 text-xs font-semibold rounded-full border transition text-decoration-none {% if selected_status == 'pending' %}bg-warning text-dark border-warning{% else %}bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200{% endif %}">
+                        Pending
                     </a>
                     <a href="{{ url_for('warnings') }}?status=murtaae" class="px-3 py-1 text-xs font-semibold rounded-full border transition text-decoration-none {% if selected_status == 'murtaae' %}bg-emerald-600 text-white border-emerald-600{% else %}bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200{% endif %}">
-                        Murtee Dhumaa Argate
+                        Murtee Dhumaa Argateera
                     </a>
                 </div>
 
@@ -146,28 +140,22 @@
                                         </span>
                                     </td>
                                     
-                                    <!-- Status / Sadarkaa (Adminiif Dropdown jijjiiramaaf, Branch-iif immoo agarsiiftuu) -->
+                                    <!-- Status / Sadarkaa (Pending / Murtee Dhumaa Argateera) -->
                                     <td>
                                         {% if current_user.role == 'admin' %}
                                             <form action="{{ url_for('update_discipline_decision', id=r.id) }}" method="POST" class="d-flex flex-column gap-1">
                                                 <select name="discipline_status" class="form-select form-select-sm text-xs">
-                                                    <option value="mana_sirreessaa" {% if r.discipline_status == 'mana_sirreessaa' %}selected{% endif %}>Mana Sirreessaa</option>
-                                                    <option value="godinaa" {% if r.discipline_status == 'godinaa' %}selected{% endif %}>Koree Godinaa</option>
-                                                    <option value="komishinii" {% if r.discipline_status == 'komishinii' %}selected{% endif %}>Komishinii</option>
-                                                    <option value="murtaae" {% if r.discipline_status == 'murtaae' %}selected{% endif %}>Murtee Dhumaa Argate</option>
+                                                    <option value="pending" {% if r.discipline_status == 'pending' or not r.discipline_status %}selected{% endif %}>Pending</option>
+                                                    <option value="murtaae" {% if r.discipline_status == 'murtaae' %}selected{% endif %}>Murtee Dhumaa Argateera</option>
                                                 </select>
-                                                <input type="text" name="final_decision" value="{{ r.final_decision or '' }}" class="form-control form-control-sm text-xs" placeholder="Murtee dhumaa...">
+                                                <input type="text" name="final_decision" value="{{ r.final_decision or '' }}" class="form-control form-control-sm text-xs" placeholder="Murtee dhumaa galchi...">
                                                 <button type="submit" class="btn btn-sm btn-success text-xs py-0">Olkaa'i</button>
                                             </form>
                                         {% else %}
-                                            {% if r.discipline_status == 'godinaa' %}
-                                                <span class="badge bg-primary">Koree Godinaa</span>
-                                            {% elif r.discipline_status == 'komishinii' %}
-                                                <span class="badge bg-purple text-white" style="background-color: #6f42c1;">Komishinii</span>
-                                            {% elif r.discipline_status == 'murtaae' %}
-                                                <span class="badge bg-success">Murtee Dhumaa Argate</span>
+                                            {% if r.discipline_status == 'murtaae' %}
+                                                <span class="badge bg-success">Murtee Dhumaa Argateera</span>
                                             {% else %}
-                                                <span class="badge bg-warning text-dark">Mana Sirreessaa</span>
+                                                <span class="badge bg-warning text-dark">Pending</span>
                                             {% endif %}
                                         {% endif %}
                                     </td>
@@ -180,7 +168,7 @@
                                     <td>{{ r.zone_committee_date or '-' }}</td>
                                     <td>{{ r.commission_sent_date or '-' }}</td>
                                     
-                                    <!-- Murtee Dhumaa (Branch-iif ragaan mirkanaa'e akka mul'atu) -->
+                                    <!-- Murtee Dhumaa -->
                                     <td>
                                         <span class="fw-medium text-dark">{{ r.final_decision or '-' }}</span>
                                     </td>
