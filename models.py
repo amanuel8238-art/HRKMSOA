@@ -77,8 +77,8 @@ class DisciplineRecord(db.Model):
     penalty_type = db.Column(db.String(150), nullable=False)
     reason = db.Column(db.Text, nullable=True)
     
-    # Kolomiin kun dhabamee waan tureef asitti dabalamera (nullable=True ta'uun isaa dirqamatti akka hin gaafanne godha)
     offense_date = db.Column(db.String(50), nullable=True)  
+    reporting_date = db.Column(db.String(50), nullable=True)  # Guyyaa itti gabaafame (reporting date)
     
     date_given = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
