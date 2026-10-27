@@ -467,6 +467,23 @@ def delete_discipline(id):
         
     return redirect(request.referrer or url_for('warnings'))
 
+@app.route('/update_discipline_decision/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def update_discipline_decision(id):
+    record = DisciplineRecord.query.get_or_404(id)
+    try:
+        create_local_backup()
+        final_decision = request.form.get('final_decision')
+        if final_decision is not None:
+            record.final_decision = final_decision.strip()
+            db.session.commit()
+            flash("Murteen dhumaa milkaa'inaan haaromfameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('warnings'))
+
 @app.route('/add_discipline/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
 def add_discipline(employee_id):
@@ -491,7 +508,6 @@ def add_discipline(employee_id):
             commission_sent_date = request.form.get('commission_sent_date')
             discipline_status = request.form.get('discipline_status', 'mana_sirreessaa')
             
-            # Murtee dhumaa kan guutu Admin qofa yoo ta'e, damee irraa yoo dhufe None ta'a
             final_decision = request.form.get('final_decision') if current_user.role == 'admin' else None
 
             new_record = DisciplineRecord(
@@ -500,9 +516,9 @@ def add_discipline(employee_id):
                 offense_type=offense_type,
                 reason=reason,
                 offense_date=offense_date,
-                reporting_date=None,   # Kan haqame / duwwaa ta'ee kan darbu
+                reporting_date=None,
                 decision_date=decision_date,
-                effective_date=None,   # Kan haqame / duwwaa ta'ee kan darbu
+                effective_date=None,
                 expiry_date=expiry_date,
                 approved_by=approved_by,
                 description=description,
@@ -1018,7 +1034,7 @@ def export_promotions_excel():
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
-    with pd.ExcelWriter(writer, engine='openpyxl') as writer:
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo')
     output.seek(0)
 
