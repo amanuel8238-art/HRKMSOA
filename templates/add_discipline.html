@@ -86,7 +86,7 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-12 mb-3">
                                     <label for="discipline_status" class="form-label">Sadarkaa Adeemsa Dhimmaa (Status)</label>
                                     <select class="form-select" id="discipline_status" name="discipline_status">
                                         <option value="mana_sirreessaa">Sadarkaa Mana Sirreessaa</option>
@@ -95,11 +95,17 @@
                                         <option value="murtaae">Murtee Dhumaa Argate</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="final_decision" class="form-label">Murtee Dhumaa / Haala Irra Jiru</label>
+                            </div>
+
+                            <!-- Murtee Dhumaa / Haala Irra Jiru (Admin/Head Office Qofaaf akka mul'atu) -->
+                            {% if current_user.role == 'admin' %}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="final_decision" class="form-label">Murtee Dhumaa / Haala Irra Jiru (Admin)</label>
                                     <input type="text" class="form-control" id="final_decision" name="final_decision" placeholder="Fkn. Akeekkachiisa dhumaa ykn qulqullaa'e">
                                 </div>
                             </div>
+                            {% endif %}
 
                             <div class="mb-3">
                                 <label for="appeal_status" class="form-label">Haala Apiiwii (Appeal Status)</label>

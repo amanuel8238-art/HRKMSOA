@@ -490,7 +490,9 @@ def add_discipline(employee_id):
             zone_committee_date = request.form.get('zone_committee_date')
             commission_sent_date = request.form.get('commission_sent_date')
             discipline_status = request.form.get('discipline_status', 'mana_sirreessaa')
-            final_decision = request.form.get('final_decision')
+            
+            # Murtee dhumaa kan guutu Admin qofa yoo ta'e, damee irraa yoo dhufe None ta'a
+            final_decision = request.form.get('final_decision') if current_user.role == 'admin' else None
 
             new_record = DisciplineRecord(
                 employee_id=emp.id,
@@ -1016,7 +1018,7 @@ def export_promotions_excel():
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    with pd.ExcelWriter(writer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo')
     output.seek(0)
 
