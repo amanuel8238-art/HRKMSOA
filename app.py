@@ -272,21 +272,18 @@ def dashboard():
         resigned_count = Employee.query.filter(Employee.status.in_(inactive_statuses)).count()
         all_emps = Employee.query.filter_by(status='Active').all()
         
-        # Hordoffii Adeemsa Naamusaa Dashboard Admin
+        # Hordoffii Adeemsa Naamusaa Dashboard Admin (Guyyoota qofa irratti hundaa'uun)
         local_committee_count = DisciplineRecord.query.filter(
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.local_committee_date != None,
             DisciplineRecord.local_committee_date != ''
         ).count()
         
         zone_committee_count = DisciplineRecord.query.filter(
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.zone_committee_date != None,
             DisciplineRecord.zone_committee_date != ''
         ).count()
         
         commission_pending_count = DisciplineRecord.query.filter(
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.commission_sent_date != None,
             DisciplineRecord.commission_sent_date != ''
         ).count()
@@ -317,21 +314,18 @@ def dashboard():
             # Hordoffii Adeemsa Naamusaa Dashboard Damee
             local_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
                 DisciplineRecord.local_committee_date != None,
                 DisciplineRecord.local_committee_date != ''
             ).count()
 
             zone_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
                 DisciplineRecord.zone_committee_date != None,
                 DisciplineRecord.zone_committee_date != ''
             ).count()
 
             commission_pending_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
                 DisciplineRecord.commission_sent_date != None,
                 DisciplineRecord.commission_sent_date != ''
             ).count()
@@ -390,15 +384,12 @@ def get_branch_stats(branch_id):
         penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
         
         local_committee = DisciplineRecord.query.filter(
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''
         ).count()
         zone_committee = DisciplineRecord.query.filter(
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''
         ).count()
         commission_pending = DisciplineRecord.query.filter(
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''
         ).count()
         final_decided = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
@@ -433,19 +424,16 @@ def get_branch_stats(branch_id):
         
         local_committee = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''
         ).count()
         
         zone_committee = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''
         ).count()
         
         commission_pending = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(DisciplineRecord.discipline_status == 'pending', DisciplineRecord.discipline_status == None),
             DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''
         ).count()
         
