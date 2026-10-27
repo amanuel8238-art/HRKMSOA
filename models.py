@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+[cite: 1]from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
 
@@ -76,6 +76,10 @@ class DisciplineRecord(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     penalty_type = db.Column(db.String(150), nullable=False)
     reason = db.Column(db.Text, nullable=True)
+    
+    # Kolomiin kun dhabamee waan tureef asitti dabalamera (nullable=True ta'uun isaa dirqamatti akka hin gaafanne godha)
+    offense_date = db.Column(db.String(50), nullable=True)  
+    
     date_given = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
     
