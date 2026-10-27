@@ -75,23 +75,24 @@ class DisciplineRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     penalty_type = db.Column(db.String(150), nullable=False)
+    offense_type = db.Column(db.String(150), nullable=True)  # Gosa Balleessaa (Asitti dabalamera)
     reason = db.Column(db.Text, nullable=True)
     
     offense_date = db.Column(db.String(50), nullable=True)  
     reporting_date = db.Column(db.String(50), nullable=True)  
-    decision_date = db.Column(db.String(50), nullable=True)  # Guyyaa Murteen Itti Kenname
-    effective_date = db.Column(db.String(50), nullable=True)  # Guyyaa Hojii Irra Oole
-    expiry_date = db.Column(db.String(50), nullable=True)     # Guyyaa Adabbiin Itti Xumuramu (Asitti dabalamera)
+    decision_date = db.Column(db.String(50), nullable=True)  
+    effective_date = db.Column(db.String(50), nullable=True)  
+    expiry_date = db.Column(db.String(50), nullable=True)     
     
     date_given = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
     
     # Kolomoota Hordoffii Naamusaa Haaraa Dabalaman
-    local_committee_date = db.Column(db.String(50), nullable=True)  # Guyyaa Koreen M/Sirreessaa itti murteesse
-    zone_committee_date = db.Column(db.String(50), nullable=True)   # Guyyaa Koreen Godinaa itti murteesse
-    commission_sent_date = db.Column(db.String(50), nullable=True)  # Guyyaa Komishiniitti ergame
-    discipline_status = db.Column(db.String(100), default='mana_sirreessaa') # mana_sirreessaa, godinaa, komishinii, murtaae
-    final_decision = db.Column(db.Text, nullable=True)               # Murtee Dhumaa
+    local_committee_date = db.Column(db.String(50), nullable=True)  
+    zone_committee_date = db.Column(db.String(50), nullable=True)   
+    commission_sent_date = db.Column(db.String(50), nullable=True)  
+    discipline_status = db.Column(db.String(100), default='mana_sirreessaa') 
+    final_decision = db.Column(db.Text, nullable=True)               
 
 class Transfer(db.Model):
     __tablename__ = 'transfer'
