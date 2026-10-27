@@ -164,6 +164,12 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN discipline_status VARCHAR(100) DEFAULT 'mana_sirreessaa'"))
             if 'final_decision' not in disc_columns:
                 conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN final_decision TEXT"))
+            if 'offense_type' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN offense_type VARCHAR(150)"))
+            if 'expiry_date' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN expiry_date VARCHAR(50)"))
+            if 'approved_by' not in disc_columns:
+                conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN approved_by VARCHAR(150)"))
 
     if not User.query.filter_by(username='admin').first():
         hashed_pw = generate_password_hash('admin123')
@@ -473,19 +479,36 @@ def add_discipline(employee_id):
         try:
             create_local_backup()
             penalty_type = request.form.get('penalty_type')
+            offense_type = request.form.get('offense_type')
+            reason = request.form.get('reason')
+            offense_date = request.form.get('offense_date')
+            decision_date = request.form.get('decision_date')
+            expiry_date = request.form.get('expiry_date')
+            approved_by = request.form.get('approved_by')
             description = request.form.get('description', '')
-            d_date = request.form.get('date') or request.form.get('offense_date') or "2019-01-28"
+            local_committee_date = request.form.get('local_committee_date')
+            zone_committee_date = request.form.get('zone_committee_date')
+            commission_sent_date = request.form.get('commission_sent_date')
+            discipline_status = request.form.get('discipline_status', 'mana_sirreessaa')
+            final_decision = request.form.get('final_decision')
 
             new_record = DisciplineRecord(
                 employee_id=emp.id,
                 penalty_type=penalty_type,
+                offense_type=offense_type,
+                reason=reason,
+                offense_date=offense_date,
+                reporting_date=None,   # Kan haqame / duwwaa ta'ee kan darbu
+                decision_date=decision_date,
+                effective_date=None,   # Kan haqame / duwwaa ta'ee kan darbu
+                expiry_date=expiry_date,
+                approved_by=approved_by,
                 description=description,
-                date_given=d_date,
-                local_committee_date=request.form.get('local_committee_date'),
-                zone_committee_date=request.form.get('zone_committee_date'),
-                commission_sent_date=request.form.get('commission_sent_date'),
-                discipline_status=request.form.get('discipline_status', 'mana_sirreessaa'),
-                final_decision=request.form.get('final_decision')
+                local_committee_date=local_committee_date,
+                zone_committee_date=zone_committee_date,
+                commission_sent_date=commission_sent_date,
+                discipline_status=discipline_status,
+                final_decision=final_decision
             )
             db.session.add(new_record)
             db.session.commit()
