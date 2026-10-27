@@ -78,7 +78,8 @@ class DisciplineRecord(db.Model):
     reason = db.Column(db.Text, nullable=True)
     
     offense_date = db.Column(db.String(50), nullable=True)  
-    reporting_date = db.Column(db.String(50), nullable=True)  # Guyyaa itti gabaafame (reporting date)
+    reporting_date = db.Column(db.String(50), nullable=True)  
+    decision_date = db.Column(db.String(50), nullable=True)  # Guyyaa Murteen Itti Kenname (Asitti dabalamera)
     
     date_given = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
