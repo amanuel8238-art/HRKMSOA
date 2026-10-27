@@ -75,7 +75,7 @@ class DisciplineRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     penalty_type = db.Column(db.String(150), nullable=False)
-    offense_type = db.Column(db.String(150), nullable=True)  # Gosa Balleessaa (Asitti dabalamera)
+    offense_type = db.Column(db.String(150), nullable=True)  
     reason = db.Column(db.Text, nullable=True)
     
     offense_date = db.Column(db.String(50), nullable=True)  
@@ -83,6 +83,7 @@ class DisciplineRecord(db.Model):
     decision_date = db.Column(db.String(50), nullable=True)  
     effective_date = db.Column(db.String(50), nullable=True)  
     expiry_date = db.Column(db.String(50), nullable=True)     
+    approved_by = db.Column(db.String(150), nullable=True)   # Namicha Murteesse/Raggaasise (Asitti dabalamera)
     
     date_given = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
