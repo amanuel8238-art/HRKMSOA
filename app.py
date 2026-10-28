@@ -403,6 +403,9 @@ def dashboard():
 @app.route('/api/dashboard-stats/<branch_id>')
 @login_required
 def get_branch_stats(branch_id):
+    if current_user.role != 'admin':
+        branch_id = str(current_user.branch_id) if current_user.branch_id else '0'
+
     if branch_id == 'all':
         emp_query = Employee.query.filter_by(status='Active')
         all_active_for_retired = emp_query.all()
@@ -800,7 +803,6 @@ def evaluate_employee(id):
             emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
                                emp.law_score + emp.experience_score + emp.service_score)
             
-            # Guyyaa Gonfaa Itti Aanu (Kalendarii Itoophiyaa) fi Status guddinaa galchuu
             emp.next_promotion_date = request.form.get('next_promotion_date')
             emp.next_promotion_status = request.form.get('next_promotion_status')
             
@@ -984,12 +986,18 @@ def promotions():
 def penalties():
     branch_id_filter = request.args.get('branch_id')
     query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
+    
     if current_user.role == 'admin':
         if branch_id_filter and str(branch_id_filter).isdigit():
             query = query.filter(Employee.branch_id == int(branch_id_filter))
     else:
         user_b = current_user.branch_id
-        query = query.filter(Employee.branch_id == user_b) if user_b else query.filter(False)
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+            
     records = query.all()
     all_branches = Branch.query.all()
     return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
