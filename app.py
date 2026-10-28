@@ -320,6 +320,7 @@ def dashboard():
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        
         emp_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').count() if user_b else 0
         branch_count = 1
         male_count = Employee.query.filter_by(branch_id=branch_id_val, status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count() if user_b else 0
@@ -327,6 +328,7 @@ def dashboard():
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
         resigned_count = Employee.query.filter_by(branch_id=branch_id_val).filter(Employee.status.in_(inactive_statuses)).count() if user_b else 0
         all_emps = Employee.query.filter_by(branch_id=branch_id_val, status='Active').all() if user_b else []
+        
         if user_b:
             b_str = str(user_b)
             to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
