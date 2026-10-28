@@ -746,7 +746,7 @@ def add_transfer():
             from_branch_id=int(from_branch_id) if from_branch_id and str(from_branch_id).isdigit() else None,
             to_branch_id=int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else None,
             reason=reason,
-            date=transfer_date,
+            transfer_date=transfer_date,
             status='Pending'
         )
         db.session.add(new_transfer)
@@ -899,7 +899,7 @@ def evaluate_employee(id):
                     from_branch_id=emp.branch_id,
                     to_branch_id=emp.branch_id,
                     reason=f'Gaaffii Gonfoo: {emp.next_promotion_status}',
-                    date=emp.next_promotion_date,
+                    transfer_date=emp.next_promotion_date,
                     status='Pending'
                 )
                 db.session.add(new_promotion)
