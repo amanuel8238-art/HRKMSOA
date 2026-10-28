@@ -367,12 +367,23 @@ def dashboard():
             local_committee_count = zone_committee_count = commission_pending_count = final_decided_count = 0
 
     retired_count = len(get_retired_employees_list(all_emps))
-    warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
-    penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
     
+    # Dashboard stats warning and penalty filtered properly for branch users
     if current_user.role == 'admin':
+        warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
+        penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
         promotion_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
     else:
+        warning_count = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
+            Employee.branch_id == branch_id_val,
+            DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')
+        ).count() if user_b else 0
+        
+        penalty_count = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
+            Employee.branch_id == branch_id_val,
+            db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
+        ).count() if user_b else 0
+
         promotion_count = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
             Employee.branch_id == branch_id_val,
             Transfer.reason.ilike('%Gaaffii Gonfoo%')
@@ -531,6 +542,27 @@ def warnings():
     records = query.all()
     all_branches = Branch.query.all()
     return render_template('warnings.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter, selected_status=status_filter)
+
+@app.route('/penalties')
+@login_required
+def penalties():
+    branch_id_filter = request.args.get('branch_id')
+    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
+    
+    if current_user.role == 'admin':
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            query = query.filter(Employee.branch_id == int(branch_id_filter))
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+            
+    records = query.all()
+    all_branches = Branch.query.all()
+    return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
 
 @app.route('/delete_discipline/<int:id>', methods=['POST'])
 @login_required
@@ -980,27 +1012,6 @@ def promotions():
         promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
 
     return render_template('promotions.html', promotions=promotions_list, all_branches=all_branches, selected_branch=branch_id_filter, selected_status=status_filter)
-
-@app.route('/penalties')
-@login_required
-def penalties():
-    branch_id_filter = request.args.get('branch_id')
-    query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id)
-    
-    if current_user.role == 'admin':
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            query = query.filter(Employee.branch_id == int(branch_id_filter))
-    else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_val = int(user_b) if str(user_b).isdigit() else user_b
-            query = query.filter(Employee.branch_id == b_val)
-        else:
-            query = query.filter(False)
-            
-    records = query.all()
-    all_branches = Branch.query.all()
-    return render_template('penalties.html', records=records, all_branches=all_branches, selected_branch=branch_id_filter)
 
 @app.route('/export_employees_excel')
 @login_required
