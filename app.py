@@ -800,6 +800,10 @@ def evaluate_employee(id):
             emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
                                emp.law_score + emp.experience_score + emp.service_score)
             
+            # Guyyaa Gonfaa Itti Aanu (Kalendarii Itoophiyaa) fi Status guddinaa galchuu
+            emp.next_promotion_date = request.form.get('next_promotion_date')
+            emp.next_promotion_status = request.form.get('next_promotion_status')
+            
             db.session.commit()
             flash("Qabxiin madaallii hojjetaa milkaa'inaan galmaa'eera!", 'success')
             return redirect(url_for('employees'))
