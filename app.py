@@ -21,6 +21,36 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
+def format_ethiopian_date(date_str):
+    if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
+        return "Hin ibsamne"
+    try:
+        s = str(date_str).strip()
+        if s.isdigit() and len(s) == 4:
+            g_year = int(s)
+            return str(g_year - 8)
+        
+        if '-' in s:
+            parts = s.split()[0].split('-')
+            if len(parts) == 3:
+                gy, gm, gd = int(parts[0]), int(parts[1]), int(parts[2])
+                ey, em, ed = to_ethiopian(gy, gm, gd)
+                return f"{ed:02d}/{em:02d}/{ey}"
+        elif '/' in s:
+            parts = s.split()[0].split('/')
+            if len(parts) == 3:
+                if len(parts[2]) == 4:
+                    gd, gm, gy = int(parts[0]), int(parts[1]), int(parts[2])
+                    ey, em, ed = to_ethiopian(gy, gm, gd)
+                    return f"{ed:02d}/{em:02d}/{ey}"
+        return s
+    except Exception:
+        return str(date_str)
+
+# Model Data Binding fi Kalendarii Itoophiyaa sirreessuuf Properties dabaluu
+Employee.previous_rank_date = property(lambda self: format_ethiopian_date(getattr(self, 'rank_date', None) or getattr(self, 'last_promotion_date', None)))
+Employee.eth_next_promotion_date = property(lambda self: format_ethiopian_date(getattr(self, 'next_promotion_date', None)))
+
 def calculate_age(birth_date):
     if not birth_date:
         return "Hin beekamu"
@@ -56,7 +86,7 @@ def utility_processor():
             return True
         except Exception:
             return False
-    return dict(endpoint_exists=endpoint_exists, calculate_age=calculate_age)
+    return dict(endpoint_exists=endpoint_exists, calculate_age=calculate_age, format_ethiopian_date=format_ethiopian_date)
 
 instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
 if not os.path.exists(instance_dir):
@@ -272,7 +302,6 @@ def dashboard():
         resigned_count = Employee.query.filter(Employee.status.in_(inactive_statuses)).count()
         all_emps = Employee.query.filter_by(status='Active').all()
         
-        # Hordoffii Adeemsa Naamusaa Dashboard Admin (Guyyoota qofa irratti hundaa'uun)
         local_committee_count = DisciplineRecord.query.filter(
             DisciplineRecord.local_committee_date != None,
             DisciplineRecord.local_committee_date != ''
@@ -311,7 +340,6 @@ def dashboard():
             branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
             transfer_count = len([t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)])
             
-            # Hordoffii Adeemsa Naamusaa Dashboard Damee
             local_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
                 DisciplineRecord.local_committee_date != None,
