@@ -368,7 +368,6 @@ def dashboard():
 
     retired_count = len(get_retired_employees_list(all_emps))
     
-    # Dashboard stats warning and penalty filtered properly for branch users
     if current_user.role == 'admin':
         warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
         penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
@@ -832,15 +831,28 @@ def evaluate_employee(id):
             emp.experience_score = float(request.form.get('experience_score', 0) or 0)
             emp.service_score = float(request.form.get('service_score', 0) or 0)
             
+            # Ida'ama Waliigalaa qabxiiwwan madaallichaa (Max 100%)
             emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
                                emp.law_score + emp.experience_score + emp.service_score)
             
             emp.next_promotion_date = request.form.get('next_promotion_date')
             emp.next_promotion_status = request.form.get('next_promotion_status')
             
+            # Gaaffii Gonfoo yoo filatame akka Transfer/Promotion-tti galmeessuuf
+            if emp.next_promotion_status:
+                new_promotion = Transfer(
+                    employee_id=emp.id,
+                    from_branch_id=emp.branch_id,
+                    to_branch_id=emp.branch_id,
+                    reason=f'Gaaffii Gonfoo: {emp.next_promotion_status}',
+                    date_given=emp.next_promotion_date,
+                    status='Pending'
+                )
+                db.session.add(new_promotion)
+            
             db.session.commit()
-            flash("Qabxiin madaallii hojjetaa milkaa'inaan galmaa'eera!", 'success')
-            return redirect(url_for('employees'))
+            flash("Qabxiin madaallii hojjetaa fi gaaffiin gonfoo milkaa'inaan galmaa'eera!", 'success')
+            return redirect(url_for('promotions'))
         except Exception as e:
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
