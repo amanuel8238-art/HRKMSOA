@@ -674,6 +674,25 @@ def update_transfer_status(id):
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
     return redirect(url_for('transfers'))
 
+@app.route('/approve_promotion/<int:id>', methods=['POST'])
+@login_required
+def approve_promotion(id):
+    transfer = Transfer.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and transfer.employee and transfer.employee.branch_id != user_b_val:
+        abort(403)
+        
+    try:
+        create_local_backup()
+        transfer.status = 'Approved'
+        db.session.commit()
+        flash("Gaaffiin Gonfoo milkaa'inaan ragga'eera (Approved)!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
+    return redirect(url_for('promotions'))
+
 @app.route('/add_transfer', methods=['POST'])
 @login_required
 def add_transfer():
