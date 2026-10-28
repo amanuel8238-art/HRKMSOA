@@ -14,21 +14,17 @@
                 <div class="col-md-6">
                     <p class="mb-2"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name }}</p>
                     <p class="mb-2"><strong>Bakka Hojii:</strong> {{ employee.branch.name if employee.branch else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Gahee Hojii:</strong> {{ employee.position if employee.position else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Saala:</strong> {{ employee.gender }}</p>
+                    <p class="mb-2"><strong>Gahee Hojii:</strong> {{ employee.job_position if employee.job_position else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Saala:</strong> {{ employee.gender if employee.gender else 'Hin ibsamne' }}</p>
                 </div>
                 <div class="col-md-6">
                     <p class="mb-2">
                         <strong>Umrii:</strong> 
-                        {% if employee.birth_date %}
-                            {{ 2026 - (employee.birth_date[:4] | int) }} Waggaa
-                        {% else %}
-                            Hin ibsamne
-                        {% endif %}
+                        {{ calculate_age(employee.birth_date) }}
                     </p>
                     <p class="mb-2"><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level if employee.education_level else 'Hin ibsamne' }}</p>
                     <p class="mb-2"><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study if employee.field_of_study else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.last_promotion_date if employee.last_promotion_date else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.previous_rank_date if employee.previous_rank_date else 'Hin ibsamne' }}</p>
                 </div>
             </div>
 
@@ -38,12 +34,12 @@
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
-                    <input type="number" step="0.01" name="performance_score" class="form-control score-input" max="25" min="0" value="{{ employee.performance_score if employee.performance_score is defined and employee.performance_score else '' }}" required>
+                    <input type="number" step="0.01" name="perf_score" class="form-control score-input" max="25" min="0" value="{{ employee.perf_score if employee.perf_score is defined and employee.perf_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                    <input type="number" step="0.01" name="education_score" class="form-control score-input" max="20" min="0" value="{{ employee.education_score if employee.education_score is defined and employee.education_score else '' }}" required>
+                    <input type="number" step="0.01" name="edu_score" class="form-control score-input" max="20" min="0" value="{{ employee.edu_score if employee.edu_score is defined and employee.edu_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
@@ -63,13 +59,14 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 15%):</label>
-                    <input type="number" step="0.01" name="service_delivery_score" class="form-control score-input" max="15" min="0" value="{{ employee.service_delivery_score if employee.service_delivery_score is defined and employee.service_delivery_score else '' }}" required>
+                    <input type="number" step="0.01" name="service_score" class="form-control score-input" max="15" min="0" value="{{ employee.service_score if employee.service_score is defined and employee.service_score else '' }}" required>
                 </div>
 
-                <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Input Date) -->
+                <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Kalendarii Itoophiyaatiin akka galchamu) -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</label>
-                    <input type="date" name="next_promotion_date" class="form-control" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
+                    <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Fkn. DD/MM/YYYY E.C.):</label>
+                    <input type="text" name="next_promotion_date" class="form-control" placeholder="DD/MM/YYYY" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
+                    <small class="text-muted">Fakkeenya: 28/01/2019</small>
                 </div>
 
                 <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu (Filannoo Goonfoo / Rank) -->
@@ -80,7 +77,6 @@
                             {{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }}
                         </span> / 100%
                     </p>
-                    <!-- Hidden input to send total score to server -->
                     <input type="hidden" name="total_score" id="total_score" value="{{ employee.total_score if employee.total_score else '0.00' }}">
                     
                     <div class="mb-0">
@@ -116,7 +112,6 @@
     </div>
 </div>
 
-<!-- JavaScript to auto-calculate total score -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const scoreInputs = document.querySelectorAll('.score-input');
@@ -137,7 +132,6 @@
             input.addEventListener('input', calculateTotal);
         });
 
-        // Initialize calculation on page load if values exist
         calculateTotal();
     });
 </script>
