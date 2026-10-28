@@ -47,7 +47,6 @@ def format_ethiopian_date(date_str):
     except Exception:
         return str(date_str)
 
-# Model Data Binding fi Kalendarii Itoophiyaa sirreessuuf Properties dabaluu
 Employee.previous_rank_date = property(lambda self: format_ethiopian_date(getattr(self, 'rank_date', None) or getattr(self, 'last_promotion_date', None)))
 Employee.eth_next_promotion_date = property(lambda self: format_ethiopian_date(getattr(self, 'next_promotion_date', None)))
 
@@ -693,6 +692,44 @@ def approve_promotion(id):
         
     return redirect(url_for('promotions'))
 
+@app.route('/reject_promotion/<int:id>', methods=['POST'])
+@login_required
+def reject_promotion(id):
+    transfer = Transfer.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and transfer.employee and transfer.employee.branch_id != user_b_val:
+        abort(403)
+        
+    try:
+        create_local_backup()
+        transfer.status = 'Rejected'
+        db.session.commit()
+        flash("Gaaffiin Gonfoo dhorkameera (Rejected)!", 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
+    return redirect(url_for('promotions'))
+
+@app.route('/delete_promotion/<int:id>', methods=['POST'])
+@login_required
+def delete_promotion(id):
+    transfer = Transfer.query.get_or_404(id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and transfer.employee and transfer.employee.branch_id != user_b_val:
+        abort(403)
+        
+    try:
+        create_local_backup()
+        db.session.delete(transfer)
+        db.session.commit()
+        flash("Gaaffiin Gonfoo tarree irraa haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+        
+    return redirect(url_for('promotions'))
+
 @app.route('/add_transfer', methods=['POST'])
 @login_required
 def add_transfer():
@@ -709,7 +746,7 @@ def add_transfer():
             from_branch_id=int(from_branch_id) if from_branch_id and str(from_branch_id).isdigit() else None,
             to_branch_id=int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else None,
             reason=reason,
-            date_given=transfer_date,
+            date=transfer_date,
             status='Pending'
         )
         db.session.add(new_transfer)
@@ -843,28 +880,26 @@ def evaluate_employee(id):
     if request.method == 'POST':
         try:
             create_local_backup()
-            emp.perf_score = float(request.form.get('perf_score', 0) or 0)
-            emp.edu_score = float(request.form.get('edu_score', 0) or 0)
+            emp.perf_score = float(request.form.get('performance_score', 0) or 0)
+            emp.edu_score = float(request.form.get('education_score', 0) or 0)
             emp.discipline_score = float(request.form.get('discipline_score', 0) or 0)
             emp.law_score = float(request.form.get('law_score', 0) or 0)
             emp.experience_score = float(request.form.get('experience_score', 0) or 0)
-            emp.service_score = float(request.form.get('service_score', 0) or 0)
+            emp.service_score = float(request.form.get('service_delivery_score', 0) or 0)
             
-            # Ida'ama Waliigalaa qabxiiwwan madaallichaa (Max 100%)
             emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
                                emp.law_score + emp.experience_score + emp.service_score)
             
             emp.next_promotion_date = request.form.get('next_promotion_date')
             emp.next_promotion_status = request.form.get('next_promotion_status')
             
-            # Gaaffii Gonfoo yoo filatame akka Transfer/Promotion-tti galmeessuuf
             if emp.next_promotion_status:
                 new_promotion = Transfer(
                     employee_id=emp.id,
                     from_branch_id=emp.branch_id,
                     to_branch_id=emp.branch_id,
                     reason=f'Gaaffii Gonfoo: {emp.next_promotion_status}',
-                    date_given=emp.next_promotion_date,
+                    date=emp.next_promotion_date,
                     status='Pending'
                 )
                 db.session.add(new_promotion)
@@ -876,7 +911,7 @@ def evaluate_employee(id):
             db.session.rollback()
             flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
 
-    return render_template('evaluate_employee.html', employee=emp)
+    return render_template('evaluate_promotion.html', employee=emp)
 
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 @login_required

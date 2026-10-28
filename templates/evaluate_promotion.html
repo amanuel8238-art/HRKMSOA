@@ -15,85 +15,87 @@
                     <p class="mb-2"><strong>Maqaa Miseensaa (Hojjetichaa):</strong> {{ employee.full_name }}</p>
                     <p class="mb-2"><strong>Bakka Hojii:</strong> {{ employee.branch.name if employee.branch else 'Hin ibsamne' }}</p>
                     <p class="mb-2"><strong>Gahee Hojii:</strong> {{ employee.job_position if employee.job_position else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Saala:</strong> {{ employee.gender }}</p>
+                    <p class="mb-2"><strong>Saala:</strong> {{ employee.gender if employee.gender else 'Hin ibsamne' }}</p>
                 </div>
                 <div class="col-md-6">
                     <p class="mb-2">
                         <strong>Umrii:</strong> 
-                        {% if employee.birth_date %}
-                            {{ 2026 - (employee.birth_date[:4] | int) }} Waggaa
-                        {% else %}
-                            Hin ibsamne
-                        {% endif %}
+                        {{ calculate_age(employee.birth_date) }}
                     </p>
                     <p class="mb-2"><strong>Sadarkaa Barumsaa:</strong> {{ employee.education_level if employee.education_level else 'Hin ibsamne' }}</p>
                     <p class="mb-2"><strong>Gosa Barumsaa:</strong> {{ employee.field_of_study if employee.field_of_study else 'Hin ibsamne' }}</p>
-                    <p class="mb-2"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.rank_date if employee.rank_date else 'Hin ibsamne' }}</p>
+                    <p class="mb-2"><strong>Gonfaa Dura Yeroo Itti Argate:</strong> {{ employee.previous_rank_date if employee.previous_rank_date else 'Hin ibsamne' }}</p>
                 </div>
             </div>
 
-            <!-- Foomii Gamaaggamaa (Evaluation Form) -->
+            <!-- Foomii Gamaaggamaa -->
             <form method="POST" action="{{ url_for('evaluate_employee', id=employee.id) }}">
                 <h5 class="fw-bold text-secondary mb-3">Ulaagaalee Gamaaggamaa</h5>
                 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Bu'uura Raawwii Hojii (Max 25%):</label>
-                    <input type="number" step="0.01" name="performance_score" class="form-control score-input" max="25" min="0" required>
+                    <input type="number" step="0.01" name="performance_score" class="form-control score-input" max="25" min="0" value="{{ employee.perf_score if employee.perf_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Sadarkaa Barumsaa & Leenjii (Max 20%):</label>
-                    <input type="number" step="0.01" name="education_score" class="form-control score-input" max="20" min="0" required>
+                    <input type="number" step="0.01" name="education_score" class="form-control score-input" max="20" min="0" value="{{ employee.edu_score if employee.edu_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Naamusaa Poolisii (Max 20%):</label>
-                    <input type="number" step="0.01" name="discipline_score" class="form-control score-input" max="20" min="0" required>
+                    <input type="number" step="0.01" name="discipline_score" class="form-control score-input" max="20" min="0" value="{{ employee.discipline_score if employee.discipline_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Seera fi Heera (Max 10%):</label>
-                    <input type="number" step="0.01" name="law_score" class="form-control score-input" max="10" min="0" required>
+                    <input type="number" step="0.01" name="law_score" class="form-control score-input" max="10" min="0" value="{{ employee.law_score if employee.law_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Muxannoo Hojii (Max 10%):</label>
-                    <input type="number" step="0.01" name="experience_score" class="form-control score-input" max="10" min="0" required>
+                    <input type="number" step="0.01" name="experience_score" class="form-control score-input" max="10" min="0" value="{{ employee.experience_score if employee.experience_score else '' }}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Mira Tajaajiltummaa (Max 15%):</label>
-                    <input type="number" step="0.01" name="service_delivery_score" class="form-control score-input" max="15" min="0" required>
+                    <input type="number" step="0.01" name="service_delivery_score" class="form-control score-input" max="15" min="0" value="{{ employee.service_score if employee.service_score else '' }}" required>
                 </div>
 
-                <!-- Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu -->
+                <!-- Guyyaa Gonfaa Itti Aanu -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu:</label>
-                    <input type="date" name="next_promotion_date" class="form-control" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
+                    <label class="form-label fw-bold text-primary">Guyyaa Gonfaa Itti Aanu Yeroo Itti Argatu (Fkn. DD/MM/YYYY):</label>
+                    <input type="text" name="next_promotion_date" class="form-control" placeholder="DD/MM/YYYY" value="{{ employee.next_promotion_date if employee.next_promotion_date else '' }}">
+                    <small class="text-muted">Fakkeenya: 28/01/2019</small>
                 </div>
 
                 <!-- Ida'ama Waliigalaa fi Sadarkaa Guddinaa Itti Aanu -->
                 <div class="p-3 bg-light rounded border mb-4">
-                    <p class="mb-3 fs-5"><strong>Ida'ama Waliigalaa:</strong> <span id="total-score-display" class="text-success fw-bold">0.00 / 100%</span></p>
+                    <p class="mb-3 fs-5">
+                        <strong>Ida'ama Waliigalaa:</strong> 
+                        <span id="total-score-display" class="text-success fw-bold">
+                            {{ "%.2f"|format(employee.total_score|float) if employee.total_score else '0.00' }} / 100%
+                        </span>
+                    </p>
                     
                     <div class="mb-0">
                         <label class="form-label fw-bold text-primary">Sadarkaa Guddinaa Itti Aanu (Goonfoo Filadhu):</label>
-                        <select name="next_promotion_status" class="form-select">
+                        <select name="next_promotion_status" class="form-select" required>
                             <option value="">-- Sadarkaa Filadhu --</option>
-                            <option value="Konstabilii">Konstabilii</option>
-                            <option value="Gargaaraa Sajjiin">Gargaaraa Sajjiin</option>
-                            <option value="It/A/Sajjiin">It/A/Sajjiin</option>
-                            <option value="Sajjiin">Sajjiin</option>
-                            <option value="Sajjiin Olaanaa">Sajjiin Olaanaa</option>
-                            <option value="Gargaaraa Inspeektera">Gargaaraa Inspeektera</option>
-                            <option value="Itti/A/Inspeektera">Itti/A/Inspeektera</option>
-                            <option value="Inspeektera">Inspeektera</option>
-                            <option value="Inspeektera Olaanaa">Inspeektera Olaanaa</option>
-                            <option value="Itt/A/Komaandara">Itt/A/Komaandara</option>
-                            <option value="Komaandara">Komaandara</option>
-                            <option value="Gargaaraa Komishinaraa">Gargaaraa Komishinaraa</option>
-                            <option value="Itti Aanaa Komishinaraa">Itti Aanaa Komishinaraa</option>
-                            <option value="Komishinaraa">Komishinaraa</option>
+                            <option value="Konstabilii" {% if employee.next_promotion_status == "Konstabilii" %}selected{% endif %}>Konstabilii</option>
+                            <option value="Gargaaraa Sajjiin" {% if employee.next_promotion_status == "Gargaaraa Sajjiin" %}selected{% endif %}>Gargaaraa Sajjiin</option>
+                            <option value="It/A/Sajjiin" {% if employee.next_promotion_status == "It/A/Sajjiin" %}selected{% endif %}>It/A/Sajjiin</option>
+                            <option value="Sajjiin" {% if employee.next_promotion_status == "Sajjiin" %}selected{% endif %}>Sajjiin</option>
+                            <option value="Sajjiin Olaanaa" {% if employee.next_promotion_status == "Sajjiin Olaanaa" %}selected{% endif %}>Sajjiin Olaanaa</option>
+                            <option value="Gargaaraa Inspeektera" {% if employee.next_promotion_status == "Gargaaraa Inspeektera" %}selected{% endif %}>Gargaaraa Inspeektera</option>
+                            <option value="Itti/A/Inspeektera" {% if employee.next_promotion_status == "Itti/A/Inspeektera" %}selected{% endif %}>Itti/A/Inspeektera</option>
+                            <option value="Inspeektera" {% if employee.next_promotion_status == "Inspeektera" %}selected{% endif %}>Inspeektera</option>
+                            <option value="Inspeektera Olaanaa" {% if employee.next_promotion_status == "Inspeektera Olaanaa" %}selected{% endif %}>Inspeektera Olaanaa</option>
+                            <option value="Itt/A/Komaandara" {% if employee.next_promotion_status == "Itt/A/Komaandara" %}selected{% endif %}>Itt/A/Komaandara</option>
+                            <option value="Komaandara" {% if employee.next_promotion_status == "Komaandara" %}selected{% endif %}>Komaandara</option>
+                            <option value="Gargaaraa Komishinaraa" {% if employee.next_promotion_status == "Gargaaraa Komishinaraa" %}selected{% endif %}>Gargaaraa Komishinaraa</option>
+                            <option value="Itti Aanaa Komishinaraa" {% if employee.next_promotion_status == "Itti Aanaa Komishinaraa" %}selected{% endif %}>Itti Aanaa Komishinaraa</option>
+                            <option value="Komishinaraa" {% if employee.next_promotion_status == "Komishinaraa" %}selected{% endif %}>Komishinaraa</option>
                         </select>
                     </div>
                 </div>
@@ -129,6 +131,8 @@
         scoreInputs.forEach(input => {
             input.addEventListener("input", calculateTotal);
         });
+
+        calculateTotal();
     });
 </script>
 {% endblock %}
