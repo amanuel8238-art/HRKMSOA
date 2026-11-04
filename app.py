@@ -9,6 +9,7 @@ from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord,
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
+from supabase import create_client, Client
 
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
@@ -20,6 +21,10 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+
+# Environment variables irraa Supabase Credentials fiduu
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
@@ -123,7 +128,25 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# 2. Automated Backup System (Improved)
+# Off-Site Backup to Supabase Storage Function
+def upload_to_supabase_storage(file_path, file_name):
+    """Faayilii backup gara Supabase Storage Bucket-itti erga"""
+    try:
+        if SUPABASE_URL and SUPABASE_KEY:
+            supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+            bucket_name = "hrkmso-backups"
+            
+            with open(file_path, 'rb') as f:
+                response = supabase.storage.from_(bucket_name).upload(
+                    path=file_name,
+                    file=f,
+                    file_options={"content-type": "application/x-sqlite3", "upsert": "true"}
+                )
+            print(f"[INFO] Cloud Backup successful to Supabase: {file_name}")
+    except Exception as e:
+        print(f"[ERR] Supabase Storage upload error: {e}")
+
+# Automated Local & Cloud Backup System
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -131,10 +154,17 @@ def create_local_backup():
         if not os.path.exists(backup_dir):
             os.makedirs(backup_dir)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_file = os.path.join(backup_dir, f'hrkmso_backup_{timestamp}.db')
+        backup_filename = f'hrkmso_backup_{timestamp}.db'
+        backup_file_path = os.path.join(backup_dir, backup_filename)
+        
         if os.path.exists(db_path):
-            shutil.copy(db_path, backup_file)
-            print(f"[INFO] Backup successful: {backup_file}")
+            # 1. Local Backup
+            shutil.copy(db_path, backup_file_path)
+            print(f"[INFO] Local Backup successful: {backup_file_path}")
+            
+            # 2. Cloud Backup (Supabase Storage-tti erguu)
+            upload_to_supabase_storage(backup_file_path, backup_filename)
+            
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
@@ -285,7 +315,6 @@ def login():
             login_user(user)
             flash("Milkaa'inaan seenteetta!", 'success')
             
-            # Audit Trail Log for Login
             log_entry = AuditLog(
                 user_id=user.id,
                 action="Seensa (Login)",
@@ -681,7 +710,6 @@ def add_discipline(employee_id):
             )
             db.session.add(new_record)
             
-            # Audit Trail Log for Discipline
             log_entry = AuditLog(
                 user_id=current_user.id,
                 action="Naamusa Galche",
@@ -715,7 +743,6 @@ def update_transfer_status(id):
         if status == 'Approved' and transfer.employee and transfer.to_branch_id:
             transfer.employee.branch_id = transfer.to_branch_id
 
-        # Audit Trail Log for Transfer Status Update
         log_entry = AuditLog(
             user_id=current_user.id,
             action="Jijjiirraa Raggaasise",
@@ -943,7 +970,6 @@ def add_employee():
         )
         db.session.add(new_emp)
         
-        # Audit Trail Log for Employee Addition
         log_entry = AuditLog(
             user_id=current_user.id,
             action="Hojjetaa Haaraa Galche",
@@ -1087,12 +1113,11 @@ def transfers():
         employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
-# 3. Performance Optimization (Pagination Added to /employees Route)
 @app.route('/employees')
 @login_required
 def employees():
     page = request.args.get('page', 1, type=int)
-    per_page = 50  # Fuula tokkotti hojjetaa 50 qofa fe'uu (Pagination)
+    per_page = 50
 
     branch_id = request.args.get('branch_id')
     rank = request.args.get('rank')
