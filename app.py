@@ -1192,11 +1192,11 @@ def promotions():
     if status_filter and status_filter != 'All':
         query = query.filter_by(status=status_filter)
 
-    if rank_id_filter and str(rank_id_filter).isdigit():
+    if rank_id_filter and str(rank_id_filter).strip().isdigit():
         query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.rank_id == int(rank_id_filter))
 
     if current_user.role == 'admin':
-        if branch_id_filter and str(branch_id_filter).isdigit():
+        if branch_id_filter and str(branch_id_filter).strip().isdigit():
             b_id_int = int(branch_id_filter)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
                 db.or_(Employee.branch_id == b_id_int, Transfer.to_branch_id == b_id_int)
@@ -1316,11 +1316,11 @@ def export_promotions_excel():
     if status_filter and status_filter != 'All':
         query = query.filter_by(status=status_filter)
 
-    if rank_id_filter and str(rank_id_filter).isdigit():
+    if rank_id_filter and str(rank_id_filter).strip().isdigit():
         query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.rank_id == int(rank_id_filter))
 
     if current_user.role == 'admin':
-        if branch_id and str(branch_id).isdigit():
+        if branch_id and str(branch_id).strip().isdigit():
             b_id_int = int(branch_id)
             query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
                 db.or_(Employee.branch_id == b_id_int, Transfer.to_branch_id == b_id_int)
@@ -1357,13 +1357,13 @@ def export_promotions_excel():
             'Gonfaa Itti Aanu Yeroo Itti Argatu': emp.next_promotion_date if emp and emp.next_promotion_date else (p.transfer_date.strftime('%Y-%m-%d') if p.transfer_date else '-'),
             'Sadarkaa Barumsaa': emp.education_level if emp and emp.education_level else '-',
             'Gosa Barumsaa': emp.field_of_study if emp and emp.field_of_study else '-',
-            "Bu'uura Raawwii Hojii (25%)": emp.perf_score if emp and emp.perf_score is not None else 0.0,
-            'Sadarkaa Barumsaa (20%)': emp.edu_score if emp and emp.edu_score is not None else 0.0,
-            'Naamusaa Poolisii (20%)': emp.discipline_score if emp and emp.discipline_score is not None else 0.0,
-            'Seera fi Heera (10%)': emp.law_score if emp and emp.law_score is not None else 0.0,
-            'Muxannoo Hojii (10%)': emp.experience_score if emp and emp.experience_score is not None else 0.0,
-            'Mira Tajaajiltummaa (15%)': emp.service_score if emp and emp.service_score is not None else 0.0,
-            'Ida\'amaa': f"{emp.total_score if emp and emp.total_score is not None else 0.0}%",
+            "Bu'uura Raawwii Hojii (25%)": emp.perf_score if emp and emp.perf_score is not none else 0.0,
+            'Sadarkaa Barumsaa (20%)': emp.edu_score if emp and emp.edu_score is not none else 0.0,
+            'Naamusaa Poolisii (20%)': emp.discipline_score if emp and emp.discipline_score is not none else 0.0,
+            'Seera fi Heera (10%)': emp.law_score if emp and emp.law_score is not none else 0.0,
+            'Muxannoo Hojii (10%)': emp.experience_score if emp and emp.experience_score is not none else 0.0,
+            'Mira Tajaajiltummaa (15%)': emp.service_score if emp and emp.service_score is not none else 0.0,
+            'Ida\'amaa': f"{emp.total_score if emp and emp.total_score is not none else 0.0}%",
             'Gonfoo Itti Guddatuu': emp.next_promotion_status if emp and emp.next_promotion_status else '-',
             'Haala (Status)': getattr(p, 'status', '-')
         })
