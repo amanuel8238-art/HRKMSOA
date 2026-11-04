@@ -29,13 +29,13 @@ class Rank(db.Model):
 class Employee(db.Model):
     __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
-    unique_id = db.Column(db.String(100), unique=True, nullable=True)  
+    unique_id = db.Column(db.String(100), unique=True, nullable=True, index=True)  # Performance Optimization (Index)
     pension_number = db.Column(db.Text, nullable=True)  
     phone_number = db.Column(db.Text, nullable=True)     
-    full_name = db.Column(db.String(150), nullable=False)
+    full_name = db.Column(db.String(150), nullable=False, index=True)            # Performance Optimization (Index)
     gender = db.Column(db.String(50), nullable=True)
     
-    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True, index=True) # Performance Optimization (Index)
     rank_id = db.Column(db.Integer, db.ForeignKey('rank.id'), nullable=True)
     
     rank_date = db.Column(db.String(50), nullable=True)
@@ -99,15 +99,24 @@ class Transfer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     
-    # Dameewwan akka Foreign Key fi Relationship ta'an
     from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
     to_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
     
     reason = db.Column(db.Text, nullable=True)
-    approval_reason = db.Column(db.Text, nullable=True)  # Sababa murtee Admin
+    approval_reason = db.Column(db.Text, nullable=True)
     transfer_date = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(50), default='Pending')
 
-    # Relationships Damee Duraanii fi Damee Haaraatiif
     from_branch = db.relationship('Branch', foreign_keys=[from_branch_id])
     to_branch = db.relationship('Branch', foreign_keys=[to_branch_id])
+
+# 1. Audit Trail Model (Activity Log)
+class AuditLog(db.Model):
+    __tablename__ = 'audit_log'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    action = db.Column(db.String(255), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref='audit_logs', lazy=True)

@@ -5,7 +5,7 @@ from datetime import datetime, date
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord
+from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord, AuditLog
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
@@ -123,6 +123,7 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
+# 2. Automated Backup System (Improved)
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -133,6 +134,7 @@ def create_local_backup():
         backup_file = os.path.join(backup_dir, f'hrkmso_backup_{timestamp}.db')
         if os.path.exists(db_path):
             shutil.copy(db_path, backup_file)
+            print(f"[INFO] Backup successful: {backup_file}")
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
@@ -282,6 +284,16 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash("Milkaa'inaan seenteetta!", 'success')
+            
+            # Audit Trail Log for Login
+            log_entry = AuditLog(
+                user_id=user.id,
+                action="Seensa (Login)",
+                details=f"Fayyadamaan {user.username} systemitti seeneera."
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         else:
@@ -291,6 +303,14 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    log_entry = AuditLog(
+        user_id=current_user.id,
+        action="Ba'umsa (Logout)",
+        details=f"Fayyadamaan {current_user.username} system irraa ba'eera."
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
     logout_user()
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
@@ -660,6 +680,15 @@ def add_discipline(employee_id):
                 final_decision=final_decision
             )
             db.session.add(new_record)
+            
+            # Audit Trail Log for Discipline
+            log_entry = AuditLog(
+                user_id=current_user.id,
+                action="Naamusa Galche",
+                details=f"Hojjetaaf {emp.full_name} galmeen naamusa ({penalty_type}) galmaa'eera."
+            )
+            db.session.add(log_entry)
+
             db.session.commit()
             flash("Odeeffannoon naamusa hojjetaa milkaa'inaan galmaa'eera!", 'success')
             return redirect(url_for('warnings'))
@@ -683,9 +712,16 @@ def update_transfer_status(id):
         if approval_reason is not None:
             transfer.approval_reason = approval_reason
             
-        # Admin-n yeroo 'Approved' godhu qofa hojjetaa sana gara damee haaraatti jijjiiruu (Update employee branch)
         if status == 'Approved' and transfer.employee and transfer.to_branch_id:
             transfer.employee.branch_id = transfer.to_branch_id
+
+        # Audit Trail Log for Transfer Status Update
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Jijjiirraa Raggaasise",
+            details=f"Hojjetaa {transfer.employee.full_name} jijjiirraan isaa {status} ta'eera."
+        )
+        db.session.add(log_entry)
 
         db.session.commit()
         flash("Murtiin jijjiirraa milkaa'inaan galmaa'eera!", 'success')
@@ -705,6 +741,14 @@ def approve_promotion(id):
     try:
         create_local_backup()
         transfer.status = 'Approved'
+        
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Gonfoo Raggaasise",
+            details=f"Hojjetaa {transfer.employee.full_name} gaaffiin gonfoo ragga'eera."
+        )
+        db.session.add(log_entry)
+
         db.session.commit()
         flash("Gaaffiin Gonfoo milkaa'inaan ragga'eera (Approved)!", 'success')
     except Exception as e:
@@ -724,6 +768,14 @@ def reject_promotion(id):
     try:
         create_local_backup()
         transfer.status = 'Rejected'
+        
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Gonfoo Dhorke",
+            details=f"Hojjetaa {transfer.employee.full_name} gaaffiin gonfoo dhorkameera."
+        )
+        db.session.add(log_entry)
+
         db.session.commit()
         flash("Gaaffiin Gonfoo dhorkameera (Rejected)!", 'warning')
     except Exception as e:
@@ -765,11 +817,9 @@ def add_transfer():
             flash('Hojjetaa fi Dameen haaraan dirqama guutamuu qabu!', 'danger')
             return redirect(url_for('transfers'))
 
-        # Hojjetaa filatame sana irraa damee inni amma irra jiru (Damee Duraanii) ofumaan fiduu
         emp = Employee.query.get_or_404(int(employee_id))
         from_branch_id = emp.branch_id
 
-        # Gaafficha akka 'Pending' (Eeggannoorra) ta'etti qofa galchuu (Kallattiidhaan hojjetaa hin jijjiiru)
         new_transfer = Transfer(
             employee_id=emp.id,
             from_branch_id=from_branch_id,
@@ -779,8 +829,15 @@ def add_transfer():
             status='Pending'
         )
         db.session.add(new_transfer)
-        db.session.commit()
         
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Gaaffii Jijjiirraa Dhiyeesse",
+            details=f"Hojjetaaf {emp.full_name} gaaffiin jijjiirraa dhiyaateera."
+        )
+        db.session.add(log_entry)
+
+        db.session.commit()
         flash("Gaaffiin jijjiirraa milkaa'inaan dhiyaateera, amma Admin hayyamuu isaa eeggachaa jira!", 'success')
     except Exception as e:
         db.session.rollback()
@@ -885,6 +942,15 @@ def add_employee():
             status='Active'
         )
         db.session.add(new_emp)
+        
+        # Audit Trail Log for Employee Addition
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Hojjetaa Haaraa Galche",
+            details=f"Maqaa hojjetaa: {full_name}, ID: {unique_id}"
+        )
+        db.session.add(log_entry)
+
         db.session.commit()
         flash("Hojjetaan haaraan milkaa'inaan galmaa'eera!", 'success')
     except Exception as e:
@@ -1021,9 +1087,13 @@ def transfers():
         employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
+# 3. Performance Optimization (Pagination Added to /employees Route)
 @app.route('/employees')
 @login_required
 def employees():
+    page = request.args.get('page', 1, type=int)
+    per_page = 50  # Fuula tokkotti hojjetaa 50 qofa fe'uu (Pagination)
+
     branch_id = request.args.get('branch_id')
     rank = request.args.get('rank')
     gender = request.args.get('gender')
@@ -1068,10 +1138,13 @@ def employees():
             )
         )
 
-    all_employees = query.order_by(Employee.full_name.asc()).all()
+    pagination = query.order_by(Employee.full_name.asc()).paginate(page=page, per_page=per_page, error_out=False)
+    all_employees = pagination.items
+
     all_branches = Branch.query.all() if current_user.role == 'admin' else Branch.query.filter_by(id=current_user.branch_id).all()
     all_ranks = Rank.query.all()
-    return render_template('employees.html', employees=all_employees, branches=all_branches, ranks=all_ranks)
+    
+    return render_template('employees.html', employees=all_employees, pagination=pagination, branches=all_branches, ranks=all_ranks)
 
 @app.route('/ranks')
 @login_required
@@ -1329,6 +1402,14 @@ def add_user():
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None
         )
         db.session.add(new_user)
+        
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Fayyadamaa Uumame",
+            details=f"Fayyadamaan {username} ({role}) uumameera."
+        )
+        db.session.add(log_entry)
+
         db.session.commit()
         flash("Fayyadamaan haaraan milkaa'inaan uumameera!", 'success')
     except Exception as e:
