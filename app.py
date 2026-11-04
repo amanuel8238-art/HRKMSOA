@@ -200,6 +200,16 @@ with app.app_context():
             if 'approved_by' not in disc_columns:
                 conn.execute(sa.text("ALTER TABLE discipline_record ADD COLUMN approved_by VARCHAR(150)"))
 
+    if 'transfer' in inspector.get_table_names():
+        transfer_columns = [col['name'] for col in inspector.get_columns('transfer')]
+        with engine.begin() as conn:
+            if 'approval_reason' not in transfer_columns:
+                conn.execute(sa.text("ALTER TABLE transfer ADD COLUMN approval_reason TEXT"))
+            if 'from_branch_id' not in transfer_columns:
+                conn.execute(sa.text("ALTER TABLE transfer ADD COLUMN from_branch_id INTEGER"))
+            if 'to_branch_id' not in transfer_columns:
+                conn.execute(sa.text("ALTER TABLE transfer ADD COLUMN to_branch_id INTEGER"))
+
     if not User.query.filter_by(username='admin').first():
         hashed_pw = generate_password_hash('admin123')
         admin_user = User(username='admin', password=hashed_pw, role='admin', branch_id=None)
