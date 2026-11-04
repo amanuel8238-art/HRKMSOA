@@ -666,10 +666,19 @@ def update_transfer_status(id):
     try:
         create_local_backup()
         status = request.form.get('status')
+        approval_reason = request.form.get('approval_reason')
+        
         if status:
             transfer.status = status
-            db.session.commit()
-            flash("Haalli jijjiirraa milkaa'inaan fooyya'eera!", 'success')
+        if approval_reason is not None:
+            transfer.approval_reason = approval_reason
+            
+        # Admin-n yeroo 'Approved' godhu qofa hojjetaa sana gara damee haaraatti jijjiiruu (Update employee branch)
+        if status == 'Approved' and transfer.employee and transfer.to_branch_id:
+            transfer.employee.branch_id = transfer.to_branch_id
+
+        db.session.commit()
+        flash("Murtiin jijjiirraa milkaa'inaan galmaa'eera!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
@@ -738,28 +747,31 @@ def add_transfer():
     try:
         create_local_backup()
         employee_id = request.form.get('employee_id')
-        from_branch_id = request.form.get('from_branch_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
         transfer_date = request.form.get('transfer_date') or request.form.get('date')
 
+        if not employee_id or not to_branch_id:
+            flash('Hojjetaa fi Dameen haaraan dirqama guutamuu qabu!', 'danger')
+            return redirect(url_for('transfers'))
+
+        # Hojjetaa filatame sana irraa damee inni amma irra jiru (Damee Duraanii) ofumaan fiduu
+        emp = Employee.query.get_or_404(int(employee_id))
+        from_branch_id = emp.branch_id
+
+        # Gaafficha akka 'Pending' (Eeggannoorra) ta'etti qofa galchuu (Kallattiidhaan hojjetaa hin jijjiiru)
         new_transfer = Transfer(
-            employee_id=int(employee_id) if employee_id and str(employee_id).isdigit() else None,
-            from_branch_id=int(from_branch_id) if from_branch_id and str(from_branch_id).isdigit() else None,
-            to_branch_id=int(to_branch_id) if to_branch_id and str(to_branch_id).isdigit() else None,
+            employee_id=emp.id,
+            from_branch_id=from_branch_id,
+            to_branch_id=int(to_branch_id) if str(to_branch_id).isdigit() else None,
             reason=reason,
             transfer_date=transfer_date,
             status='Pending'
         )
         db.session.add(new_transfer)
-        
-        if employee_id and to_branch_id and str(employee_id).isdigit() and str(to_branch_id).isdigit():
-            emp = Employee.query.get(int(employee_id))
-            if emp:
-                emp.branch_id = int(to_branch_id)
-
         db.session.commit()
-        flash("Jijjiirraan hojjetaa milkaa'inaan galmaa'eera!", 'success')
+        
+        flash("Gaaffiin jijjiirraa milkaa'inaan dhiyaateera, amma Admin hayyamuu isaa eeggachaa jira!", 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
