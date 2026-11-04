@@ -1309,11 +1309,15 @@ def export_employees_excel():
 def export_promotions_excel():
     branch_id = request.args.get('branch_id')
     status_filter = request.args.get('status', 'Pending')
+    rank_id_filter = request.args.get('rank_id')
 
     query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
 
     if status_filter and status_filter != 'All':
         query = query.filter_by(status=status_filter)
+
+    if rank_id_filter and str(rank_id_filter).isdigit():
+        query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.rank_id == int(rank_id_filter))
 
     if current_user.role == 'admin':
         if branch_id and str(branch_id).isdigit():
@@ -1326,42 +1330,59 @@ def export_promotions_excel():
         user_b = current_user.branch_id
         promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
 
-    # Check 1: Yoo daataan filatame duwwaa ta'e crash akka hin taane ittisa
     if not promotions_list:
         flash("Odeeffannoon gaaffii gonfoo filatame waan hin jirreef, Excel-tti buufachuun hin danda'amu!", 'warning')
-        return redirect(url_for('promotions', branch_id=branch_id, status=status_filter))
+        return redirect(url_for('promotions', branch_id=branch_id, status=status_filter, rank_id=rank_id_filter))
 
     data = []
     for idx, p in enumerate(promotions_list, start=1):
-        emp_name = p.employee.full_name if p.employee else 'N/A'
-        from_r = p.employee.rank.name if p.employee and p.employee.rank else '-'
-        to_r = p.employee.next_promotion_status if p.employee and p.employee.next_promotion_status else '-'
-        
+        emp = p.employee
+        branch_name = '-'
+        if emp and emp.branch:
+            branch_name = emp.branch.name
+        elif p.to_branch_id:
+            b_obj = Branch.query.get(p.to_branch_id)
+            if b_obj:
+                branch_name = b_obj.name
+
         data.append({
             'Lakk.': idx,
-            'Maqaa Hojjetaa': emp_name,
-            'Gonfoo Duraanii': from_r,
-            'Gonfoo Haaraa': to_r,
-            'Sababa': p.reason if p.reason else '-',
-            'Status': getattr(p, 'status', '-')
+            'Gonfa Ammaa Qabu': emp.rank.name if emp and emp.rank else '-',
+            'Maqaa Miseensotaa': emp.full_name if emp else 'N/A',
+            'Bakka Hojii': branch_name,
+            'Gahee Hojii': emp.job_position if emp and emp.job_position else '-',
+            'Saala': emp.gender if emp and emp.gender else '-',
+            'Umrii': emp.birth_date if emp and emp.birth_date else '-',
+            'Bara Gonfaa Dura Yeroo Itti Argate': emp.rank_date if emp and emp.rank_date else '-',
+            'Gonfaa Itti Aanu Yeroo Itti Argatu': emp.next_promotion_date if emp and emp.next_promotion_date else (p.transfer_date.strftime('%Y-%m-%d') if p.transfer_date else '-'),
+            'Sadarkaa Barumsaa': emp.education_level if emp and emp.education_level else '-',
+            'Gosa Barumsaa': emp.field_of_study if emp and emp.field_of_study else '-',
+            "Bu'uura Raawwii Hojii (25%)": emp.perf_score if emp and emp.perf_score is not None else 0.0,
+            'Sadarkaa Barumsaa (20%)': emp.edu_score if emp and emp.edu_score is not None else 0.0,
+            'Naamusaa Poolisii (20%)': emp.discipline_score if emp and emp.discipline_score is not None else 0.0,
+            'Seera fi Heera (10%)': emp.law_score if emp and emp.law_score is not None else 0.0,
+            'Muxannoo Hojii (10%)': emp.experience_score if emp and emp.experience_score is not None else 0.0,
+            'Mira Tajaajiltummaa (15%)': emp.service_score if emp and emp.service_score is not None else 0.0,
+            'Ida\'amaa': f"{emp.total_score if emp and emp.total_score is not None else 0.0}%",
+            'Gonfoo Itti Guddatuu': emp.next_promotion_status if emp and emp.next_promotion_status else '-',
+            'Haala (Status)': getattr(p, 'status', '-')
         })
 
-    # Check 2: Yoo array'n data duwwaa ta'e akka openpyxl crash hin gooneef
     if not data:
         flash("Daataan export ta'u tokkollee hin argamne!", 'warning')
-        return redirect(url_for('promotions', branch_id=branch_id, status=status_filter))
+        return redirect(url_for('promotions', branch_id=branch_id, status=status_filter, rank_id=rank_id_filter))
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo')
+        df.to_excel(output, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
     output.seek(0)
 
     return send_file(
         output, 
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
         as_attachment=True, 
-        download_name='Gaaffii_Gonfoo_Report.xlsx'
+        download_name='Gaaffii_Gonfoo_Madaallii_Report.xlsx'
     )
 
 @app.route('/export_ranks_excel')
