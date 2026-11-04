@@ -29,9 +29,9 @@ class Rank(db.Model):
 class Employee(db.Model):
     __tablename__ = 'employee'
     id = db.Column(db.Integer, primary_key=True)
-    unique_id = db.Column(db.String(100), unique=True, nullable=True)  # Unique ID eegameera
-    pension_number = db.Column(db.Text, nullable=True)  # Lakkoofsa Sooromaa (Pension Number)
-    phone_number = db.Column(db.Text, nullable=True)     # Lakkoofsa Bilbilaa (Phone Number)
+    unique_id = db.Column(db.String(100), unique=True, nullable=True)  
+    pension_number = db.Column(db.Text, nullable=True)  
+    phone_number = db.Column(db.Text, nullable=True)     
     full_name = db.Column(db.String(150), nullable=False)
     gender = db.Column(db.String(50), nullable=True)
     
@@ -83,12 +83,11 @@ class DisciplineRecord(db.Model):
     decision_date = db.Column(db.String(50), nullable=True)  
     effective_date = db.Column(db.String(50), nullable=True)  
     expiry_date = db.Column(db.String(50), nullable=True)     
-    approved_by = db.Column(db.String(150), nullable=True)   # Namicha Murteesse/Raggaasise (Asitti dabalamera)
+    approved_by = db.Column(db.String(150), nullable=True)   
     
     date_given = db.Column(db.String(50), nullable=True)
     description = db.Column(db.Text, nullable=True)
     
-    # Kolomoota Hordoffii Naamusaa Haaraa Dabalaman
     local_committee_date = db.Column(db.String(50), nullable=True)  
     zone_committee_date = db.Column(db.String(50), nullable=True)   
     commission_sent_date = db.Column(db.String(50), nullable=True)  
@@ -99,8 +98,16 @@ class Transfer(db.Model):
     __tablename__ = 'transfer'
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    from_branch_id = db.Column(db.String(100), nullable=True)
-    to_branch_id = db.Column(db.Integer, nullable=True)
+    
+    # Dameewwan akka Foreign Key fi Relationship ta'an
+    from_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    to_branch_id = db.Column(db.Integer, db.ForeignKey('branch.id'), nullable=True)
+    
     reason = db.Column(db.Text, nullable=True)
-    transfer_date = db.Column(db.DateTime, default=datetime.utcnow)
+    approval_reason = db.Column(db.Text, nullable=True)  # Sababa murtee Admin
+    transfer_date = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(50), default='Pending')
+
+    # Relationships Damee Duraanii fi Damee Haaraatiif
+    from_branch = db.relationship('Branch', foreign_keys=[from_branch_id])
+    to_branch = db.relationship('Branch', foreign_keys=[to_branch_id])
