@@ -1374,8 +1374,10 @@ def export_promotions_excel():
 
     df = pd.DataFrame(data)
     output = io.BytesIO()
+    
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
+        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
+    
     output.seek(0)
 
     return send_file(
