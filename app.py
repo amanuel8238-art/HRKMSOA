@@ -1326,26 +1326,35 @@ def export_promotions_excel():
         user_b = current_user.branch_id
         promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
 
+    # Check 1: Yoo daataan filatame duwwaa ta'e crash akka hin taane ittisa
     if not promotions_list:
-        flash("Odeeffannoon gaaffii gonfoo Excel-tti buufamu hin jiru!", 'warning')
-        return redirect(url_for('promotions'))
+        flash("Odeeffannoon gaaffii gonfoo filatame waan hin jirreef, Excel-tti buufachuun hin danda'amu!", 'warning')
+        return redirect(url_for('promotions', branch_id=branch_id, status=status_filter))
 
     data = []
     for idx, p in enumerate(promotions_list, start=1):
         emp_name = p.employee.full_name if p.employee else 'N/A'
+        from_r = p.employee.rank.name if p.employee and p.employee.rank else '-'
+        to_r = p.employee.next_promotion_status if p.employee and p.employee.next_promotion_status else '-'
+        
         data.append({
             'Lakk.': idx,
             'Maqaa Hojjetaa': emp_name,
-            'Gonfoo Duraanii': getattr(p, 'from_rank', '-'),
-            'Gonfoo Haaraa': getattr(p, 'to_rank', '-'),
+            'Gonfoo Duraanii': from_r,
+            'Gonfoo Haaraa': to_r,
             'Sababa': p.reason if p.reason else '-',
             'Status': getattr(p, 'status', '-')
         })
 
+    # Check 2: Yoo array'n data duwwaa ta'e akka openpyxl crash hin gooneef
+    if not data:
+        flash("Daataan export ta'u tokkollee hin argamne!", 'warning')
+        return redirect(url_for('promotions', branch_id=branch_id, status=status_filter))
+
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Gaaffii Gonfoo')
+        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo')
     output.seek(0)
 
     return send_file(
