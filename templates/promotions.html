@@ -141,7 +141,13 @@
                                 </td>
                                 <td>{{ emp.job_position if emp and emp.job_position else '-' }}</td>
                                 <td>{{ emp.gender if emp and emp.gender else '-' }}</td>
-                                <td>{{ emp.birth_date if emp and emp.birth_date else '-' }}</td>
+                                <td>
+                                    {% if emp and emp.birth_date %}
+                                        <span class="badge bg-info text-dark">{{ calculate_age(emp.birth_date) }}</span>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
                                 <td>{{ emp.rank_date if emp and emp.rank_date else '-' }}</td>
                                 <td>{{ emp.next_promotion_date if emp and emp.next_promotion_date else (tr.transfer_date.strftime('%Y-%m-%d') if tr.transfer_date else '-') }}</td>
                                 <td>{{ emp.education_level if emp and emp.education_level else '-' }}</td>
