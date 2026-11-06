@@ -1277,39 +1277,36 @@ def export_employees_excel():
         for idx, e in enumerate(emps, start=1):
             branch_name = e.branch.name if e.branch else 'N/A'
             rank_name = e.rank.name if e.rank else 'N/A'
-            
-            # Umrii fi Guyyaa Ethio-Calendar sirriitti fiduuf
             emp_age = calculate_age(e.birth_date)
             
             data.append({
                 'Lakk.': idx,
                 'ID Addaa': e.unique_id if e.unique_id else '-',
+                'Gulantaa / Rank': rank_name,
                 'Maqaa Guutuu': e.full_name,
-                'Lakk. Sooromaa': getattr(e, 'pension_number', '-') if getattr(e, 'pension_number', None) else '-',
                 'Saala': e.gender if e.gender else '-',
                 'Umrii': emp_age,
+                'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
+                'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
+                'Guyyaa Gulantaa': format_ethiopian_date(getattr(e, 'rank_date', None)) if getattr(e, 'rank_date', None) else '-',
                 'Damee (Branch)': branch_name,
                 'Gita Hojii': e.job_position if e.job_position else '-',
-                'Gulantaa / Rank': rank_name,
                 'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
                 'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
                 'Mindaa Gulantaa': e.rank_salary if e.rank_salary is not None else 0.0,
                 'Kaffaltii Iddoo': e.location_allowance if e.location_allowance is not None else 0.0,
                 'Durgoo Nyaataa': getattr(e, 'food_allowance', 0.0) if getattr(e, 'food_allowance', None) is not None else 0.0,
+                'Lakk. Sooromaa': getattr(e, 'pension_number', '-') if getattr(e, 'pension_number', None) else '-',
                 'Lakk. Bilbilaa': getattr(e, 'phone_number', '-') if getattr(e, 'phone_number', None) else '-',
-                'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
-                'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
-                'Guyyaa Gulantaa': format_ethiopian_date(getattr(e, 'rank_date', None)) if getattr(e, 'rank_date', None) else '-',
                 'Status': e.status if e.status else '-'
             })
         df = pd.DataFrame(data)
     else:
-        # Hojjataan yoo hin jire sheet duudaa headers hunda qabu akka uumamu godha
         df = pd.DataFrame(columns=[
-            'Lakk.', 'ID Addaa', 'Maqaa Guutuu', 'Lakk. Sooromaa', 'Saala', 'Umrii', 
-            'Damee (Branch)', 'Gita Hojii', 'Gulantaa / Rank', 'Sadarkaa Barumsaa', 
-            'Gosa Barumsaa', 'Mindaa Gulantaa', 'Kaffaltii Iddoo', 'Durgoo Nyaataa', 
-            'Lakk. Bilbilaa', 'Guyyaa Qacaramuu', 'Guyyaa Dhalootaa', 'Guyyaa Gulantaa', 'Status'
+            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 
+            'Guyyaa Qacaramuu', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
+            'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Mindaa Gulantaa', 
+            'Kaffaltii Iddoo', 'Durgoo Nyaataa', 'Lakk. Sooromaa', 'Lakk. Bilbilaa', 'Status'
         ])
         
     output = io.BytesIO()
