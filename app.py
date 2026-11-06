@@ -1271,31 +1271,36 @@ def export_employees_excel():
         query = query.order_by(Employee.full_name.asc())
 
     emps = query.all()
-    if not emps:
-        flash("Odeeffannoon ykn daataan hojjettootaa filatame waan hin jirreef, Excel export gochuun hin danda'amu!", 'warning')
-        return redirect(url_for('employees'))
 
     data = []
-    for idx, e in enumerate(emps, start=1):
-        branch_name = e.branch.name if e.branch else 'N/A'
-        rank_name = e.rank.name if e.rank else 'N/A'
-        data.append({
-            'Lakk.': idx,
-            'ID Addaa': e.unique_id if e.unique_id else '-',
-            'Maqaa Guutuu': e.full_name,
-            'Saala': e.gender if e.gender else '-',
-            'Damee (Branch)': branch_name,
-            'Gulantaa / Rank': rank_name,
-            'Gita Hojii': e.job_position if e.job_position else '-',
-            'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
-            'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
-            'Status': e.status if e.status else '-'
-        })
+    if emps:
+        for idx, e in enumerate(emps, start=1):
+            branch_name = e.branch.name if e.branch else 'N/A'
+            rank_name = e.rank.name if e.rank else 'N/A'
+            data.append({
+                'Lakk.': idx,
+                'ID Addaa': e.unique_id if e.unique_id else '-',
+                'Maqaa Guutuu': e.full_name,
+                'Saala': e.gender if e.gender else '-',
+                'Damee (Branch)': branch_name,
+                'Gulantaa / Rank': rank_name,
+                'Gita Hojii': e.job_position if e.job_position else '-',
+                'Sadarkaa Barumsaa': e.education_level if e.education_level else '-',
+                'Gosa Barumsaa': e.field_of_study if e.field_of_study else '-',
+                'Status': e.status if e.status else '-'
+            })
+        df = pd.DataFrame(data)
+    else:
+        # Hojjataan yoo hin jire sheet duudaa headers qofa qabu akka uumamu godha (IndexError ni hambisa)
+        df = pd.DataFrame(columns=[
+            'Lakk.', 'ID Addaa', 'Maqaa Guutuu', 'Saala', 'Damee (Branch)', 
+            'Gulantaa / Rank', 'Gita Hojii', 'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Status'
+        ])
         
-    df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Miseensota')
+        df.to_excel(writer, index=False, sheet_name='Miseensota')
+        
     output.seek(0)
     return send_file(
         output, 
