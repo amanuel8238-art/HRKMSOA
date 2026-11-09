@@ -25,8 +25,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026'
 # ==========================================
 # SUPABASE DIRECT CREDENTIALS (Environment Variable irraa fudhata)
 # ==========================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://jspbjzjutnwidvsoayna.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_secret_OvnXW...")  # Secret Key kee asitti ykn Render Env variables keessatti galchi
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://jspbjzjutnwidvsoayna.supabase.co").strip()
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
