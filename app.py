@@ -126,7 +126,7 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# Local Backup System (Qulqullinaan hojjechaa jira)
+# Local Backup System
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -145,12 +145,25 @@ def create_local_backup():
 
 @app.route('/admin/trigger-backup', methods=['POST', 'GET'])
 @login_required
+@admin_required
 def trigger_backup():
     try:
         create_local_backup()
+        db_path = os.path.join(instance_dir, 'hrkmso.db')
+        
+        # SQLite db yoo jiraate kallattiidhaan browser keetti download godha
+        if os.path.exists(db_path):
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            return send_file(
+                db_path,
+                as_attachment=True,
+                download_name=f'hrkmso_backup_{timestamp}.db'
+            )
+        
         flash("Database backup milkaa'inaan uumameera!", "success")
     except Exception as e:
         flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
+        
     return redirect(url_for('dashboard'))
 
 with app.app_context():
