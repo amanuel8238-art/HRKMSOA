@@ -168,6 +168,21 @@ def create_local_backup():
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
+# ==========================================
+# ADMIN BACKUP TRIGGER ROUTE (Supabase)
+# ==========================================
+@app.route('/admin/trigger-backup', methods=['POST', 'GET'])
+@login_required
+@admin_required
+def trigger_backup():
+    try:
+        create_local_backup()
+        flash("Database backup milkaa'inaan Supabase Storage irratti fe'ameera!", "success")
+    except Exception as e:
+        flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
+        
+    return redirect(url_for('dashboard'))
+
 with app.app_context():
     db.create_all()
     create_local_backup()
