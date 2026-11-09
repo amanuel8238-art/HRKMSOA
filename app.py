@@ -22,9 +22,11 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
-# Environment variables irraa Supabase Credentials fiduu
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+# ==========================================
+# SUPABASE DIRECT CREDENTIALS (Storage)
+# ==========================================
+SUPABASE_URL = "https://your-project-id.supabase.co"      # Supabase Project URL kee bakka buusi
+SUPABASE_KEY = "your-service-role-or-anon-key"          # Supabase Key kee bakka buusi
 
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
@@ -96,7 +98,13 @@ instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instanc
 if not os.path.exists(instance_dir):
     os.makedirs(instance_dir)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{os.path.join(instance_dir, "hrkmso.db")}')
+# ==========================================
+# SUPABASE DATABASE CONNECTION URI
+# ==========================================
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL', 
+    'postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres'
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -132,7 +140,7 @@ def resolve_rank_id(rank_input):
 def upload_to_supabase_storage(file_path, file_name):
     """Faayilii backup gara Supabase Storage Bucket-itti erga"""
     try:
-        if SUPABASE_URL and SUPABASE_KEY:
+        if SUPABASE_URL and SUPABASE_KEY and SUPABASE_URL != "https://your-project-id.supabase.co":
             supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
             bucket_name = "hrkmso-backups"
             
@@ -143,6 +151,8 @@ def upload_to_supabase_storage(file_path, file_name):
                     file_options={"content-type": "application/x-sqlite3", "upsert": "true"}
                 )
             print(f"[INFO] Cloud Backup successful to Supabase: {file_name}")
+        else:
+            print("[WARN] Supabase URL ykn Key storage-f sirriitti hin galchinee ilaali!")
     except Exception as e:
         print(f"[ERR] Supabase Storage upload error: {e}")
 
