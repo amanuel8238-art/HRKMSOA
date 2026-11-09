@@ -86,6 +86,51 @@ def calculate_age(birth_date):
         pass
     return "Hin beekamu"
 
+def calculate_service_duration(hire_date):
+    if not hire_date:
+        return "Hin beekamu"
+    try:
+        h_str = str(hire_date).strip().split()[0]
+        h_year, h_month = None, 1
+        
+        if '-' in h_str:
+            parts = h_str.split('-')
+            if len(parts[0]) == 4:
+                h_year, h_month = int(parts[0]), int(parts[1])
+            else:
+                h_year, h_month = int(parts[2]), int(parts[1])
+        elif '/' in h_str:
+            parts = h_str.split('/')
+            if len(parts) == 3:
+                h_year = int(parts[2]) if len(parts[2]) == 4 else int(parts[0])
+                h_month = int(parts[0]) if len(parts[2]) == 4 else int(parts[1])
+        elif h_str.isdigit() and len(h_str) == 4:
+            h_year = int(h_str)
+
+        if h_year:
+            current_eth_year = 2019
+            current_eth_month = 2
+            
+            years = current_eth_year - h_year
+            months = current_eth_month - h_month
+            
+            if months < 0:
+                years -= 1
+                months += 12
+                
+            if years < 0:
+                return "Haaraa"
+                
+            result = []
+            if years > 0:
+                result.append(f"Waggaa {years}")
+            if months > 0 or not result:
+                result.append(f"Ji'a {months}")
+            return " fi ".join(result)
+    except Exception:
+        pass
+    return "Hin beekamu"
+
 @app.context_processor
 def utility_processor():
     def endpoint_exists(endpoint):
@@ -94,7 +139,12 @@ def utility_processor():
             return True
         except Exception:
             return False
-    return dict(endpoint_exists=endpoint_exists, calculate_age=calculate_age, format_ethiopian_date=format_ethiopian_date)
+    return dict(
+        endpoint_exists=endpoint_exists, 
+        calculate_age=calculate_age, 
+        format_ethiopian_date=format_ethiopian_date,
+        calculate_service_duration=calculate_service_duration
+    )
 
 instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
 if not os.path.exists(instance_dir):
@@ -1311,6 +1361,7 @@ def export_employees_excel():
                 'Umrii': emp_age,
                 'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
                 'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
+                'Hanga Tajaajilaa': calculate_service_duration(e.hire_date),
                 'Guyyaa Gulantaa': format_ethiopian_date(getattr(e, 'rank_date', None)) if getattr(e, 'rank_date', None) else '-',
                 'Damee (Branch)': branch_name,
                 'Gita Hojii': e.job_position if e.job_position else '-',
@@ -1327,7 +1378,7 @@ def export_employees_excel():
     else:
         df = pd.DataFrame(columns=[
             'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 
-            'Guyyaa Qacaramuu', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
+            'Guyyaa Qacaramuu', 'Hanga Tajaajilaa', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
             'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Mindaa Gulantaa', 
             'Kaffaltii Iddoo', 'Durgoo Nyaataa', 'Lakk. Sooromaa', 'Lakk. Bilbilaa', 'Status'
         ])
