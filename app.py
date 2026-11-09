@@ -9,7 +9,6 @@ from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord,
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
-from supabase import create_client, Client
 
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
@@ -21,12 +20,6 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
-
-# ==========================================
-# SUPABASE DIRECT CREDENTIALS (Environment Variable irraa fudhata)
-# ==========================================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://jspbjzjutnwidvsoayna.supabase.co").strip()
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
@@ -98,9 +91,6 @@ instance_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instanc
 if not os.path.exists(instance_dir):
     os.makedirs(instance_dir)
 
-# ==========================================
-# SUPABASE DATABASE CONNECTION URI
-# ==========================================
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL', 
     'postgresql://postgres.jspbjzjutnwidvsoayna:Ame_2018%23Strong!9X@aws-0-eu-west-1.pooler.supabase.com:5432/postgres'
@@ -136,27 +126,7 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# Off-Site Backup to Supabase Storage Function
-def upload_to_supabase_storage(file_path, file_name):
-    """Faayilii backup gara Supabase Storage Bucket-itti erga"""
-    try:
-        if SUPABASE_URL and SUPABASE_KEY and SUPABASE_URL != "https://your-project-id.supabase.co":
-            supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-            bucket_name = "hrkmso-backups"
-            
-            with open(file_path, 'rb') as f:
-                response = supabase.storage.from_(bucket_name).upload(
-                    path=file_name,
-                    file=f,
-                    file_options={"content-type": "application/x-sqlite3", "upsert": "true"}
-                )
-            print(f"[INFO] Cloud Backup successful to Supabase: {file_name}")
-        else:
-            print("[WARN] Supabase URL ykn Key storage-f sirriitti hin galchinee ilaali!")
-    except Exception as e:
-        print(f"[ERR] Supabase Storage upload error: {e}")
-
-# Automated Local & Cloud Backup System
+# Local Backup System (Qulqullinaan hojjechaa jira)
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -168,29 +138,19 @@ def create_local_backup():
         backup_file_path = os.path.join(backup_dir, backup_filename)
         
         if os.path.exists(db_path):
-            # 1. Local Backup
             shutil.copy(db_path, backup_file_path)
             print(f"[INFO] Local Backup successful: {backup_file_path}")
-            
-            # 2. Cloud Backup (Supabase Storage-tti erguu)
-            upload_to_supabase_storage(backup_file_path, backup_filename)
-            
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
-# ==========================================
-# ADMIN BACKUP TRIGGER ROUTE (Supabase)
-# ==========================================
 @app.route('/admin/trigger-backup', methods=['POST', 'GET'])
 @login_required
-@admin_required
 def trigger_backup():
     try:
         create_local_backup()
-        flash("Database backup milkaa'inaan Supabase Storage irratti fe'ameera!", "success")
+        flash("Database backup milkaa'inaan uumameera!", "success")
     except Exception as e:
         flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
-        
     return redirect(url_for('dashboard'))
 
 with app.app_context():
