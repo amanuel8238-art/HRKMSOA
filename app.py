@@ -10,6 +10,15 @@ from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
 
+# Supabase Client import gochuu fi qindeessuu
+try:
+    from supabase import create_client, Client
+    SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
+    SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+except Exception:
+    supabase = None
+
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 except ImportError:
@@ -126,7 +135,7 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# Local Backup System
+# Local & Supabase Backup System
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -138,8 +147,24 @@ def create_local_backup():
         backup_file_path = os.path.join(backup_dir, backup_filename)
         
         if os.path.exists(db_path):
+            # 1. Local backup uumuu
             shutil.copy(db_path, backup_file_path)
             print(f"[INFO] Local Backup successful: {backup_file_path}")
+            
+            # 2. Supabase Storage (hrkmso-backups)-tti ol-fe'uu (Upload)
+            if supabase:
+                try:
+                    with open(backup_file_path, 'rb') as f:
+                        res = supabase.storage.from_('hrkmso-backups').upload(
+                            path=backup_filename,
+                            file=f,
+                            file_options={"content-type": "application/x-sqlite3"}
+                        )
+                    print(f"[INFO] Supabase Storage upload successful: {backup_filename}")
+                except Exception as ex:
+                    print(f"[ERR] Supabase Storage upload error: {ex}")
+            else:
+                print("[WARN] Supabase client is not initialized (Check URL/KEY).")
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
