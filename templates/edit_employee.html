@@ -6,7 +6,8 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="card shadow-lg border-0 rounded-3">
+            <!-- Employee Edit Form Card -->
+            <div class="card shadow-lg border-0 rounded-3 mb-4">
                 <div class="card-header bg-warning text-dark py-3">
                     <h4 class="mb-0 fw-bold"><i class="fas fa-user-edit me-2"></i> Odeeffannoo Hojjetaa Fooyyessuu</h4>
                 </div>
@@ -71,37 +72,37 @@
                             <!-- Gahee Hojii / Gita Hojii (Position) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Gahee Hojii (Position)</label>
-                                <input type="text" name="job_position" class="form-control" value="{{ employee.job_position }}">
+                                <input type="text" name="job_position" class="form-control" value="{{ employee.job_position if employee.job_position else '' }}">
                             </div>
 
                             <!-- Sadarkaa Barumsaa -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Sadarkaa Barumsaa</label>
-                                <input type="text" name="education_level" class="form-control" value="{{ employee.education_level }}">
+                                <input type="text" name="education_level" class="form-control" value="{{ employee.education_level if employee.education_level else '' }}">
                             </div>
 
                             <!-- Gosa Barumsaa (Field of Study) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Gosa Barumsaa (Field of Study)</label>
-                                <input type="text" name="field_of_study" class="form-control" value="{{ employee.field_of_study }}">
+                                <input type="text" name="field_of_study" class="form-control" value="{{ employee.field_of_study if employee.field_of_study else '' }}">
                             </div>
 
                             <!-- Mindaa Gulantaa -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Mindaa Gulantaa</label>
-                                <input type="number" step="0.01" name="rank_salary" class="form-control" value="{{ employee.rank_salary }}">
+                                <input type="number" step="0.01" name="rank_salary" class="form-control" value="{{ employee.rank_salary if employee.rank_salary is not none else 0.0 }}">
                             </div>
 
                             <!-- Durgoo Bakkaa (Location Allowance) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Durgoo Bakkaa (Location Allowance)</label>
-                                <input type="number" step="0.01" name="location_allowance" class="form-control" value="{{ employee.location_allowance }}">
+                                <input type="number" step="0.01" name="location_allowance" class="form-control" value="{{ employee.location_allowance if employee.location_allowance is not none else 0.0 }}">
                             </div>
 
                             <!-- Durgoo Nyaataa (Food Allowance) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Durgoo Nyaataa (Food Allowance)</label>
-                                <input type="number" step="0.01" name="food_allowance" class="form-control" value="{{ employee.food_allowance }}">
+                                <input type="number" step="0.01" name="food_allowance" class="form-control" value="{{ employee.food_allowance if employee.food_allowance is not none else 0.0 }}">
                             </div>
 
                             <!-- Guyyaa Qacaramuu (Hire Date) -->
@@ -155,6 +156,70 @@
                             <button type="submit" class="btn btn-warning fw-bold px-4">Fooyyessi</button>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Documents Section Card -->
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-folder-open me-2"></i> Ragaalee Miseensaa (Attached Documents)</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Upload Form -->
+                    <form action="{{ url_for('upload_document', employee_id=employee.id) }}" method="POST" enctype="multipart/form-data" class="card card-body bg-light border-0 mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-cloud-upload-alt me-1"></i> Ragaa Haaraa Attach Godhi (PDF, Images, DOCX)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Maqaa Ragaa / Document Name</label>
+                                <input type="text" name="document_name" class="form-control form-control-sm" placeholder="Fkn: Ragaa Barumsaa, Seenaa Hojii, Xalayaa..." required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Faayiloota Filadhu (Multiple Files Allowed)</label>
+                                <input type="file" name="documents" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg,.docx" multiple required>
+                            </div>
+                            <div class="col-md-12 text-end">
+                                <button type="submit" class="btn btn-success btn-sm shadow-sm"><i class="fas fa-paperclip me-1"></i> Ol-fe'i (Attach File)</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Documents Table -->
+                    <h6 class="fw-bold text-dark mb-3"><i class="fas fa-list me-1"></i> Tarree Ragaalee Attach Ta'anii:</h6>
+                    {% if employee.documents %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle mb-0">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Maqaa Ragaa</th>
+                                        <th>Guyyaa Galmee</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in employee.documents %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td><i class="fas fa-file-pdf text-danger me-1"></i> {{ doc.document_name }}</td>
+                                        <td>{{ doc.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('static', filename='uploads/documents/' + doc.file_url) }}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="Banaalii Ilaali">
+                                                <i class="fas fa-eye"></i> Ilaali
+                                            </a>
+                                            <form action="{{ url_for('delete_document', id=doc.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Dhugumaan ragaa kana haquu barbaaddaa?')" title="Haqi">
+                                                    <i class="fas fa-trash"></i> Haqi
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted small text-center py-3 bg-light border rounded mb-0"><i class="fas fa-info-circle me-1"></i> Ragaan tokkollee attach hin taane.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

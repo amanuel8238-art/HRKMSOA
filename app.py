@@ -5,7 +5,8 @@ from datetime import datetime, date
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord, AuditLog
+from werkzeug.utils import secure_filename
+from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord, AuditLog, EmployeeDocument
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
@@ -29,6 +30,16 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+
+# Folder Document attachments itti kufu
+DOCUMENTS_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'documents')
+if not os.path.exists(DOCUMENTS_FOLDER):
+    os.makedirs(DOCUMENTS_FOLDER)
+app.config['DOCUMENTS_FOLDER'] = DOCUMENTS_FOLDER
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'docx'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
@@ -372,6 +383,98 @@ def get_retired_employees_list(active_employees):
             except Exception:
                 pass
     return retired_list
+
+# Route Document Attachments Upload Gochuuf
+@app.route('/upload_document/<int:employee_id>', methods=['POST'])
+@login_required
+def upload_document(employee_id):
+    emp = Employee.query.get_or_404(employee_id)
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp.branch_id != user_b_val:
+        abort(403)
+
+    try:
+        create_local_backup()
+        doc_name = request.form.get('document_name') or 'Ragaa Miseensaa'
+        files = request.files.getlist('documents')
+        
+        if not files or files[0].filename == '':
+            flash('Faayiliin tokkollee hin filatamne!', 'danger')
+            return redirect(request.referrer or url_for('employees'))
+
+        uploaded_count = 0
+        for file in files:
+            if file and allowed_file(file.filename):
+                sec_filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"emp_{emp.id}_{timestamp}_{sec_filename}"
+                file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], filename)
+                
+                # Local Server kuusuu
+                file.save(file_path)
+                
+                # Supabase Storage ('hrkmso-documents') yoo qabaate upload gochuu
+                if supabase:
+                    try:
+                        with open(file_path, 'rb') as f_stream:
+                            supabase.storage.from_('hrkmso-documents').upload(
+                                path=filename,
+                                file=f_stream,
+                                file_options={"content-type": file.content_type or "application/pdf"}
+                            )
+                    except Exception as s_err:
+                        print(f"[WARN] Supabase Document upload error: {s_err}")
+                        
+                # Database register gochuu
+                doc_record = EmployeeDocument(
+                    employee_id=emp.id,
+                    document_name=doc_name,
+                    file_url=filename
+                )
+                db.session.add(doc_record)
+                uploaded_count += 1
+
+        if uploaded_count > 0:
+            log_entry = AuditLog(
+                user_id=current_user.id,
+                action="Ragaa Attach Godhe",
+                details=f"Hojjetaaf {emp.full_name} ragaaleen {uploaded_count} attach ta'aniiru."
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+            flash(f"Ragaaleen {uploaded_count} milkaa'inaan galmeesaaf attach ta'aniiru!", 'success')
+        else:
+            flash("Gosti faayilii filatame hin eyyamamu (PDF, JPG, PNG, DOCX qofa)!", 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return redirect(request.referrer or url_for('employees'))
+
+@app.route('/delete_document/<int:id>', methods=['POST'])
+@login_required
+def delete_document(id):
+    doc = EmployeeDocument.query.get_or_404(id)
+    emp = doc.employee
+    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    if current_user.role != 'admin' and emp and emp.branch_id != user_b_val:
+        abort(403)
+
+    try:
+        create_local_backup()
+        # Local file haquu
+        file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], doc.file_url)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
+        db.session.delete(doc)
+        db.session.commit()
+        flash("Ragaan attach ta'ee ture milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return redirect(request.referrer or url_for('employees'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1257,8 +1360,6 @@ def promotions():
     all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
     
-    # Koodii Sirreeffame: Table 'Employee' lammaffaa join akka hin taane godhuuf 
-    # join tokko qofa fayyadamnee achumaan filter gochuu.
     query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
     
     if status_filter and status_filter != 'All':

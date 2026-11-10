@@ -69,6 +69,15 @@ class Employee(db.Model):
 
     discipline_records = db.relationship('DisciplineRecord', backref='employee', cascade='all, delete-orphan', lazy=True)
     transfers = db.relationship('Transfer', backref='employee', cascade='all, delete-orphan', lazy=True)
+    documents = db.relationship('EmployeeDocument', backref='employee', cascade='all, delete-orphan', lazy=True)
+
+class EmployeeDocument(db.Model):
+    __tablename__ = 'employee_document'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    document_name = db.Column(db.String(255), nullable=False)
+    file_url = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class DisciplineRecord(db.Model):
     __tablename__ = 'discipline_record'
@@ -110,7 +119,6 @@ class Transfer(db.Model):
     from_branch = db.relationship('Branch', foreign_keys=[from_branch_id])
     to_branch = db.relationship('Branch', foreign_keys=[to_branch_id])
 
-# 1. Audit Trail Model (Activity Log)
 class AuditLog(db.Model):
     __tablename__ = 'audit_log'
     id = db.Column(db.Integer, primary_key=True)
