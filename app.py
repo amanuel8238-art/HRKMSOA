@@ -55,12 +55,14 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"]
 )
 
-# Flask-Mail Qindeessuu (Backup Notificationaf)
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+# Flask-Mail Qindeessuu (Backup Notificationaf) - Sirreeffameera
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'email_ke@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'password_ke')
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'amanuel8238@gmail.com'
+app.config['MAIL_PASSWORD'] = 'vlflxhncwsyzvkdo'
+app.config['MAIL_DEFAULT_SENDER'] = 'amanuel8238@gmail.com'
 mail = Mail(app)
 
 # Folder Document attachments itti kufu
@@ -231,7 +233,7 @@ def resolve_rank_id(rank_input):
 # Automated Backup Email Notification Function
 def send_backup_notification(filename):
     try:
-        admin_email = os.environ.get('ADMIN_EMAIL', 'admin_ke@gmail.com')
+        admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
         msg = Message("HRKMSO Backup Milkaa'eera",
                       sender=app.config['MAIL_USERNAME'],
                       recipients=[admin_email])
@@ -269,7 +271,6 @@ def create_local_backup():
             else:
                 print("[WARN] Supabase client is not initialized (Check URL/KEY).")
             
-            # Email Notification erguu
             send_backup_notification(backup_filename)
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
@@ -457,10 +458,8 @@ def upload_document(employee_id):
                 filename = f"emp_{emp.id}_{timestamp}_{sec_filename}"
                 file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], filename)
                 
-                # Local Server kuusuu
                 file.save(file_path)
                 
-                # Supabase Storage ('hrkmso-documents') yoo qabaate upload gochuu
                 if supabase:
                     try:
                         with open(file_path, 'rb') as f_stream:
@@ -472,7 +471,6 @@ def upload_document(employee_id):
                     except Exception as s_err:
                         print(f"[WARN] Supabase Document upload error: {s_err}")
                         
-                # Database register gochuu
                 doc_record = EmployeeDocument(
                     employee_id=emp.id,
                     document_name=doc_name,
@@ -509,7 +507,6 @@ def delete_document(id):
 
     try:
         create_local_backup()
-        # Local file haquu
         file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], doc.file_url)
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -524,7 +521,7 @@ def delete_document(id):
     return redirect(request.referrer or url_for('employees'))
 
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Brute force attack irraa eeguuf daangeffameera
+@limiter.limit("5 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
