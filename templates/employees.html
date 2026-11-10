@@ -91,7 +91,6 @@
                     </select>
                 </div>
 
-                <!-- Filteroota Haaraa Dabalamani -->
                 <div class="col-md-3">
                     <label class="form-label fw-bold small">Ramaddii (Rank Status)</label>
                     <select name="rank_status" class="form-select form-select-sm">
@@ -195,7 +194,6 @@
                                     <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} px-2 py-1">{{ emp.status }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <!-- Document Upload & View Button -->
                                     <button type="button" class="btn btn-sm btn-primary shadow-sm me-1" data-bs-toggle="modal" data-bs-target="#documentModal{{ emp.id }}" title="Ragaalee (Documents)">
                                         <i class="fas fa-paperclip"></i>
                                         {% if emp.documents %}
@@ -214,96 +212,6 @@
                                     </button>
                                 </td>
                             </tr>
-
-                            <!-- Attach Document & View Modal -->
-                            <div class="modal fade" id="documentModal{{ emp.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content border-0 shadow-lg">
-                                        <div class="modal-header bg-primary text-white">
-                                            <h5 class="modal-title"><i class="fas fa-folder-open me-2"></i> Ragaalee Miseensaa: <strong>{{ emp.full_name }}</strong></h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body p-4 text-start">
-                                            <!-- Form to upload documents -->
-                                            <form action="{{ url_for('upload_document', employee_id=emp.id) }}" method="POST" enctype="multipart/form-data" class="card card-body bg-light border-0 mb-4">
-                                                <h6 class="fw-bold text-dark mb-3"><i class="fas fa-cloud-upload-alt me-1"></i> Ragaa Haaraa Attach Godhi (Upload PDF/Scan)</h6>
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold">Maqaa Ragaa / Document Name</label>
-                                                        <input type="text" name="document_name" class="form-control form-control-sm" placeholder="Fkn: Ragaa Barumsaa, Seenaa Hojii, Xalayaa..." required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label small fw-bold">Faayiloota Filadhu (Multiple PDFs/Files)</label>
-                                                        <input type="file" name="documents" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg,.docx" multiple required>
-                                                    </div>
-                                                    <div class="col-md-12 text-end">
-                                                        <button type="submit" class="btn btn-success btn-sm shadow-sm"><i class="fas fa-paperclip me-1"></i> Ol-fe'i (Attach File)</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-
-                                            <!-- Table of attached documents -->
-                                            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-list me-1"></i> Tarree Ragaalee Attach Ta'anii:</h6>
-                                            {% if emp.documents %}
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered align-middle">
-                                                        <thead class="table-secondary">
-                                                            <tr>
-                                                                <th>#</th>
-                                                                <th>Maqaa Ragaa</th>
-                                                                <th>Guyyaa Galmee</th>
-                                                                <th class="text-center">Action</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {% for doc in emp.documents %}
-                                                            <tr>
-                                                                <td>{{ loop.index }}</td>
-                                                                <td><i class="fas fa-file-pdf text-danger me-1"></i> {{ doc.document_name }}</td>
-                                                                <td>{{ doc.created_at.strftime('%d/%m/%Y') }}</td>
-                                                                <td class="text-center">
-                                                                    <a href="{{ url_for('static', filename='uploads/documents/' + doc.file_url) }}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="Banaalii Ilaali">
-                                                                        <i class="fas fa-eye"></i> Ilaali
-                                                                    </a>
-                                                                    <form action="{{ url_for('delete_document', id=doc.id) }}" method="POST" class="d-inline">
-                                                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Dhugumaan ragaa kana haquu barbaaddaa?')" title="Haqi">
-                                                                            <i class="fas fa-trash"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                </td>
-                                                            </tr>
-                                                            {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            {% else %}
-                                                <p class="text-muted small text-center py-3 bg-white border rounded"><i class="fas fa-info-circle me-1"></i> Ragaan tokkollee attach hin taane.</p>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Delete Confirmation Modal -->
-                            <div class="modal fade" id="deleteModal{{ emp.id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Hubachiisa Haquu</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body text-start">
-                                            Dhugumaan hojjetaa <strong>{{ emp.full_name }}</strong> (ID: {{ emp.unique_id }}) haquu barbaaddaa? Daataan kun erga haqamee deebi'ee argamuu dhiisuu danda'a.
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Lakkii (Cancel)</button>
-                                            <form action="{{ url_for('delete_employee', id=emp.id) }}" method="POST" class="d-inline">
-                                                <button type="submit" class="btn btn-danger">Eeyyee, Haqi</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                             {% endfor %}
                         {% else %}
                             <tr>
@@ -353,6 +261,101 @@
         </div>
     </div>
 </div>
+
+<!-- Modals for each employee placed OUTSIDE the table -->
+{% if employees %}
+    {% for emp in employees %}
+    <!-- Attach Document & View Modal -->
+    <div class="modal fade" id="documentModal{{ emp.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-folder-open me-2"></i> Ragaalee Miseensaa: <strong>{{ emp.full_name }}</strong></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-start">
+                    <!-- Form to upload documents -->
+                    <form action="{{ url_for('upload_document', employee_id=emp.id) }}" method="POST" enctype="multipart/form-data" class="card card-body bg-light border-0 mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-cloud-upload-alt me-1"></i> Ragaa Haaraa Attach Godhi (Upload PDF/Scan)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Maqaa Ragaa / Document Name</label>
+                                <input type="text" name="document_name" class="form-control form-control-sm" placeholder="Fkn: Ragaa Barumsaa, Seenaa Hojii, Xalayaa..." required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Faayiloota Filadhu (Multiple PDFs/Files)</label>
+                                <input type="file" name="documents" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg,.docx" multiple required>
+                            </div>
+                            <div class="col-md-12 text-end">
+                                <button type="submit" class="btn btn-success btn-sm shadow-sm"><i class="fas fa-paperclip me-1"></i> Ol-fe'i (Attach File)</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Table of attached documents -->
+                    <h6 class="fw-bold text-dark mb-2"><i class="fas fa-list me-1"></i> Tarree Ragaalee Attach Ta'anii:</h6>
+                    {% if emp.documents %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Maqaa Ragaa</th>
+                                        <th>Guyyaa Galmee</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in emp.documents %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td><i class="fas fa-file-pdf text-danger me-1"></i> {{ doc.document_name }}</td>
+                                        <td>{{ doc.created_at.strftime('%d/%m/%Y') }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ url_for('static', filename='uploads/documents/' + doc.file_url) }}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="Banaalii Ilaali">
+                                                <i class="fas fa-eye"></i> Ilaali
+                                            </a>
+                                            <form action="{{ url_for('delete_document', id=doc.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Dhugumaan ragaa kana haquu barbaaddaa?')" title="Haqi">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted small text-center py-3 bg-white border rounded"><i class="fas fa-info-circle me-1"></i> Ragaan tokkollee attach hin taane.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal{{ emp.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Hubachiisa Haquu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-start">
+                    Dhugumaan hojjetaa <strong>{{ emp.full_name }}</strong> (ID: {{ emp.unique_id }}) haquu barbaaddaa? Daataan kun erga haqamee deebi'ee argamuu dhiisuu danda'a.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Lakkii (Cancel)</button>
+                    <form action="{{ url_for('delete_employee', id=emp.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">Eeyyee, Haqi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
 
 <!-- Add Employee Modal -->
 <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
