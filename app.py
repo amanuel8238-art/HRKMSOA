@@ -197,11 +197,9 @@ def create_local_backup():
         backup_file_path = os.path.join(backup_dir, backup_filename)
         
         if os.path.exists(db_path):
-            # 1. Local backup uumuu
             shutil.copy(db_path, backup_file_path)
             print(f"[INFO] Local Backup successful: {backup_file_path}")
             
-            # 2. Supabase Storage (hrkmso-backups)-tti ol-fe'uu (Upload)
             if supabase:
                 try:
                     with open(backup_file_path, 'rb') as f:
@@ -226,7 +224,6 @@ def trigger_backup():
         create_local_backup()
         db_path = os.path.join(instance_dir, 'hrkmso.db')
         
-        # SQLite db yoo jiraate kallattiidhaan browser keetti download godha
         if os.path.exists(db_path):
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             return send_file(
@@ -1260,24 +1257,31 @@ def promotions():
     all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
     
-    query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+    # Koodii Sirreeffame: Table 'Employee' lammaffaa join akka hin taane godhuuf 
+    # join tokko qofa fayyadamnee achumaan filter gochuu.
+    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
     
     if status_filter and status_filter != 'All':
-        query = query.filter_by(status=status_filter)
+        query = query.filter(Transfer.status == status_filter)
 
     if rank_id_filter and str(rank_id_filter).strip().isdigit():
-        query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.rank_id == int(rank_id_filter))
+        query = query.filter(Employee.rank_id == int(rank_id_filter))
 
     if current_user.role == 'admin':
         if branch_id_filter and str(branch_id_filter).strip().isdigit():
             b_id_int = int(branch_id_filter)
-            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+            query = query.filter(
                 db.or_(Employee.branch_id == b_id_int, Transfer.to_branch_id == b_id_int)
             )
         promotions_list = query.all()
     else:
         user_b = current_user.branch_id
-        promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+        promotions_list = query.all()
 
     return render_template('promotions.html', 
                            promotions=promotions_list, 
@@ -1402,24 +1406,29 @@ def export_promotions_excel():
     status_filter = request.args.get('status', 'Pending')
     rank_id_filter = request.args.get('rank_id')
 
-    query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
 
     if status_filter and status_filter != 'All':
-        query = query.filter_by(status=status_filter)
+        query = query.filter(Transfer.status == status_filter)
 
     if rank_id_filter and str(rank_id_filter).strip().isdigit():
-        query = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.rank_id == int(rank_id_filter))
+        query = query.filter(Employee.rank_id == int(rank_id_filter))
 
     if current_user.role == 'admin':
         if branch_id and str(branch_id).strip().isdigit():
             b_id_int = int(branch_id)
-            query = query.join(Employee, Transfer.employee_id == Employee.id).filter(
+            query = query.filter(
                 db.or_(Employee.branch_id == b_id_int, Transfer.to_branch_id == b_id_int)
             )
         promotions_list = query.all()
     else:
         user_b = current_user.branch_id
-        promotions_list = query.join(Employee, Transfer.employee_id == Employee.id).filter(Employee.branch_id == user_b).all() if user_b else []
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(Employee.branch_id == b_val)
+        else:
+            query = query.filter(False)
+        promotions_list = query.all()
 
     if not promotions_list:
         flash("Odeeffannoon gaaffii gonfoo filatame waan hin jirreef, Excel-tti buufachuun hin danda'amu!", 'warning')
