@@ -11,6 +11,22 @@ from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
 
+# --- PROFESSIONAL ICT & SECURITY EXTENSIONS ---
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_mail import Mail, Message
+
+# Sentry Error Monitoring Qindeessuu
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN", "YOUR_SENTRY_DSN_HERE"),
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=1.0,
+    environment="production"
+)
+
 # Supabase Client import gochuu fi qindeessuu
 try:
     from supabase import create_client, Client
@@ -30,6 +46,22 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+
+# Flask-Migrate fi Flask-Limiter Qindeessuu
+migrate = Migrate(app, db)
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Flask-Mail Qindeessuu (Backup Notificationaf)
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'email_ke@gmail.com')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'password_ke')
+mail = Mail(app)
 
 # Folder Document attachments itti kufu
 DOCUMENTS_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'documents')
@@ -196,6 +228,18 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
+# Automated Backup Email Notification Function
+def send_backup_notification(filename):
+    try:
+        admin_email = os.environ.get('ADMIN_EMAIL', 'admin_ke@gmail.com')
+        msg = Message("HRKMSO Backup Milkaa'eera",
+                      sender=app.config['MAIL_USERNAME'],
+                      recipients=[admin_email])
+        msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
+        mail.send(msg)
+    except Exception as e:
+        print(f"[ERR] Email erguu irratti dogoggorri uumame: {e}")
+
 # Local & Supabase Backup System
 def create_local_backup():
     try:
@@ -224,6 +268,9 @@ def create_local_backup():
                     print(f"[ERR] Supabase Storage upload error: {ex}")
             else:
                 print("[WARN] Supabase client is not initialized (Check URL/KEY).")
+            
+            # Email Notification erguu
+            send_backup_notification(backup_filename)
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
@@ -477,6 +524,7 @@ def delete_document(id):
     return redirect(request.referrer or url_for('employees'))
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Brute force attack irraa eeguuf daangeffameera
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -1570,7 +1618,7 @@ def export_promotions_excel():
         })
 
     if not data:
-        flash("Daataan export ta'u tokkollee hin argamne!", 'warning')
+        flash("Odeeffannoon export ta'u tokkollee hin argamne!", 'warning')
         return redirect(url_for('promotions', branch_id=branch_id, status=status_filter, rank_id=rank_id_filter))
 
     df = pd.DataFrame(data)
