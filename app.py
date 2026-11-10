@@ -496,6 +496,24 @@ def upload_document(employee_id):
 
     return redirect(request.referrer or url_for('employees'))
 
+# Static uploads route to handle local missing files via Supabase
+@app.route('/static/uploads/documents/<filename>')
+def uploaded_document(filename):
+    file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], filename)
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    
+    # Yoo local irratti hin jirre (Render ephemeral storage irraa kan ka'e haqame), Supabase irraa barbaadi
+    if supabase:
+        try:
+            res = supabase.storage.from_('hrkmso-documents').get_public_url(filename)
+            if res:
+                return redirect(res)
+        except Exception as e:
+            print(f"[ERR] Supabase file fetch error: {e}")
+            
+    abort(404)
+
 @app.route('/delete_document/<int:id>', methods=['POST'])
 @login_required
 def delete_document(id):
