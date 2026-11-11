@@ -201,6 +201,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# 👇 KANA DABALEERA (CONNECTION DROPS FI TIMEOUT FURUUF) 👇
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_timeout": 30,
+}
+
 db.init_app(app)
 
 login_manager = LoginManager()
