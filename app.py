@@ -10,6 +10,7 @@ from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord,
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 import pandas as pd
+from itsdangerous import URLSafeTimedSerializer
 
 # --- PROFESSIONAL ICT & SECURITY EXTENSIONS ---
 import sentry_sdk
@@ -443,7 +444,20 @@ def get_retired_employees_list(active_employees):
                 pass
     return retired_list
 
-# Route Document Attachments Upload Gochuuf (BACKUP HAQAMEERA)
+# --- PASSWORD RESET TOKEN HELPERS ---
+def get_reset_token(user, expires_sec=1800):
+    s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return s.dumps({'user_id': user.id}, salt='password-reset-salt')
+
+def verify_reset_token(token, expires_sec=1800):
+    s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        user_id = s.loads(token, salt='password-reset-salt', max_age=expires_sec)['user_id']
+    except Exception:
+        return None
+    return User.query.get(user_id)
+
+# Route Document Attachments Upload Gochuuf
 @app.route('/upload_document/<int:employee_id>', methods=['POST'])
 @login_required
 def upload_document(employee_id):
@@ -506,7 +520,6 @@ def upload_document(employee_id):
 
     return redirect(request.referrer or url_for('employees'))
 
-# Static uploads route to handle local missing files via Supabase
 @app.route('/static/uploads/documents/<filename>')
 def uploaded_document(filename):
     file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], filename)
@@ -587,6 +600,46 @@ def logout():
     logout_user()
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
+
+# --- PASSWORD RESET ROUTES ---
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        username = request.form.get('username')
+        user = User.query.filter_by(username=username).first()
+        if user:
+            token = get_reset_token(user)
+            msg = Message("Jecha Iccitii Haaromsuu (Password Reset)",
+                          sender=app.config['MAIL_USERNAME'],
+                          recipients=[os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')])
+            
+            reset_url = url_for('reset_token', token=token, _external=True)
+            msg.body = f"Jecha iccitii kee haaromsuuf link armaan gadii tuqi:\n{reset_url}\n\nYoo ati hin gaafatin ta'e ergaa kana dhiisi."
+            mail.send(msg)
+            flash("Linkiin jecha iccitii jijjiiruu gara email keetti ergameera!", "info")
+        else:
+            flash("Maqaan fayyadamaa kun hin jiru.", "danger")
+        return redirect(url_for('login'))
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    user = verify_reset_token(token)
+    if not user:
+        flash("Linkiin kun dogoggoreera ykn yeroon isaa darbeera.", "warning")
+        return redirect(url_for('forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        user.password = generate_password_hash(password)
+        db.session.commit()
+        flash("Jecha iccitii kee milkaa'inaan jijjiirteetta! Amma seenuu dandeessa.", "success")
+        return redirect(url_for('login'))
+    return render_template('reset_password.html')
 
 @app.route('/')
 @login_required
@@ -816,6 +869,17 @@ def get_branch_stats(branch_id):
         "final_decided": final_decided
     }
     return jsonify(data)
+
+# --- AUDIT LOGS ROUTE FOR ADMIN ---
+@app.route('/admin/audit-logs')
+@login_required
+@admin_required
+def audit_logs():
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    pagination = AuditLog.query.order_by(AuditLog.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    logs = pagination.items
+    return render_template('audit_logs.html', logs=logs, pagination=pagination)
 
 @app.route('/warnings')
 @login_required
