@@ -201,7 +201,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 👇 ENGINE POOL OPTIONS (CONNECTION DROPS FI TIMEOUT FURUUF) 👇
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
@@ -237,7 +236,6 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# Automated Backup Email Notification Function
 def send_backup_notification(filename):
     try:
         admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
@@ -249,7 +247,6 @@ def send_backup_notification(filename):
     except Exception as e:
         print(f"[ERR] Email erguu irratti dogoggorri uumame: {e}")
 
-# Local & Supabase Backup System
 def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
@@ -439,7 +436,7 @@ def get_retired_employees_list(active_employees):
                 pass
     return retired_list
 
-# Route Document Attachments Upload Gochuuf
+# Route Document Attachments Upload Gochuuf (BACKUP HAQAMEERA)
 @app.route('/upload_document/<int:employee_id>', methods=['POST'])
 @login_required
 def upload_document(employee_id):
@@ -449,7 +446,6 @@ def upload_document(employee_id):
         abort(403)
 
     try:
-        create_local_backup()
         doc_name = request.form.get('document_name') or 'Ragaa Miseensaa'
         files = request.files.getlist('documents')
         
@@ -510,7 +506,6 @@ def uploaded_document(filename):
     if os.path.exists(file_path):
         return send_file(file_path)
     
-    # Yoo local irratti hin jirre (Render ephemeral storage irraa kan ka'e haqame), Supabase irraa barbaadi
     if supabase:
         try:
             res = supabase.storage.from_('hrkmso-documents').get_public_url(filename)
@@ -521,7 +516,6 @@ def uploaded_document(filename):
             
     abort(404)
 
-# 👇 FOOYYA'EERA: create_local_backup() ASII HAQAMEERA (TIMEOUT AKKA HIN FIDNEEF) 👇
 @app.route('/delete_document/<int:id>', methods=['POST'])
 @login_required
 def delete_document(id):
