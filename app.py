@@ -1,6 +1,7 @@
 import os
 import io
 import shutil
+import socket
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -245,15 +246,24 @@ def resolve_rank_id(rank_input):
         return r_obj.id if r_obj else None
 
 def send_backup_notification(filename):
+    """
+    Backup notification email erga.
+    SMTP Connection timeout yoo ta'e ykn network unreachable yoo ta'e 
+    main request flow akka hin gufachiisneef handler dabalameera.
+    """
     try:
+        # Network socket timeout gabaabsisuuf (seconds 5)
+        socket.setdefaulttimeout(5)
+        
         admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
         msg = Message("HRKMSO Backup Milkaa'eera",
                       sender=app.config['MAIL_USERNAME'],
                       recipients=[admin_email])
         msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
         mail.send(msg)
+        print(f"[INFO] Backup email notification sent for {filename}")
     except Exception as e:
-        print(f"[ERR] Email erguu irratti dogoggorri uumame: {e}")
+        print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored to prevent app block): {e}")
 
 def create_local_backup():
     try:
@@ -610,15 +620,20 @@ def forgot_password():
         username = request.form.get('username')
         user = User.query.filter_by(username=username).first()
         if user:
-            token = get_reset_token(user)
-            msg = Message("Jecha Iccitii Haaromsuu (Password Reset)",
-                          sender=app.config['MAIL_USERNAME'],
-                          recipients=[os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')])
-            
-            reset_url = url_for('reset_token', token=token, _external=True)
-            msg.body = f"Jecha iccitii kee haaromsuuf link armaan gadii tuqi:\n{reset_url}\n\nYoo ati hin gaafatin ta'e ergaa kana dhiisi."
-            mail.send(msg)
-            flash("Linkiin jecha iccitii jijjiiruu gara email keetti ergameera!", "info")
+            try:
+                socket.setdefaulttimeout(5)
+                token = get_reset_token(user)
+                msg = Message("Jecha Iccitii Haaromsuu (Password Reset)",
+                              sender=app.config['MAIL_USERNAME'],
+                              recipients=[os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')])
+                
+                reset_url = url_for('reset_token', token=token, _external=True)
+                msg.body = f"Jecha iccitii kee haaromsuuf link armaan gadii tuqi:\n{reset_url}\n\nYoo ati hin gaafatin ta'e ergaa kana dhiisi."
+                mail.send(msg)
+                flash("Linkiin jecha iccitii jijjiiruu gara email keetti ergameera!", "info")
+            except Exception as e:
+                print(f"[ERR] Forgot password email error: {e}")
+                flash("Email erguun hin danda'amne. Mee booda irra deebi'aa yaalaa.", "danger")
         else:
             flash("Maqaan fayyadamaa kun hin jiru.", "danger")
         return redirect(url_for('login'))
