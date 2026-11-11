@@ -608,7 +608,7 @@ def logout():
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
 
-# --- PASSWORD RESET ROUTES (RESEND HTTP API) ---
+# --- PASSWORD RESET ROUTES (RESEND HTTP API & SAFE RESET) ---
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if current_user.is_authenticated:
@@ -651,18 +651,39 @@ def forgot_password():
 def reset_token(token):
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
+    
     user = verify_reset_token(token)
     if not user:
         flash("Linkiin kun dogoggoreera ykn yeroon isaa darbeera.", "warning")
         return redirect(url_for('forgot_password'))
     
     if request.method == 'POST':
-        password = request.form.get('password')
-        user.password = generate_password_hash(password)
-        db.session.commit()
-        flash("Jecha iccitii kee milkaa'inaan jijjiirteetta! Amma seenuu dandeessa.", "success")
-        return redirect(url_for('login'))
-    return render_template('reset_password.html')
+        try:
+            create_local_backup()
+            password = request.form.get('password')
+            if not password or len(password.strip()) < 4:
+                flash("Jechi iccitii guutamuu qaba (yoo xiqqaate tahuu qaba).", "danger")
+                return render_template('reset_password.html', token=token)
+                
+            user.password = generate_password_hash(password.strip())
+            db.session.commit()
+            
+            log_entry = AuditLog(
+                user_id=user.id,
+                action="Jecha Iccitii Jijjiire",
+                details=f"Fayyadamaan {user.username} jecha iccitii isaa milkaa'inaan jijjiireera."
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+            
+            flash("Jecha iccitii kee milkaa'inaan jijjiirteetta! Amma login gochuu dandeessa.", "success")
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"[ERR] Password reset error: {e}")
+            flash(f"Dogoggorri uumameera: {str(e)}", "danger")
+            
+    return render_template('reset_password.html', token=token)
 
 @app.route('/')
 @login_required
