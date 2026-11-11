@@ -201,7 +201,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 👇 KANA DABALEERA (CONNECTION DROPS FI TIMEOUT FURUUF) 👇
+# 👇 ENGINE POOL OPTIONS (CONNECTION DROPS FI TIMEOUT FURUUF) 👇
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
@@ -521,6 +521,7 @@ def uploaded_document(filename):
             
     abort(404)
 
+# 👇 FOOYYA'EERA: create_local_backup() ASII HAQAMEERA (TIMEOUT AKKA HIN FIDNEEF) 👇
 @app.route('/delete_document/<int:id>', methods=['POST'])
 @login_required
 def delete_document(id):
@@ -531,7 +532,6 @@ def delete_document(id):
         abort(403)
 
     try:
-        create_local_backup()
         file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], doc.file_url)
         if os.path.exists(file_path):
             os.remove(file_path)
