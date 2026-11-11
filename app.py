@@ -1,8 +1,8 @@
 import os
 import io
 import shutil
-from datetime import datetime, date
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify
+from datetime import datetime, date, timedelta
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -46,6 +46,13 @@ except ImportError:
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
+
+# Flask Session Lifetime Qindeessuu (Server Side Timeout - Daqiiqaa 30)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 # Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
@@ -1376,10 +1383,13 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
+    # --- SIRREEFFAMA HAARAAN BARBAADDE ---
+    # Ramaddii qabaan -> Hojjettoota Kaffaltii Iddoo (Location Allowance) qaban/guutameef
     if rank_status == 'with':
-        query = query.filter(Employee.rank_id != None)
+        query = query.filter(Employee.location_allowance > 0)
+    # Ramaddii kan hin qabne -> Hojjettoota Mindaa Gulantaa (Rank Salary) qaban/guutameef
     elif rank_status == 'without':
-        query = query.filter(Employee.rank_id == None)
+        query = query.filter(Employee.rank_salary > 0)
 
     if position_status == 'with':
         query = query.filter(Employee.job_position != None, Employee.job_position != '')
