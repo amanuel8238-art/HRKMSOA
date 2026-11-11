@@ -1383,11 +1383,18 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
-    # --- SIRREEFFAMA HAARAAN BARBAADDE ---
-    # Ramaddii qabaan -> Hojjettoota Kaffaltii Iddoo (Location Allowance) qaban/guutameef
+    # --- FILTER SAALAA (GENDER) ---
+    if gender:
+        if gender in ['Dhalaa', 'Dubartii']:
+            query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
+        elif gender in ['Dhiira', 'Dhiirra']:
+            query = query.filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra'))
+        else:
+            query = query.filter_by(gender=gender)
+
+    # Ramaddii / Allowance filters
     if rank_status == 'with':
         query = query.filter(Employee.location_allowance > 0)
-    # Ramaddii kan hin qabne -> Hojjettoota Mindaa Gulantaa (Rank Salary) qaban/guutameef
     elif rank_status == 'without':
         query = query.filter(Employee.rank_salary > 0)
 
