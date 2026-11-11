@@ -2,6 +2,7 @@ import os
 import io
 import shutil
 import socket
+import resend
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -28,6 +29,9 @@ sentry_sdk.init(
     traces_sample_rate=1.0,
     environment="production"
 )
+
+# Resend API Key qindeessuu (Render Environment Variables irraa dubbisa)
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 # Supabase Client import gochuu fi qindeessuu
 try:
@@ -64,7 +68,7 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"]
 )
 
-# Flask-Mail Qindeessuu (Backup Notificationaf) - Sirreeffameera
+# Flask-Mail Qindeessuu (Backup Notificationaf)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -246,15 +250,8 @@ def resolve_rank_id(rank_input):
         return r_obj.id if r_obj else None
 
 def send_backup_notification(filename):
-    """
-    Backup notification email erga.
-    SMTP Connection timeout yoo ta'e ykn network unreachable yoo ta'e 
-    main request flow akka hin gufachiisneef handler dabalameera.
-    """
     try:
-        # Network socket timeout gabaabsisuuf (seconds 5)
         socket.setdefaulttimeout(5)
-        
         admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
         msg = Message("HRKMSO Backup Milkaa'eera",
                       sender=app.config['MAIL_USERNAME'],
@@ -263,7 +260,7 @@ def send_backup_notification(filename):
         mail.send(msg)
         print(f"[INFO] Backup email notification sent for {filename}")
     except Exception as e:
-        print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored to prevent app block): {e}")
+        print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored): {e}")
 
 def create_local_backup():
     try:
@@ -611,7 +608,7 @@ def logout():
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
 
-# --- PASSWORD RESET ROUTES ---
+# --- PASSWORD RESET ROUTES (RESEND HTTP API) ---
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if current_user.is_authenticated:
@@ -621,18 +618,29 @@ def forgot_password():
         user = User.query.filter_by(username=username).first()
         if user:
             try:
-                socket.setdefaulttimeout(5)
                 token = get_reset_token(user)
-                msg = Message("Jecha Iccitii Haaromsuu (Password Reset)",
-                              sender=app.config['MAIL_USERNAME'],
-                              recipients=[os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')])
-                
                 reset_url = url_for('reset_token', token=token, _external=True)
-                msg.body = f"Jecha iccitii kee haaromsuuf link armaan gadii tuqi:\n{reset_url}\n\nYoo ati hin gaafatin ta'e ergaa kana dhiisi."
-                mail.send(msg)
+                
+                # Resend API fayyadamuun email erguu (Port 443 - HTTPS)
+                params = {
+                    "from": "HRKMSO <onboarding@resend.dev>",
+                    "to": [os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')],
+                    "subject": "Jecha Iccitii Haaromsuu (Password Reset)",
+                    "html": f"""
+                        <div style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2 style="color: #333;">Komishinii Manneen Sirreessaa Oromiyaa</h2>
+                            <p>Jecha iccitii kee haaromsuuf link armaan gadii tuqi:</p>
+                            <p><a href='{reset_url}' style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Jecha Iccitii Jijjiiri</a></p>
+                            <p style="color: gray; font-size: 12px; margin-top: 20px;">Yoo ati hin gaafatin ta'e ergaa kana dhiisi.</p>
+                        </div>
+                    """
+                }
+                
+                email_res = resend.Emails.send(params)
+                print(f"[INFO] Resend email success: {email_res}")
                 flash("Linkiin jecha iccitii jijjiiruu gara email keetti ergameera!", "info")
             except Exception as e:
-                print(f"[ERR] Forgot password email error: {e}")
+                print(f"[ERR] Resend API error: {e}")
                 flash("Email erguun hin danda'amne. Mee booda irra deebi'aa yaalaa.", "danger")
         else:
             flash("Maqaan fayyadamaa kun hin jiru.", "danger")
