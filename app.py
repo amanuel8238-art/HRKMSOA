@@ -392,7 +392,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # Tarree Dameewwan HRKMSO (Waliigala: 39 - Maqaawwan Fooyya'an Qofa)
+    # Tarree Dameewwan HRKMSO (Waliigala Sirrii: 39 Qofa)
     branches_list = [
         "Head Office (Finfinnee)",
         "Mattuu",
