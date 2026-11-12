@@ -66,12 +66,11 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu
+# Flask-Migrate fi Flask-Limiter Qindeessuu (Default limits haqameera)
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    key_func=get_remote_address
 )
 
 # Folder Document attachments itti kufu
