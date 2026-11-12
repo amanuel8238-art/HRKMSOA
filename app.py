@@ -32,14 +32,21 @@ sentry_sdk.init(
 # Resend API Key qindeessuu (Render Environment Variables irraa dubbisa)
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
-# Supabase Client import gochuu fi qindeessuu
+# Supabase Client import gochuu fi qindeessuu (Debugging dabaluun)
 try:
     from supabase import create_client, Client
     SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
     SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
-except Exception:
+    
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("[INFO] Supabase client successfully initialized.")
+    else:
+        supabase = None
+        print("[WARN] Supabase URL or KEY is missing in environment variables.")
+except Exception as e:
     supabase = None
+    print(f"[ERROR] Supabase initialization failed with error: {e}")
 
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
