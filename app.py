@@ -392,7 +392,41 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # Tarree Dameewwan HRKMSO (Waliigala Sirrii: 39 Qofa - Irra Deddeebii Malee)
+    # Maqaawwan zamaneessuu (Rename) gochuuf map kaafame — Hojjettoonni tokkollee hin tuqaman, branch_id isaanii qabateuma branch_id haaraatti geeddorama.
+    branches_mapping = {
+        "Mattuu (Iluu Abaabor)": "Mattuu",
+        "Naqamtee (Wallaggaa Bahaa)": "Naqamtee",
+        "Gimbii (Wallaggaa Lixaa)": "Gimbii",
+        "Shaambuu (Horo Guduruu Wallaggaa)": "Shaambuu",
+        "Dambii Doolloo (Qellem Wallaggaa)": "Dambii Doolloo",
+        "Adaamaa (Shawaa Bahaa)": "Adaamaa",
+        "Amboo (Shawaa Lixaa)": "Amboo",
+        "Walisoo (Shawaa Kibba Lixaa)": "Walisoo",
+        "Fichee (Shawaa Kaabaa)": "Fichee",
+        "Gindhiir (Baalee Bahaa)": "Gindhiir",
+        "Haraar (Harargee Bahaa)": "Haraar",
+        "Ciroo (Harargee Lixaa)": "Ciroo",
+        "Adoolaa (Gujii Bahaa)": "Adoolaa",
+        "Bulee Horaa (Gujii Lixaa)": "Bulee Horaa",
+        "Yaabelloo (Booranaa)": "Yaabelloo",
+        "Nageellee (Booranaa Bahaa)": "Nageellee",
+        "Shaashamannee (Arsii Lixaa)": "Shaashamannee",
+        "Shaggar (Magaalaa Shagar)": "Shaggar",
+        "Aallee (Aanaa Aallee)": "Aallee",
+        "Arsii Roobee (Roobee)": "Arsii Roobee"
+    }
+
+    for old_name, new_name in branches_mapping.items():
+        old_b = Branch.query.filter_by(name=old_name).first()
+        if old_b:
+            existing_new = Branch.query.filter_by(name=new_name).first()
+            if not existing_new:
+                old_b.name = new_name
+            else:
+                Employee.query.filter_by(branch_id=old_b.id).update({Employee.branch_id: existing_new.id})
+                db.session.delete(old_b)
+
+    # Tarree Guutuu Dameewwan 39 (Manneen Sirreessaa Oromiyaa) - Inni Dhugaa fi Sirrii
     branches_list = [
         "Head Office (Finfinnee)",
         "Iluu Abaabor",
@@ -1304,7 +1338,7 @@ def add_employee():
         pension_number = request.form.get('pension_number')
         phone_number = request.form.get('phone_number')
         gender = request.form.get('gender')
-        birth_place = request.form.get('birth_place')  # <--- Bakka Dhalootaa Asitti Fudhateera
+        birth_place = request.form.get('birth_place')
         
         if current_user.role == 'admin':
             branch_id = request.form.get('branch_id')
@@ -1328,7 +1362,7 @@ def add_employee():
             pension_number=pension_number,
             phone_number=phone_number,
             gender=gender,
-            birth_place=birth_place,  # <--- Asitti Dabalamteerta
+            birth_place=birth_place,
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             job_position=job_position,
@@ -1419,7 +1453,7 @@ def edit_employee(id):
             emp.pension_number = request.form.get('pension_number', emp.pension_number)
             emp.phone_number = request.form.get('phone_number', emp.phone_number)
             emp.gender = request.form.get('gender', emp.gender)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)  # <--- Asitti Fooyya'eera
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             
             if current_user.role == 'admin':
                 b_id = request.form.get('branch_id')
