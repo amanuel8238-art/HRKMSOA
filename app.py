@@ -392,41 +392,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # Maqaawwan zamaneessuu (Rename) gochuuf map kaafame — Hojjettoonni tokkollee hin tuqaman, branch_id isaanii qabateuma branch_id haaraatti geeddorama.
-    branches_mapping = {
-        "Mattuu (Iluu Abaabor)": "Mattuu",
-        "Naqamtee (Wallaggaa Bahaa)": "Naqamtee",
-        "Gimbii (Wallaggaa Lixaa)": "Gimbii",
-        "Shaambuu (Horo Guduruu Wallaggaa)": "Shaambuu",
-        "Dambii Doolloo (Qellem Wallaggaa)": "Dambii Doolloo",
-        "Adaamaa (Shawaa Bahaa)": "Adaamaa",
-        "Amboo (Shawaa Lixaa)": "Amboo",
-        "Walisoo (Shawaa Kibba Lixaa)": "Walisoo",
-        "Fichee (Shawaa Kaabaa)": "Fichee",
-        "Gindhiir (Baalee Bahaa)": "Gindhiir",
-        "Haraar (Harargee Bahaa)": "Haraar",
-        "Ciroo (Harargee Lixaa)": "Ciroo",
-        "Adoolaa (Gujii Bahaa)": "Adoolaa",
-        "Bulee Horaa (Gujii Lixaa)": "Bulee Horaa",
-        "Yaabelloo (Booranaa)": "Yaabelloo",
-        "Nageellee (Booranaa Bahaa)": "Nageellee",
-        "Shaashamannee (Arsii Lixaa)": "Shaashamannee",
-        "Shaggar (Magaalaa Shagar)": "Shaggar",
-        "Aallee (Aanaa Aallee)": "Aallee",
-        "Arsii Roobee (Roobee)": "Arsii Roobee"
-    }
-
-    for old_name, new_name in branches_mapping.items():
-        old_b = Branch.query.filter_by(name=old_name).first()
-        if old_b:
-            existing_new = Branch.query.filter_by(name=new_name).first()
-            if not existing_new:
-                old_b.name = new_name
-            else:
-                Employee.query.filter_by(branch_id=old_b.id).update({Employee.branch_id: existing_new.id})
-                db.session.delete(old_b)
-
-    # Tarree Guutuu Dameewwan 39 (Manneen Sirreessaa Oromiyaa) - Inni Dhugaa fi Sirrii
+    # Tarree Guutuu Dameewwan Manneen Sirreessaa Oromiyaa (Maqaawwan haaraa kallattiidhaan qindaa'an)
     branches_list = [
         "Head Office (Finfinnee)",
         "Iluu Abaabor",
@@ -466,9 +432,63 @@ with app.app_context():
         "Habroo",
         "Dalloo Mannaa",
         "Martii",
-        "Roobee"
+        "Roobee",
+        "Mattuu",
+        "Naqamtee",
+        "Gimbii",
+        "Shaambuu",
+        "Dambii Doolloo",
+        "Adaamaa",
+        "Amboo",
+        "Walisoo",
+        "Fichee",
+        "Gindhiir",
+        "Haraar",
+        "Ciroo",
+        "Adoolaa",
+        "Bulee Horaa",
+        "Yaabelloo",
+        "Nageellee",
+        "Shaashamannee",
+        "Shaggar",
+        "Aallee",
+        "Arsii Roobee"
     ]
     
+    # Maqaawwan moofaa gara maqaa haaraatti jijjiiruu (Rename) fi hojjettoota eeguu
+    old_to_new_mapping = {
+        "Mattuu (Iluu Abaabor)": "Mattuu",
+        "Naqamtee (Wallaggaa Bahaa)": "Naqamtee",
+        "Gimbii (Wallaggaa Lixaa)": "Gimbii",
+        "Shaambuu (Horo Guduruu Wallaggaa)": "Shaambuu",
+        "Dambii Doolloo (Qellem Wallaggaa)": "Dambii Doolloo",
+        "Adaamaa (Shawaa Bahaa)": "Adaamaa",
+        "Amboo (Shawaa Lixaa)": "Amboo",
+        "Walisoo (Shawaa Kibba Lixaa)": "Walisoo",
+        "Fichee (Shawaa Kaabaa)": "Fichee",
+        "Gindhiir (Baalee Bahaa)": "Gindhiir",
+        "Haraar (Harargee Bahaa)": "Haraar",
+        "Ciroo (Harargee Lixaa)": "Ciroo",
+        "Adoolaa (Gujii Bahaa)": "Adoolaa",
+        "Bulee Horaa (Gujii Lixaa)": "Bulee Horaa",
+        "Yaabelloo (Booranaa)": "Yaabelloo",
+        "Nageellee (Booranaa Bahaa)": "Nageellee",
+        "Shaashamannee (Arsii Lixaa)": "Shaashamannee",
+        "Shaggar (Magaalaa Shagar)": "Shaggar",
+        "Aallee (Aanaa Aallee)": "Aallee",
+        "Arsii Roobee (Roobee)": "Arsii Roobee"
+    }
+
+    for old_n, new_n in old_to_new_mapping.items():
+        old_branch_obj = Branch.query.filter_by(name=old_n).first()
+        if old_branch_obj:
+            new_branch_obj = Branch.query.filter_by(name=new_n).first()
+            if not new_branch_obj:
+                old_branch_obj.name = new_n
+            else:
+                Employee.query.filter_by(branch_id=old_branch_obj.id).update({Employee.branch_id: new_branch_obj.id})
+                db.session.delete(old_branch_obj)
+
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
@@ -522,7 +542,6 @@ def verify_reset_token(token, expires_sec=1800):
         return None
     return User.query.get(user_id)
 
-# Route Document Attachments Upload Gochuuf
 @app.route('/upload_document/<int:employee_id>', methods=['POST'])
 @login_required
 def upload_document(employee_id):
