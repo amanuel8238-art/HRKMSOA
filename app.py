@@ -234,17 +234,6 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def resolve_rank_id(rank_input):
-    if not rank_input:
-        return None
-    if str(rank_input).isdigit():
-        return int(rank_input)
-    else:
-        r_obj = Rank.query.filter_by(name=rank_input).first()
-        if not r_obj:
-            r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
-        return r_obj.id if r_obj else None
-
 def send_backup_notification(filename):
     try:
         admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
@@ -333,6 +322,8 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN phone_number VARCHAR(50)"))
+            if 'birth_place' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -610,7 +601,6 @@ def logout():
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
 
-# --- PASSWORD RESET ROUTES (RESEND HTTP API & SAFE RESET) ---
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if current_user.is_authenticated:
@@ -623,7 +613,6 @@ def forgot_password():
                 token = get_reset_token(user)
                 reset_url = url_for('reset_token', token=token, _external=True)
                 
-                # Resend API fayyadamuun email erguu (Port 443 - HTTPS)
                 params = {
                     "from": "HRKMSO <onboarding@resend.dev>",
                     "to": [os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')],
@@ -664,7 +653,7 @@ def reset_token(token):
             create_local_backup()
             password = request.form.get('password')
             if not password or len(password.strip()) < 4:
-                flash("Jechi iccitii guutamuu qaba (yoo xiqqaate tahuu qaba).", "danger")
+                flash("Jechi iccitii guutamuu qaba.", "danger")
                 return render_template('reset_password.html', token=token)
                 
             user.password = generate_password_hash(password.strip())
@@ -678,11 +667,10 @@ def reset_token(token):
             db.session.add(log_entry)
             db.session.commit()
             
-            flash("Jecha iccitii kee milkaa'inaan jijjiirteetta! Amma login gochuu dandeessa.", "success")
+            flash("Jecha iccitii kee milkaa'inaan jijjiirteetta!", "success")
             return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()
-            print(f"[ERR] Password reset error: {e}")
             flash(f"Dogoggorri uumameera: {str(e)}", "danger")
             
     return render_template('reset_password.html', token=token)
@@ -916,7 +904,6 @@ def get_branch_stats(branch_id):
     }
     return jsonify(data)
 
-# --- AUDIT LOGS ROUTE FOR ADMIN ---
 @app.route('/admin/audit-logs')
 @login_required
 @admin_required
@@ -1286,6 +1273,7 @@ def add_employee():
         pension_number = request.form.get('pension_number')
         phone_number = request.form.get('phone_number')
         gender = request.form.get('gender')
+        birth_place = request.form.get('birth_place')  # <--- Bakka Dhalootaa Asitti Fudhateera
         
         if current_user.role == 'admin':
             branch_id = request.form.get('branch_id')
@@ -1309,6 +1297,7 @@ def add_employee():
             pension_number=pension_number,
             phone_number=phone_number,
             gender=gender,
+            birth_place=birth_place,  # <--- Asitti Dabalamteerta
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             job_position=job_position,
@@ -1399,6 +1388,8 @@ def edit_employee(id):
             emp.pension_number = request.form.get('pension_number', emp.pension_number)
             emp.phone_number = request.form.get('phone_number', emp.phone_number)
             emp.gender = request.form.get('gender', emp.gender)
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)  # <--- Asitti Fooyya'eera
+            
             if current_user.role == 'admin':
                 b_id = request.form.get('branch_id')
                 if b_id:
@@ -1493,7 +1484,6 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
-    # --- FILTER SAALAA (GENDER) ---
     if gender:
         if gender in ['Dhalaa', 'Dubartii']:
             query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
@@ -1502,7 +1492,6 @@ def employees():
         else:
             query = query.filter_by(gender=gender)
 
-    # Ramaddii / Allowance filters
     if rank_status == 'with':
         query = query.filter(Employee.location_allowance > 0)
     elif rank_status == 'without':
@@ -1656,6 +1645,7 @@ def export_employees_excel():
                 'Saala': e.gender if e.gender else '-',
                 'Umrii': emp_age,
                 'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
+                'Bakka Dhalootaa': e.birth_place if e.birth_place else '-',
                 'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
                 'Hanga Tajaajilaa': calculate_service_duration(e.hire_date),
                 'Guyyaa Gulantaa': format_ethiopian_date(getattr(e, 'rank_date', None)) if getattr(e, 'rank_date', None) else '-',
@@ -1673,7 +1663,7 @@ def export_employees_excel():
         df = pd.DataFrame(data)
     else:
         df = pd.DataFrame(columns=[
-            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 
+            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 'Bakka Dhalootaa',
             'Guyyaa Qacaramuu', 'Hanga Tajaajilaa', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
             'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Mindaa Gulantaa', 
             'Kaffaltii Iddoo', 'Durgoo Nyaataa', 'Lakk. Sooromaa', 'Lakk. Bilbilaa', 'Status'

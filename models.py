@@ -41,6 +41,7 @@ class Employee(db.Model):
     rank_date = db.Column(db.String(50), nullable=True)
     hire_date = db.Column(db.String(50), nullable=True)
     birth_date = db.Column(db.String(50), nullable=True)
+    birth_place = db.Column(db.String(150), nullable=True)  # <--- Bakka Dhalootaa Asitti Dabalamteerta[cite: 5]
     last_promotion_date = db.Column(db.String(50), nullable=True)
     
     rank_salary = db.Column(db.Float, default=0.0)
