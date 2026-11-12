@@ -392,39 +392,39 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # Tarree Dameewwan HRKMSO (Waliigala Sirrii: 39 Qofa)
+    # Tarree Dameewwan HRKMSO (Waliigala Sirrii: 39 Qofa - Irra Deddeebii Malee)
     branches_list = [
         "Head Office (Finfinnee)",
-        "Mattuu",
+        "Iluu Abaabor",
         "Jimmaa",
         "Bunoo Beddellee",
-        "Naqamtee",
-        "Gimbii",
-        "Shaambuu",
-        "Dambii Doolloo",
-        "Adaamaa",
-        "Amboo",
-        "Walisoo",
-        "Fichee",
+        "Wallaggaa Bahaa",
+        "Wallaggaa Lixaa",
+        "Horo Guduruu Wallaggaa",
+        "Qellem Wallaggaa",
+        "Shawaa Bahaa",
+        "Shawaa Lixaa",
+        "Shawaa Kibba Lixaa",
+        "Shawaa Kaabaa",
         "Baalee",
-        "Gindhiir",
-        "Haraar",
-        "Ciroo",
-        "Adoolaa",
-        "Bulee Horaa",
-        "Yaabelloo",
-        "Nageellee",
+        "Baalee Bahaa",
+        "Harargee Bahaa",
+        "Harargee Lixaa",
+        "Gujii Bahaa",
+        "Gujii Lixaa",
+        "Booranaa",
+        "Booranaa Bahaa",
         "Arsii",
-        "Shaashamannee",
+        "Arsii Lixaa",
         "GGLTO",
         "Dadar",
-        "Shaggar",
+        "Magaalaa Shagar",
         "Baatuu",
         "Aggaroo",
         "Mayyaa",
         "Dodolaa",
         "Shanoo",
-        "Aallee",
+        "Aanaa Aallee",
         "Jimmaa Arjoo",
         "Eejeree",
         "Gursum",
@@ -432,7 +432,7 @@ with app.app_context():
         "Habroo",
         "Dalloo Mannaa",
         "Martii",
-        "Arsii Roobee"
+        "Roobee"
     ]
     
     for b_name in branches_list:
