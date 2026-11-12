@@ -392,16 +392,47 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
+    # Tarree Dameewwan HRKMSO (Total: 39) - Maqaawwan Haaraan Qindaa'an
     branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+        "Head Office (Finfinnee)", 
+        "Mattuu (Iluu Abaabor)", 
+        "Jimmaa", 
+        "Bunoo Beddellee", 
+        "Naqamtee (Wallaggaa Bahaa)", 
+        "Gimbii (Wallaggaa Lixaa)", 
+        "Shaambuu (Horo Guduruu Wallaggaa)", 
+        "Dambii Doolloo (Qellem Wallaggaa)",
+        "Adaamaa (Shawaa Bahaa)", 
+        "Amboo (Shawaa Lixaa)", 
+        "Walisoo (Shawaa Kibba Lixaa)", 
+        "Fichee (Shawaa Kaabaa)",
+        "Baalee", 
+        "Gindhiir (Baalee Bahaa)", 
+        "Haraar (Harargee Bahaa)", 
+        "Ciroo (Harargee Lixaa)",
+        "Adoolaa (Gujii Bahaa)", 
+        "Bulee Horaa (Gujii Lixaa)", 
+        "Yaabelloo (Booranaa)", 
+        "Nageellee (Booranaa Bahaa)",
+        "Arsii", 
+        "Shaashamannee (Arsii Lixaa)", 
+        "GGLTO", 
+        "Dadar", 
+        "Shaggar (Magaalaa Shagar)",
+        "Baatuu", 
+        "Aggaroo", 
+        "Mayyaa", 
+        "Dodolaa", 
+        "Shanoo",
+        "Aallee (Aanaa Aallee)", 
+        "Jimmaa Arjoo", 
+        "Eejeree", 
+        "Gursum", 
+        "Girawaa",
+        "Habroo", 
+        "Dalloo Mannaa", 
+        "Martii", 
+        "Arsii Roobee (Roobee)"
     ]
     
     for b_name in branches_list:
