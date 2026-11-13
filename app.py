@@ -261,6 +261,17 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def resolve_rank_id(rank_input):
+    if not rank_input:
+        return None
+    if str(rank_input).isdigit():
+        return int(rank_input)
+    else:
+        r_obj = Rank.query.filter_by(name=rank_input).first()
+        if not r_obj:
+            r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
+        return r_obj.id if r_obj else None
+
 def send_backup_notification(filename):
     try:
         socket.setdefaulttimeout(5)
@@ -411,15 +422,16 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # Dameewwan Oromia (Kan kaleessa sirreeffamanii fi tarreeffaman hundi)
     branches_list = [
-        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee", "Arsii", 
-        "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo", 
-        "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa", "Habroo", "Dalloo Mannaa", 
-        "Martii", "Iluu Abaabor - Mattuu", "Naqamtee", "Gimbii", "Shaambuu", 
-        "Dambii Doolloo", "Adaamaa", "Amboo", "Walisoo", "Fichee", "Gindhiir", 
-        "Haraar", "Ciroo", "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee", 
-        "Shaashamannee", "Shaggar", "Aallee", "Arsii Roobee"
+        "Head Office (Finfinnee)", "Iluu Abaabor - Mattuu", "Jimmaa", "Bunoo Beddellee", 
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
     ]
     
     for b_name in branches_list:
@@ -475,6 +487,7 @@ def verify_reset_token(token, expires_sec=1800):
         return None
     return User.query.get(user_id)
 
+# Route Document Attachments Upload Gochuuf
 @app.route('/upload_document/<int:employee_id>', methods=['POST'])
 @login_required
 def upload_document(employee_id):
@@ -618,6 +631,7 @@ def logout():
     flash("Milkaa'inaan baateetta!", 'info')
     return redirect(url_for('login'))
 
+# --- PASSWORD RESET ROUTES (RESEND HTTP API & SAFE RESET) ---
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if current_user.is_authenticated:
@@ -630,6 +644,7 @@ def forgot_password():
                 token = get_reset_token(user)
                 reset_url = url_for('reset_token', token=token, _external=True)
                 
+                # Resend API fayyadamuun email erguu (Port 443 - HTTPS)
                 params = {
                     "from": "HRKMSO <onboarding@resend.dev>",
                     "to": [os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')],
@@ -670,7 +685,7 @@ def reset_token(token):
             create_local_backup()
             password = request.form.get('password')
             if not password or len(password.strip()) < 4:
-                flash("Jechi iccitii guutamuu qaba.", "danger")
+                flash("Jechi iccitii guutamuu qaba (yoo xiqqaate tahuu qaba).", "danger")
                 return render_template('reset_password.html', token=token)
                 
             user.password = generate_password_hash(password.strip())
@@ -684,10 +699,11 @@ def reset_token(token):
             db.session.add(log_entry)
             db.session.commit()
             
-            flash("Jecha iccitii kee milkaa'inaan jijjiirteetta!", "success")
+            flash("Jecha iccitii kee milkaa'inaan jijjiirteetta! Amma login gochuu dandeessa.", "success")
             return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()
+            print(f"[ERR] Password reset error: {e}")
             flash(f"Dogoggorri uumameera: {str(e)}", "danger")
             
     return render_template('reset_password.html', token=token)
@@ -921,6 +937,7 @@ def get_branch_stats(branch_id):
     }
     return jsonify(data)
 
+# --- AUDIT LOGS ROUTE FOR ADMIN ---
 @app.route('/admin/audit-logs')
 @login_required
 @admin_required
@@ -1036,14 +1053,17 @@ def add_discipline(employee_id):
             penalty_type = request.form.get('penalty_type')
             offense_type = request.form.get('offense_type')
             reason = request.form.get('reason')
+            
+            # Ethiopian Calendar Date Parsing
             offense_date = parse_ethiopian_to_gregorian(request.form.get('offense_date'))
             decision_date = parse_ethiopian_to_gregorian(request.form.get('decision_date'))
             expiry_date = parse_ethiopian_to_gregorian(request.form.get('expiry_date'))
-            approved_by = request.form.get('approved_by')
-            description = request.form.get('description', '')
             local_committee_date = parse_ethiopian_to_gregorian(request.form.get('local_committee_date'))
             zone_committee_date = parse_ethiopian_to_gregorian(request.form.get('zone_committee_date'))
             commission_sent_date = parse_ethiopian_to_gregorian(request.form.get('commission_sent_date'))
+            
+            approved_by = request.form.get('approved_by')
+            description = request.form.get('description', '')
             discipline_status = request.form.get('discipline_status', 'pending')
             
             final_decision = request.form.get('final_decision') if current_user.role == 'admin' else None
@@ -1196,6 +1216,8 @@ def add_transfer():
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
+        
+        # Ethiopian Calendar Date Parsing
         transfer_date = parse_ethiopian_to_gregorian(request.form.get('transfer_date') or request.form.get('date'))
 
         if not employee_id or not to_branch_id:
@@ -1304,6 +1326,7 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         
+        # Ethiopian Calendar Date Parsing
         hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
         birth_date = parse_ethiopian_to_gregorian(request.form.get('birth_date'))
         rank_date = parse_ethiopian_to_gregorian(request.form.get('rank_date'))
@@ -1365,6 +1388,7 @@ def evaluate_employee(id):
             emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
                                emp.law_score + emp.experience_score + emp.service_score)
             
+            # Ethiopian Calendar Date Parsing
             emp.next_promotion_date = parse_ethiopian_to_gregorian(request.form.get('next_promotion_date'))
             emp.next_promotion_status = request.form.get('next_promotion_status')
             
@@ -1420,6 +1444,7 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             
+            # Ethiopian Calendar Date Parsing
             if request.form.get('hire_date'):
                 emp.hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
             if request.form.get('birth_date'):
@@ -1503,6 +1528,7 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
+    # --- FILTER SAALAA (GENDER) ---
     if gender:
         if gender in ['Dhalaa', 'Dubartii']:
             query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
@@ -1511,6 +1537,7 @@ def employees():
         else:
             query = query.filter_by(gender=gender)
 
+    # Ramaddii / Allowance filters
     if rank_status == 'with':
         query = query.filter(Employee.location_allowance > 0)
     elif rank_status == 'without':
