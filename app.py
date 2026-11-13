@@ -48,6 +48,7 @@ except Exception as e:
     supabase = None
     print(f"[ERROR] Supabase initialization failed with error: {e}")
 
+# --- ETHIOPIAN DATE CONVERTER QINDEESSUU ---
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 except ImportError:
@@ -66,7 +67,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu (Default limits haqameera)
+# Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
@@ -83,6 +84,7 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'docx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# --- DATE CONVERSION HELPER FUNCTIONS ---
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
         return "Hin ibsamne"
@@ -108,6 +110,33 @@ def format_ethiopian_date(date_str):
         return s
     except Exception:
         return str(date_str)
+
+def parse_ethiopian_to_gregorian(date_str):
+    """
+    Form irraa Guyyaa Itoophiyaatiin (fkn 04/03/2019 ykn 2019-03-04) dhufe 
+    gara Gregorian date (YYYY-MM-DD) jijjiirtee database keessatti akka taa'u taasisa.
+    """
+    if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
+        return None
+    try:
+        s = str(date_str).strip()
+        parts = []
+        if '-' in s:
+            parts = s.split()[0].split('-')
+        elif '/' in s:
+            parts = s.split()[0].split('/')
+            
+        if len(parts) == 3:
+            if len(parts[0]) == 4:
+                ey, em, ed = int(parts[0]), int(parts[1]), int(parts[2])
+            else:
+                ed, em, ey = int(parts[0]), int(parts[1]), int(parts[2])
+            
+            gy, gm, gd = to_gregorian(ey, em, ed)
+            return f"{gy:04d}-{gm:02d}-{gd:02d}"
+    except Exception as e:
+        print(f"[ERR] Ethiopian to Gregorian conversion error: {e}")
+    return date_str
 
 Employee.previous_rank_date = property(lambda self: format_ethiopian_date(getattr(self, 'rank_date', None) or getattr(self, 'last_promotion_date', None)))
 Employee.eth_next_promotion_date = property(lambda self: format_ethiopian_date(getattr(self, 'next_promotion_date', None)))
@@ -1001,14 +1030,14 @@ def add_discipline(employee_id):
             penalty_type = request.form.get('penalty_type')
             offense_type = request.form.get('offense_type')
             reason = request.form.get('reason')
-            offense_date = request.form.get('offense_date')
-            decision_date = request.form.get('decision_date')
-            expiry_date = request.form.get('expiry_date')
+            offense_date = parse_ethiopian_to_gregorian(request.form.get('offense_date'))
+            decision_date = parse_ethiopian_to_gregorian(request.form.get('decision_date'))
+            expiry_date = parse_ethiopian_to_gregorian(request.form.get('expiry_date'))
             approved_by = request.form.get('approved_by')
             description = request.form.get('description', '')
-            local_committee_date = request.form.get('local_committee_date')
-            zone_committee_date = request.form.get('zone_committee_date')
-            commission_sent_date = request.form.get('commission_sent_date')
+            local_committee_date = parse_ethiopian_to_gregorian(request.form.get('local_committee_date'))
+            zone_committee_date = parse_ethiopian_to_gregorian(request.form.get('zone_committee_date'))
+            commission_sent_date = parse_ethiopian_to_gregorian(request.form.get('commission_sent_date'))
             discipline_status = request.form.get('discipline_status', 'pending')
             
             final_decision = request.form.get('final_decision') if current_user.role == 'admin' else None
@@ -1161,7 +1190,7 @@ def add_transfer():
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
-        transfer_date = request.form.get('transfer_date') or request.form.get('date')
+        transfer_date = parse_ethiopian_to_gregorian(request.form.get('transfer_date') or request.form.get('date'))
 
         if not employee_id or not to_branch_id:
             flash('Hojjetaa fi Dameen haaraan dirqama guutamuu qabu!', 'danger')
@@ -1269,9 +1298,11 @@ def add_employee():
         rank_salary = float(request.form.get('rank_salary', 0) or 0)
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
-        hire_date = request.form.get('hire_date')
-        birth_date = request.form.get('birth_date')
-        rank_date = request.form.get('rank_date')
+        
+        # Guyyoota Kaandarii Itoophiyaatiin guutaman gara Gregorian-tti jijjiiranii qabachuuf:
+        hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
+        birth_date = parse_ethiopian_to_gregorian(request.form.get('birth_date'))
+        rank_date = parse_ethiopian_to_gregorian(request.form.get('rank_date'))
 
         new_emp = Employee(
             full_name=full_name,
@@ -1331,7 +1362,7 @@ def evaluate_employee(id):
             emp.total_score = (emp.perf_score + emp.edu_score + emp.discipline_score + 
                                emp.law_score + emp.experience_score + emp.service_score)
             
-            emp.next_promotion_date = request.form.get('next_promotion_date')
+            emp.next_promotion_date = parse_ethiopian_to_gregorian(request.form.get('next_promotion_date'))
             emp.next_promotion_status = request.form.get('next_promotion_status')
             
             if emp.next_promotion_status:
@@ -1387,9 +1418,14 @@ def edit_employee(id):
             emp.rank_salary = float(request.form.get('rank_salary', 0) or 0)
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
-            emp.hire_date = request.form.get('hire_date', emp.hire_date)
-            emp.birth_date = request.form.get('birth_date', emp.birth_date)
-            emp.rank_date = request.form.get('rank_date', emp.rank_date)
+            
+            if request.form.get('hire_date'):
+                emp.hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
+            if request.form.get('birth_date'):
+                emp.birth_date = parse_ethiopian_to_gregorian(request.form.get('birth_date'))
+            if request.form.get('rank_date'):
+                emp.rank_date = parse_ethiopian_to_gregorian(request.form.get('rank_date'))
+                
             emp.status = request.form.get('status', emp.status)
 
             db.session.commit()
@@ -1740,7 +1776,7 @@ def export_promotions_excel():
     output = io.BytesIO()
     
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
+        df.to_excel(output, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
     
     output.seek(0)
 
@@ -1878,7 +1914,8 @@ def edit_user(id):
 @login_required
 @admin_required
 def delete_user(id):
-    if id == current_user.id:
+    id_val = int(id) if str(id).isdigit() else id
+    if id_val == current_user.id:
         flash("Fayyadamaa amma itti fayyadamtu haquun hin danda'amu!", 'danger')
         return redirect(url_for('users'))
     user = User.query.get_or_404(id)

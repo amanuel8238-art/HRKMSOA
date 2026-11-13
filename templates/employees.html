@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Back to Dashboard & Header & Action Buttons -->
+    <!-- Header & Action Buttons -->
     <div class="row mb-4 align-items-center">
         <div class="col-md-6 d-flex align-items-center">
             <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-3 shadow-sm" title="Gara Dashboarditti Deebi'i">
@@ -16,112 +16,6 @@
             <button class="btn btn-success shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
                 <i class="fas fa-user-plus me-1"></i> Miseensa Haaraa Galchi
             </button>
-            {% if endpoint_exists('export_employees_excel') %}
-            <a href="{{ url_for('export_employees_excel', branch_id=request.args.get('branch_id'), rank=request.args.get('rank'), gender=request.args.get('gender'), search=request.args.get('search'), education_level=request.args.get('education_level'), field_of_study=request.args.get('field_of_study'), status=request.args.get('status', 'Active'), sort=request.args.get('sort', 'az'), rank_status=request.args.get('rank_status'), position_status=request.args.get('position_status'), allowance_status=request.args.get('allowance_status')) }}" class="btn btn-outline-primary shadow-sm">
-                <i class="fas fa-file-excel me-1"></i> Excel-tti Buusi (Export)
-            </a>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Filter & Search Card -->
-    <div class="card shadow-sm mb-4 border-0 rounded-3 bg-light">
-        <div class="card-body">
-            <form method="GET" action="{{ url_for('employees') }}" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Barbaadi (Search)</label>
-                    <input type="text" name="search" class="form-control form-control-sm" value="{{ request.args.get('search', '') }}" placeholder="Maqaa, ID Addaa, Gita Hojii...">
-                </div>
-                
-                {% if current_user.role == 'admin' %}
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small">Damee (Branch)</label>
-                    <select name="branch_id" class="form-select form-select-sm">
-                        <option value="">Dameewwan Hunda</option>
-                        {% for b in branches %}
-                        <option value="{{ b.id }}" {% if request.args.get('branch_id') == b.id|string %}selected{% endif %}>{{ b.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
-
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small">Gulantaa (Rank)</label>
-                    <select name="rank" class="form-select form-select-sm">
-                        <option value="">Gulantaa Hunda</option>
-                        {% for r in ranks %}
-                        <option value="{{ r.id }}" {% if request.args.get('rank') == r.id|string %}selected{% endif %}>{{ r.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small">Saala (Gender)</label>
-                    <select name="gender" class="form-select form-select-sm">
-                        <option value="">Hunda</option>
-                        <option value="Dhiira" {% if request.args.get('gender') == 'Dhiira' %}selected{% endif %}>Dhiira</option>
-                        <option value="Dhalaa" {% if request.args.get('gender') == 'Dhalaa' %}selected{% endif %}>Dhalaa</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small">Status</label>
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="Active" {% if request.args.get('status', 'Active') == 'Active' %}selected{% endif %}>Active</option>
-                        <option value="All" {% if request.args.get('status') == 'All' %}selected{% endif %}>Hunda (All)</option>
-                        <option value="Resigned" {% if request.args.get('status') == 'Resigned' %}selected{% endif %}>Resigned</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Sadarkaa Barumsaa</label>
-                    <input type="text" name="education_level" class="form-control form-control-sm" value="{{ request.args.get('education_level', '') }}" placeholder="Fkn: Degree, Diploma...">
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Gosa Barumsaa (Field)</label>
-                    <input type="text" name="field_of_study" class="form-control form-control-sm" value="{{ request.args.get('field_of_study', '') }}" placeholder="Fkn: Management, IT...">
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Tartiiba Maqaa (Sorting)</label>
-                    <select name="sort" class="form-select form-select-sm">
-                        <option value="az" {% if request.args.get('sort', 'az') == 'az' %}selected{% endif %}>A - Z (Qubeen)</option>
-                        <option value="za" {% if request.args.get('sort') == 'za' %}selected{% endif %}>Z - A (Duubatti)</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Ramaddii (Rank Status)</label>
-                    <select name="rank_status" class="form-select form-select-sm">
-                        <option value="">Hunda (All)</option>
-                        <option value="with" {% if request.args.get('rank_status') == 'with' %}selected{% endif %}>Ramaddii Qaban</option>
-                        <option value="without" {% if request.args.get('rank_status') == 'without' %}selected{% endif %}>Ramaddii Kan Hin Qabne</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Gita Hojii (Position Status)</label>
-                    <select name="position_status" class="form-select form-select-sm">
-                        <option value="">Hunda (All)</option>
-                        <option value="with" {% if request.args.get('position_status') == 'with' %}selected{% endif %}>Gita Hojii Qaban</option>
-                        <option value="without" {% if request.args.get('position_status') == 'without' %}selected{% endif %}>Gita Hojii Kan Hin Qabne</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">Location Allowance</label>
-                    <select name="allowance_status" class="form-select form-select-sm">
-                        <option value="">Hunda (All)</option>
-                        <option value="with" {% if request.args.get('allowance_status') == 'with' %}selected{% endif %}>Allowance Qaban</option>
-                        <option value="without" {% if request.args.get('allowance_status') == 'without' %}selected{% endif %}>Mindaa Gonfoo Qofaa</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm"><i class="fas fa-filter me-1"></i> Qindeessi (Filter)</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -148,12 +42,9 @@
                             <th class="py-3">Sadarkaa Barumsaa</th>
                             <th class="py-3">Gosa Barumsaa</th>
                             <th class="py-3">Mindaa Gulantaa</th>
-                            <th class="py-3">Kaffaltii Iddoo</th>
-                            <th class="py-3">Durgoo Nyaataa</th>
                             <th class="py-3">Lakk. Sooromaa</th>
                             <th class="py-3">Lakk. Bilbilaa</th>
                             <th class="py-3">Status</th>
-                            <th class="py-3 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,59 +56,27 @@
                                 <td><strong>{{ emp.rank.name if emp.rank else '-' }}</strong></td>
                                 <td><strong class="text-dark">{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
-                                <td>
-                                    {% if emp.birth_date %}
-                                        <span class="badge bg-info text-dark">{{ calculate_age(emp.birth_date) }}</span>
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
+                                <td>{{ calculate_age(emp.birth_date) if emp.birth_date else '-' }}</td>
                                 <td>{{ format_ethiopian_date(emp.birth_date) if emp.birth_date else '-' }}</td>
                                 <td>{{ emp.birth_place if emp.birth_place else '-' }}</td>
                                 <td>{{ format_ethiopian_date(emp.hire_date) if emp.hire_date else '-' }}</td>
-                                <td>
-                                    {% if emp.hire_date %}
-                                        <span class="badge bg-secondary text-white">{{ calculate_service_duration(emp.hire_date) }}</span>
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
+                                <td>{{ calculate_service_duration(emp.hire_date) }}</td>
                                 <td>{{ format_ethiopian_date(emp.rank_date) if emp.rank_date else '-' }}</td>
                                 <td>{{ emp.branch.name if emp.branch else '-' }}</td>
                                 <td>{{ emp.job_position if emp.job_position else '-' }}</td>
                                 <td>{{ emp.education_level if emp.education_level else '-' }}</td>
                                 <td>{{ emp.field_of_study if emp.field_of_study else '-' }}</td>
                                 <td>{{ "%.2f"|format(emp.rank_salary) if emp.rank_salary else '0.00' }} ETB</td>
-                                <td>{{ "%.2f"|format(emp.location_allowance) if emp.location_allowance else '0.00' }} ETB</td>
-                                <td>{{ "%.2f"|format(emp.food_allowance) if emp.food_allowance else '0.00' }} ETB</td>
                                 <td>{{ emp.pension_number if emp.pension_number else '-' }}</td>
                                 <td>{{ emp.phone_number if emp.phone_number else '-' }}</td>
                                 <td>
                                     <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} px-2 py-1">{{ emp.status }}</span>
                                 </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-primary shadow-sm me-1" data-bs-toggle="modal" data-bs-target="#documentModal{{ emp.id }}" title="Ragaalee (Documents)">
-                                        <i class="fas fa-paperclip"></i>
-                                        {% if emp.documents %}
-                                            <span class="badge bg-light text-dark rounded-pill">{{ emp.documents|length }}</span>
-                                        {% endif %}
-                                    </button>
-
-                                    <a href="{{ url_for('evaluate_employee', id=emp.id) }}" class="btn btn-sm btn-success shadow-sm me-1" title="Guddina Gonfoo Madaali">
-                                        <i class="fas fa-star"></i>
-                                    </a>
-                                    <a href="{{ url_for('edit_employee', id=emp.id) }}" class="btn btn-sm btn-warning shadow-sm me-1" title="Fooyyessi"><i class="fas fa-edit"></i></a>
-                                    <a href="{{ url_for('add_discipline', employee_id=emp.id) }}" class="btn btn-sm btn-info text-white shadow-sm me-1" title="Naamusa"><i class="fas fa-gavel"></i></a>
-                                    
-                                    <button type="button" class="btn btn-sm btn-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ emp.id }}" title="Haqi (Delete)">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="22" class="text-center py-5 text-muted">
+                                <td colspan="19" class="text-center py-5 text-muted">
                                     <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
                                     Hojjetaan argame hin jiru.
                                 </td>
@@ -226,138 +85,9 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination Controls -->
-            <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center">
-                <div>
-                    <p class="text-sm text-muted mb-0">
-                        Fuula <span class="fw-semibold text-dark">{{ pagination.page }}</span> 
-                        ga'eessaa <span class="fw-semibold text-dark">{{ pagination.pages }}</span> (Walitti qabaamatti hojjetaa <span class="fw-semibold text-dark">{{ pagination.total }}</span>)
-                    </p>
-                </div>
-                <div class="btn-group" role="group" aria-label="Pagination">
-                    {% if pagination.has_prev %}
-                        <a href="{{ url_for('employees', page=pagination.prev_num, branch_id=request.args.get('branch_id'), search=request.args.get('search'), status=request.args.get('status')) }}" 
-                           class="btn btn-outline-secondary btn-sm">
-                           <i class="fas fa-chevron-left me-1"></i> Duraanii (Previous)
-                        </a>
-                    {% else %}
-                        <button type="button" class="btn btn-outline-secondary btn-sm disabled" tabindex="-1" aria-disabled="true">
-                            <i class="fas fa-chevron-left me-1"></i> Duraanii (Previous)
-                        </button>
-                    {% endif %}
-
-                    {% if pagination.has_next %}
-                        <a href="{{ url_for('employees', page=pagination.next_num, branch_id=request.args.get('branch_id'), search=request.args.get('search'), status=request.args.get('status')) }}" 
-                           class="btn btn-outline-primary btn-sm">
-                           Itti Aanu (Next) <i class="fas fa-chevron-right ms-1"></i>
-                        </a>
-                    {% else %}
-                        <button type="button" class="btn btn-outline-primary btn-sm disabled" tabindex="-1" aria-disabled="true">
-                            Itti Aanu (Next) <i class="fas fa-chevron-right ms-1"></i>
-                        </button>
-                    {% endif %}
-                </div>
-            </div>
-
         </div>
     </div>
 </div>
-
-<!-- Modals for each employee placed OUTSIDE the table -->
-{% if employees %}
-    {% for emp in employees %}
-    <!-- Attach Document & View Modal -->
-    <div class="modal fade" id="documentModal{{ emp.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="fas fa-folder-open me-2"></i> Ragaalee Miseensaa: <strong>{{ emp.full_name }}</strong></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4 text-start">
-                    <!-- Form to upload documents -->
-                    <form action="{{ url_for('upload_document', employee_id=emp.id) }}" method="POST" enctype="multipart/form-data" class="card card-body bg-light border-0 mb-4">
-                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-cloud-upload-alt me-1"></i> Ragaa Haaraa Attach Godhi (Upload PDF/Scan)</h6>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Maqaa Ragaa / Document Name</label>
-                                <input type="text" name="document_name" class="form-control form-control-sm" placeholder="Fkn: Ragaa Barumsaa, Seenaa Hojii, Xalayaa..." required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Faayiloota Filadhu (Multiple PDFs/Files)</label>
-                                <input type="file" name="documents" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg,.docx" multiple required>
-                            </div>
-                            <div class="col-md-12 text-end">
-                                <button type="submit" class="btn btn-success btn-sm shadow-sm"><i class="fas fa-paperclip me-1"></i> Ol-fe'i (Attach File)</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <!-- Table of attached documents -->
-                    <h6 class="fw-bold text-dark mb-2"><i class="fas fa-list me-1"></i> Tarree Ragaalee Attach Ta'anii:</h6>
-                    {% if emp.documents %}
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered align-middle">
-                                <thead class="table-secondary">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Maqaa Ragaa</th>
-                                        <th>Guyyaa Galmee</th>
-                                        <th class="text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for doc in emp.documents %}
-                                    <tr>
-                                        <td>{{ loop.index }}</td>
-                                        <td><i class="fas fa-file-pdf text-danger me-1"></i> {{ doc.document_name }}</td>
-                                        <td>{{ doc.created_at.strftime('%d/%m/%Y') }}</td>
-                                        <td class="text-center">
-                                            <a href="{{ url_for('static', filename='uploads/documents/' + doc.file_url) }}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="Banaalii Ilaali">
-                                                <i class="fas fa-eye"></i> Ilaali
-                                            </a>
-                                            <form action="{{ url_for('delete_document', id=doc.id) }}" method="POST" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Dhugumaan ragaa kana haquu barbaaddaa?')" title="Haqi">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted small text-center py-3 bg-white border rounded"><i class="fas fa-info-circle me-1"></i> Ragaan tokkollee attach hin taane.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal{{ emp.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Hubachiisa Haquu</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-start">
-                    Dhugumaan hojjetaa <strong>{{ emp.full_name }}</strong> (ID: {{ emp.unique_id }}) haquu barbaaddaa? Daataan kun erga haqamee deebi'ee argamuu dhiisuu danda'a.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Lakkii (Cancel)</button>
-                    <form action="{{ url_for('delete_employee', id=emp.id) }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger">Eeyyee, Haqi</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-{% endif %}
 
 <!-- Add Employee Modal -->
 <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-hidden="true">
@@ -435,33 +165,23 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Kaffaltii Iddoo</label>
-                            <input type="number" step="0.01" name="location_allowance" class="form-control" value="0.0">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Durgoo Nyaataa (Food Allowance)</label>
-                            <input type="number" step="0.01" name="food_allowance" class="form-control" value="0.0">
-                        </div>
-
-                        <div class="col-md-4">
                             <label class="form-label fw-bold">Guyyaa Qacaramuu (Hire Date)</label>
-                            <input type="text" name="hire_date" class="form-control" placeholder="Fkn: 12/05/2015">
+                            <input type="text" name="hire_date" class="form-control" placeholder="04/03/2019">
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Guyyaa Dhalootaa (Birth Date)</label>
-                            <input type="text" name="birth_date" class="form-control" placeholder="Fkn: 20/10/1985">
+                            <input type="text" name="birth_date" class="form-control" placeholder="04/03/2019">
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Bakka Dhalootaa (Place of Birth)</label>
-                            <input type="text" name="birth_place" class="form-control" placeholder="Fkn: Finfinnee, Jimmaa, Asallaa...">
+                            <input type="text" name="birth_place" class="form-control" placeholder="Finfinnee">
                         </div>
 
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Guyyaa Gulantaa (Rank Date)</label>
-                            <input type="text" name="rank_date" class="form-control" placeholder="Fkn: 01/04/2018">
+                            <input type="text" name="rank_date" class="form-control" placeholder="04/03/2019">
                         </div>
                     </div>
                 </div>
