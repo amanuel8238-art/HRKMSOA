@@ -139,6 +139,7 @@
                             <th class="py-3">Saala</th>
                             <th class="py-3">Umrii</th>
                             <th class="py-3">Guyyaa Dhalootaa</th>
+                            <th class="py-3">Bakka Dhalootaa</th>
                             <th class="py-3">Guyyaa Qacaramuu</th>
                             <th class="py-3">Hanga Tajaajilaa</th>
                             <th class="py-3">Guyyaa Gulantaa</th>
@@ -172,6 +173,7 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ format_ethiopian_date(emp.birth_date) if emp.birth_date else '-' }}</td>
+                                <td>{{ emp.birth_place if emp.birth_place else '-' }}</td>
                                 <td>{{ format_ethiopian_date(emp.hire_date) if emp.hire_date else '-' }}</td>
                                 <td>
                                     {% if emp.hire_date %}
@@ -222,7 +224,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="21" class="text-center py-5 text-muted">
+                                <td colspan="22" class="text-center py-5 text-muted">
                                     <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
                                     Hojjetaan argame hin jiru.
                                 </td>
@@ -397,6 +399,10 @@
                                 <option value="Dhiira">Dhiira</option>
                                 <option value="Dhalaa">Dhalaa</option>
                             </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Bakka Dhalootaa (Birth Place)</label>
+                            <input type="text" name="birth_place" class="form-control" placeholder="Fkn: Dodolaa">
                         </div>
 
                         {% if current_user.role == 'admin' %}
