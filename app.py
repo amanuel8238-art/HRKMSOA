@@ -91,8 +91,28 @@ def allowed_file(filename):
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
         return "Hin ibsamne"
-    # Akka inni ofumaan waggaa hin hirifneef kallattiidhaan akka jrutti akka deebisu taasifameera
-    return str(date_str).strip()
+    try:
+        s = str(date_str).strip()
+        if s.isdigit() and len(s) == 4:
+            g_year = int(s)
+            return str(g_year - 8)
+        
+        if '-' in s:
+            parts = s.split()[0].split('-')
+            if len(parts) == 3:
+                gy, gm, gd = int(parts[0]), int(parts[1]), int(parts[2])
+                ey, em, ed = to_ethiopian(gy, gm, gd)
+                return f"{ed:02d}/{em:02d}/{ey}"
+        elif '/' in s:
+            parts = s.split()[0].split('/')
+            if len(parts) == 3:
+                if len(parts[2]) == 4:
+                    gd, gm, gy = int(parts[0]), int(parts[1]), int(parts[2])
+                    ey, em, ed = to_ethiopian(gy, gm, gd)
+                    return f"{ed:02d}/{em:02d}/{ey}"
+        return s
+    except Exception:
+        return str(date_str)
 
 Employee.previous_rank_date = property(lambda self: format_ethiopian_date(getattr(self, 'rank_date', None) or getattr(self, 'last_promotion_date', None)))
 Employee.eth_next_promotion_date = property(lambda self: format_ethiopian_date(getattr(self, 'next_promotion_date', None)))
@@ -380,15 +400,45 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+        "Head Office (Finfinnee)", 
+        "Jimmaa", 
+        "Bunoo Beddellee",  
+        "Baalee", 
+        "Arsii", 
+        "GGLTO", 
+        "Dadar", 
+        "Baatuu", 
+        "Aggaroo", 
+        "Mayyaa", 
+        "Dodolaa", 
+        "Shanoo",
+        "Jimmaa Arjoo", 
+        "Eejeree", 
+        "Gursum", 
+        "Girawaa",
+        "Habroo", 
+        "Dalloo Mannaa", 
+        "Martii",  
+        "Mattuu", 
+        "Naqamtee", 
+        "Gimbii", 
+        "Shaambuu", 
+        "Dambii Doolloo",
+        "Adaamaa", 
+        "Amboo", 
+        "Walisoo", 
+        "Fichee", 
+        "Gindhiir", 
+        "Haraar",
+        "Ciroo", 
+        "Adoolaa", 
+        "Bulee Horaa", 
+        "Yaabelloo", 
+        "Nageellee",
+        "Shaashamannee", 
+        "Shaggar", 
+        "Aallee", 
+        "Arsii Roobee"
     ]
     
     for b_name in branches_list:
