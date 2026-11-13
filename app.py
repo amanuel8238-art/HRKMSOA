@@ -1419,6 +1419,7 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             
+            # Guyyoota fooyya'an sirriitti parse gochuun galchuu:
             if request.form.get('hire_date'):
                 emp.hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
             if request.form.get('birth_date'):
