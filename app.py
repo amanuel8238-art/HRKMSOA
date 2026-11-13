@@ -20,6 +20,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_migrate import Migrate
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_mail import Mail, Message
 
 # Sentry Error Monitoring Qindeessuu
 sentry_sdk.init(
@@ -32,23 +33,15 @@ sentry_sdk.init(
 # Resend API Key qindeessuu (Render Environment Variables irraa dubbisa)
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
-# Supabase Client import gochuu fi qindeessuu (Debugging dabaluun)
+# Supabase Client import gochuu fi qindeessuu
 try:
     from supabase import create_client, Client
     SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
     SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
-    
-    if SUPABASE_URL and SUPABASE_KEY:
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("[INFO] Supabase client successfully initialized.")
-    else:
-        supabase = None
-        print("[WARN] Supabase URL or KEY is missing in environment variables.")
-except Exception as e:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+except Exception:
     supabase = None
-    print(f"[ERROR] Supabase initialization failed with error: {e}")
 
-# --- ETHIOPIAN DATE CONVERTER QINDEESSUU ---
 try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 except ImportError:
@@ -71,8 +64,19 @@ def make_session_permanent():
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
 )
+
+# Flask-Mail Qindeessuu (Backup Notificationaf)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'amanuel8238@gmail.com'
+app.config['MAIL_PASSWORD'] = 'vlflxhncwsyzvkdo'
+app.config['MAIL_DEFAULT_SENDER'] = 'amanuel8238@gmail.com'
+mail = Mail(app)
 
 # Folder Document attachments itti kufu
 DOCUMENTS_FOLDER = os.path.join(app.root_path, 'static', 'uploads', 'documents')
@@ -84,7 +88,6 @@ ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'docx'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- DATE CONVERSION HELPER FUNCTIONS ---
 def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
         return "Hin ibsamne"
@@ -112,10 +115,6 @@ def format_ethiopian_date(date_str):
         return str(date_str)
 
 def parse_ethiopian_to_gregorian(date_str):
-    """
-    Form irraa Guyyaa Itoophiyaatiin (fkn 04/03/2019 ykn 2019-03-04) dhufe 
-    gara Gregorian date (YYYY-MM-DD) jijjiirtee database keessatti akka taa'u taasisa.
-    """
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
         return None
     try:
@@ -264,22 +263,16 @@ def admin_required(f):
 
 def send_backup_notification(filename):
     try:
+        socket.setdefaulttimeout(5)
         admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
-        params = {
-            "from": "HRKMSO <onboarding@resend.dev>",
-            "to": [admin_email],
-            "subject": "HRKMSO Backup Milkaa'eera",
-            "html": f"""
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #333;">Komishinii Manneen Sirreessaa Oromiyaa</h2>
-                    <p>Galmeen backup <b>{filename}</b> milkaa'inaan uumamee Supabase storage fi local irratti kuufameera.</p>
-                </div>
-            """
-        }
-        email_res = resend.Emails.send(params)
-        print(f"[INFO] Backup email notification sent via Resend for {filename}: {email_res}")
+        msg = Message("HRKMSO Backup Milkaa'eera",
+                      sender=app.config['MAIL_USERNAME'],
+                      recipients=[admin_email])
+        msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
+        mail.send(msg)
+        print(f"[INFO] Backup email notification sent for {filename}")
     except Exception as e:
-        print(f"[ERR] Resend backup email notification error (Ignored): {e}")
+        print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored): {e}")
 
 def create_local_backup():
     try:
@@ -350,8 +343,6 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN phone_number VARCHAR(50)"))
-            if 'birth_place' not in columns:
-                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -419,6 +410,21 @@ with app.app_context():
     if not Rank.query.first():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
+
+    # Dameewwan Oromia (Kan kaleessa sirreeffamanii fi tarreeffaman hundi)
+    branches_list = [
+        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee", "Arsii", 
+        "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo", 
+        "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa", "Habroo", "Dalloo Mannaa", 
+        "Martii", "Iluu Abaabor - Mattuu", "Naqamtee", "Gimbii", "Shaambuu", 
+        "Dambii Doolloo", "Adaamaa", "Amboo", "Walisoo", "Fichee", "Gindhiir", 
+        "Haraar", "Ciroo", "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee", 
+        "Shaashamannee", "Shaggar", "Aallee", "Arsii Roobee"
+    ]
+    
+    for b_name in branches_list:
+        if not Branch.query.filter_by(name=b_name).first():
+            db.session.add(Branch(name=b_name, location='Oromia'))
             
     db.session.commit()
 
@@ -1284,7 +1290,6 @@ def add_employee():
         pension_number = request.form.get('pension_number')
         phone_number = request.form.get('phone_number')
         gender = request.form.get('gender')
-        birth_place = request.form.get('birth_place')
         
         if current_user.role == 'admin':
             branch_id = request.form.get('branch_id')
@@ -1299,7 +1304,6 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         
-        # Guyyoota Kaandarii Itoophiyaatiin guutaman gara Gregorian-tti jijjiiranii qabachuuf:
         hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
         birth_date = parse_ethiopian_to_gregorian(request.form.get('birth_date'))
         rank_date = parse_ethiopian_to_gregorian(request.form.get('rank_date'))
@@ -1310,7 +1314,6 @@ def add_employee():
             pension_number=pension_number,
             phone_number=phone_number,
             gender=gender,
-            birth_place=birth_place,
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             job_position=job_position,
@@ -1401,8 +1404,6 @@ def edit_employee(id):
             emp.pension_number = request.form.get('pension_number', emp.pension_number)
             emp.phone_number = request.form.get('phone_number', emp.phone_number)
             emp.gender = request.form.get('gender', emp.gender)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)
-            
             if current_user.role == 'admin':
                 b_id = request.form.get('branch_id')
                 if b_id:
@@ -1419,7 +1420,6 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             
-            # Guyyoota fooyya'an sirriitti parse gochuun galchuu:
             if request.form.get('hire_date'):
                 emp.hire_date = parse_ethiopian_to_gregorian(request.form.get('hire_date'))
             if request.form.get('birth_date'):
@@ -1664,7 +1664,6 @@ def export_employees_excel():
                 'Saala': e.gender if e.gender else '-',
                 'Umrii': emp_age,
                 'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
-                'Bakka Dhalootaa': e.birth_place if e.birth_place else '-',
                 'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
                 'Hanga Tajaajilaa': calculate_service_duration(e.hire_date),
                 'Guyyaa Gulantaa': format_ethiopian_date(getattr(e, 'rank_date', None)) if getattr(e, 'rank_date', None) else '-',
@@ -1682,7 +1681,7 @@ def export_employees_excel():
         df = pd.DataFrame(data)
     else:
         df = pd.DataFrame(columns=[
-            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 'Bakka Dhalootaa',
+            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 
             'Guyyaa Qacaramuu', 'Hanga Tajaajilaa', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
             'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Mindaa Gulantaa', 
             'Kaffaltii Iddoo', 'Durgoo Nyaataa', 'Lakk. Sooromaa', 'Lakk. Bilbilaa', 'Status'
@@ -1777,7 +1776,7 @@ def export_promotions_excel():
     output = io.BytesIO()
     
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
+        df.to_excel(writer, index=False, sheet_name='Gaaffii Gonfoo Madaallii')
     
     output.seek(0)
 
@@ -1915,8 +1914,7 @@ def edit_user(id):
 @login_required
 @admin_required
 def delete_user(id):
-    id_val = int(id) if str(id).isdigit() else id
-    if id_val == current_user.id:
+    if id == current_user.id:
         flash("Fayyadamaa amma itti fayyadamtu haquun hin danda'amu!", 'danger')
         return redirect(url_for('users'))
     user = User.query.get_or_404(id)
