@@ -3,6 +3,8 @@ import io
 import shutil
 import socket
 import resend
+import threading
+import time
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -60,7 +62,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu (Dameewwan 39af akka mijatutti dabaleera)
+# Flask-Migrate fi Flask-Limiter Qindeessuu (Dameewwan 39af gaarii akka ta'utti dabaleera)
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
@@ -316,9 +318,17 @@ def trigger_backup():
         
     return redirect(url_for('dashboard'))
 
+# --- DELAYED STARTUP BACKUP FUNCTION (Network tasgabbeessuuf) ---
+def delayed_startup_backup():
+    time.sleep(15)  # Sekondii 15 tursiisuudhaaf akka network-ichi tasgabbaa'u
+    with app.app_context():
+        create_local_backup()
+
 with app.app_context():
     db.create_all()
-    create_local_backup()
+    
+    # Background thread fayyadamuun backup fi email erguu tursiisuu
+    threading.Thread(target=delayed_startup_backup, daemon=True).start()
     
     import sqlalchemy as sa
     engine = db.engine
