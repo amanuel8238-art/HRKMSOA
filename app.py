@@ -4,7 +4,6 @@ import shutil
 import socket
 import resend
 import threading
-import time
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -62,12 +61,12 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu (Dameewwan 39af gaarii akka ta'utti dabaleera)
+# Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["1000 per day", "200 per hour"]
+    default_limits=["200 per day", "50 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -251,20 +250,22 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-def send_backup_notification(filename):
+# --- BACKGROUND BACKUP & ASYNC EMAIL NOTIFICATION ---
+def send_async_backup_notification(filename):
     try:
-        socket.setdefaulttimeout(5)
-        admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
-        msg = Message("HRKMSO Backup Milkaa'eera",
-                      sender=app.config['MAIL_USERNAME'],
-                      recipients=[admin_email])
-        msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
-        mail.send(msg)
-        print(f"[INFO] Backup email notification sent for {filename}")
+        with app.app_context():
+            socket.setdefaulttimeout(10)
+            admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
+            msg = Message("HRKMSO Backup Milkaa'eera",
+                          sender=app.config['MAIL_USERNAME'],
+                          recipients=[admin_email])
+            msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
+            mail.send(msg)
+            print(f"[INFO] Backup email notification sent for {filename}")
     except Exception as e:
         print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored): {e}")
 
-def create_local_backup():
+def run_backup_in_background():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
         backup_dir = 'backups'
@@ -292,9 +293,14 @@ def create_local_backup():
             else:
                 print("[WARN] Supabase client is not initialized (Check URL/KEY).")
             
-            send_backup_notification(backup_filename)
+            # Email erguus background thread keessatti gaggeessuu
+            send_async_backup_notification(backup_filename)
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
+
+def create_local_backup():
+    # Backuphin akka system hin tursiisne fi network error hin fiduuf Background Thread-tti dabarsina
+    threading.Thread(target=run_backup_in_background, daemon=True).start()
 
 @app.route('/admin/trigger-backup', methods=['POST', 'GET'])
 @login_required
@@ -318,17 +324,9 @@ def trigger_backup():
         
     return redirect(url_for('dashboard'))
 
-# --- DELAYED STARTUP BACKUP FUNCTION (Network tasgabbeessuuf) ---
-def delayed_startup_backup():
-    time.sleep(15)  # Sekondii 15 tursiisuudhaaf akka network-ichi tasgabbaa'u
-    with app.app_context():
-        create_local_backup()
-
 with app.app_context():
     db.create_all()
-    
-    # Background thread fayyadamuun backup fi email erguu tursiisuu
-    threading.Thread(target=delayed_startup_backup, daemon=True).start()
+    create_local_backup()
     
     import sqlalchemy as sa
     engine = db.engine
