@@ -60,12 +60,12 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu
+# Flask-Migrate fi Flask-Limiter Qindeessuu (Damee guddaa fi hojjettoota hedduuf)
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["4000 per day", "800 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -332,7 +332,7 @@ with app.app_context():
             if 'phone_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN phone_number VARCHAR(50)"))
             if 'birth_place' not in columns:
-                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)")) # <-- Dabali
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)")) # <-- Bakka Dhalootaa
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -1301,7 +1301,7 @@ def add_employee():
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
         birth_date = request.form.get('birth_date')
-        birth_place = request.form.get('birth_place')  # <-- Bakka Dhalootaa dabaleera
+        birth_place = request.form.get('birth_place')  # <-- Bakka Dhalootaa
         rank_date = request.form.get('rank_date')
 
         new_emp = Employee(
@@ -1310,7 +1310,7 @@ def add_employee():
             pension_number=pension_number,
             phone_number=phone_number,
             gender=gender,
-            birth_place=birth_place,  # <-- Bakka Dhalootaa dabaleera
+            birth_place=birth_place,  # <-- Bakka Dhalootaa
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             job_position=job_position,
@@ -1418,7 +1418,7 @@ def edit_employee(id):
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)  # <-- Bakka Dhalootaa dabaleera
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)  # <-- Bakka Dhalootaa
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
 
