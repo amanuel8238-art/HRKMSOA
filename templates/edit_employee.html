@@ -111,16 +111,16 @@
                                 <input type="text" name="hire_date" class="form-control" value="{{ employee.hire_date if employee.hire_date else '' }}">
                             </div>
 
+                            <!-- Bakka Dhalootaa (Place of Birth) Added Here -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Bakka Dhalootaa (Place of Birth)</label>
+                                <input type="text" name="birth_place" class="form-control" value="{{ employee.birth_place if employee.birth_place else '' }}">
+                            </div>
+
                             <!-- Guyyaa Dhalootaa (Birth Date) -->
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Guyyaa Dhalootaa (Birth Date)</label>
                                 <input type="text" name="birth_date" class="form-control" value="{{ employee.birth_date if employee.birth_date else '' }}">
-                            </div>
-
-                            <!-- Bakka Dhalootaa (Place of Birth) -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold">Bakka Dhalootaa (Place of Birth)</label>
-                                <input type="text" name="birth_place" class="form-control" value="{{ employee.birth_place if employee.birth_place else '' }}" placeholder="Fkn: Finfinnee, Jimmaa...">
                             </div>
 
                             <!-- Gonfaa Dura Yeroo Itti Argate (Last Promotion Date) -->
@@ -214,7 +214,7 @@
                                             </a>
                                             <form action="{{ url_for('delete_document', id=doc.id) }}" method="POST" class="d-inline">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Dhugumaan ragaa kana haquu barbaaddaa?')" title="Haqi">
-                                                    <i class="fas fa-trash"></i> Haqi
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
                                         </td>

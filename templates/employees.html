@@ -138,8 +138,8 @@
                             <th class="py-3">Maqaa Guutuu</th>
                             <th class="py-3">Saala</th>
                             <th class="py-3">Umrii</th>
-                            <th class="py-3">Guyyaa Dhalootaa</th>
                             <th class="py-3">Bakka Dhalootaa</th>
+                            <th class="py-3">Guyyaa Dhalootaa</th>
                             <th class="py-3">Guyyaa Qacaramuu</th>
                             <th class="py-3">Hanga Tajaajilaa</th>
                             <th class="py-3">Guyyaa Gulantaa</th>
@@ -172,8 +172,8 @@
                                         -
                                     {% endif %}
                                 </td>
-                                <td>{{ format_ethiopian_date(emp.birth_date) if emp.birth_date else '-' }}</td>
                                 <td>{{ emp.birth_place if emp.birth_place else '-' }}</td>
+                                <td>{{ format_ethiopian_date(emp.birth_date) if emp.birth_date else '-' }}</td>
                                 <td>{{ format_ethiopian_date(emp.hire_date) if emp.hire_date else '-' }}</td>
                                 <td>
                                     {% if emp.hire_date %}
@@ -196,7 +196,6 @@
                                     <span class="badge {% if emp.status == 'Active' %}bg-success{% else %}bg-danger{% endif %} px-2 py-1">{{ emp.status }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <!-- Attachment Button -->
                                     <button type="button" class="btn btn-sm btn-primary shadow-sm me-1" data-bs-toggle="modal" data-bs-target="#documentModal{{ emp.id }}" title="Ragaalee (Documents)">
                                         <i class="fas fa-paperclip"></i>
                                         {% if emp.documents %}
@@ -204,18 +203,12 @@
                                         {% endif %}
                                     </button>
 
-                                    <!-- Evaluation / Promotion (Gonfoo) Button -->
                                     <a href="{{ url_for('evaluate_employee', id=emp.id) }}" class="btn btn-sm btn-success shadow-sm me-1" title="Guddina Gonfoo Madaali">
                                         <i class="fas fa-star"></i>
                                     </a>
-
-                                    <!-- Edit Button -->
                                     <a href="{{ url_for('edit_employee', id=emp.id) }}" class="btn btn-sm btn-warning shadow-sm me-1" title="Fooyyessi"><i class="fas fa-edit"></i></a>
-
-                                    <!-- Discipline (Naamusa) Button -->
                                     <a href="{{ url_for('add_discipline', employee_id=emp.id) }}" class="btn btn-sm btn-info text-white shadow-sm me-1" title="Naamusa"><i class="fas fa-gavel"></i></a>
                                     
-                                    <!-- Delete Button -->
                                     <button type="button" class="btn btn-sm btn-danger shadow-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ emp.id }}" title="Haqi (Delete)">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
@@ -400,10 +393,6 @@
                                 <option value="Dhalaa">Dhalaa</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Bakka Dhalootaa (Birth Place)</label>
-                            <input type="text" name="birth_place" class="form-control" placeholder="Fkn: Dodolaa">
-                        </div>
 
                         {% if current_user.role == 'admin' %}
                         <div class="col-md-4">
@@ -458,6 +447,12 @@
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Guyyaa Qacaramuu (Hire Date)</label>
                             <input type="text" name="hire_date" class="form-control" placeholder="Fkn: 12/05/2015">
+                        </div>
+
+                        <!-- Bakka Dhalootaa Input Added Here -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Bakka Dhalootaa (Place of Birth)</label>
+                            <input type="text" name="birth_place" class="form-control" placeholder="Fkn: Finfinnee, Jimmaa...">
                         </div>
 
                         <div class="col-md-4">

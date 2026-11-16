@@ -331,6 +331,8 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN phone_number VARCHAR(50)"))
+            if 'birth_place' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)")) # <-- Dabali
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -1299,6 +1301,7 @@ def add_employee():
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
         birth_date = request.form.get('birth_date')
+        birth_place = request.form.get('birth_place')  # <-- Bakka Dhalootaa dabaleera
         rank_date = request.form.get('rank_date')
 
         new_emp = Employee(
@@ -1307,6 +1310,7 @@ def add_employee():
             pension_number=pension_number,
             phone_number=phone_number,
             gender=gender,
+            birth_place=birth_place,  # <-- Bakka Dhalootaa dabaleera
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             job_position=job_position,
@@ -1414,6 +1418,7 @@ def edit_employee(id):
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)  # <-- Bakka Dhalootaa dabaleera
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
 
@@ -1456,35 +1461,13 @@ def branches():
 @app.route('/transfers')
 @login_required
 def transfers():
+    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
     branches = Branch.query.all()
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
-    # Query jijjiirraa jalqabaa (Gonfoo hin taane)
-    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
-
-    # Qajeelfama eeguuf: Admin yoo ta'e hunda arga, Branch User yoo ta'e immoo jijjiirraa damee isaa qofa arga
     if current_user.role == 'admin':
-        branch_id_filter = request.args.get('branch_id')
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            b_int = int(branch_id_filter)
-            query = query.filter(db.or_(Employee.branch_id == b_int, Transfer.to_branch_id == b_int))
-        transfers_list = query.all()
         employees = Employee.query.filter_by(status='Active').all()
     else:
-        if user_b_val:
-            query = query.filter(
-                db.or_(
-                    Employee.branch_id == user_b_val,
-                    Transfer.to_branch_id == user_b_val,
-                    Transfer.from_branch_id == user_b_val
-                )
-            )
-            transfers_list = query.all()
-            employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all()
-        else:
-            transfers_list = []
-            employees = []
-
+        employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/employees')
@@ -1675,6 +1658,7 @@ def export_employees_excel():
                 'Maqaa Guutuu': e.full_name,
                 'Saala': e.gender if e.gender else '-',
                 'Umrii': emp_age,
+                'Bakka Dhalootaa': e.birth_place if getattr(e, 'birth_place', None) else '-',
                 'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
                 'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
                 'Hanga Tajaajilaa': calculate_service_duration(e.hire_date),
@@ -1693,7 +1677,7 @@ def export_employees_excel():
         df = pd.DataFrame(data)
     else:
         df = pd.DataFrame(columns=[
-            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 
+            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Bakka Dhalootaa', 'Guyyaa Dhalootaa', 
             'Guyyaa Qacaramuu', 'Hanga Tajaajilaa', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
             'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Mindaa Gulantaa', 
             'Kaffaltii Iddoo', 'Durgoo Nyaataa', 'Lakk. Sooromaa', 'Lakk. Bilbilaa', 'Status'
