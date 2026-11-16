@@ -3,7 +3,6 @@ import io
 import shutil
 import socket
 import resend
-import threading
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -250,22 +249,20 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-# --- BACKGROUND BACKUP & ASYNC EMAIL NOTIFICATION ---
-def send_async_backup_notification(filename):
+def send_backup_notification(filename):
     try:
-        with app.app_context():
-            socket.setdefaulttimeout(10)
-            admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
-            msg = Message("HRKMSO Backup Milkaa'eera",
-                          sender=app.config['MAIL_USERNAME'],
-                          recipients=[admin_email])
-            msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
-            mail.send(msg)
-            print(f"[INFO] Backup email notification sent for {filename}")
+        socket.setdefaulttimeout(5)
+        admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
+        msg = Message("HRKMSO Backup Milkaa'eera",
+                      sender=app.config['MAIL_USERNAME'],
+                      recipients=[admin_email])
+        msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
+        mail.send(msg)
+        print(f"[INFO] Backup email notification sent for {filename}")
     except Exception as e:
         print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored): {e}")
 
-def run_backup_in_background():
+def create_local_backup():
     try:
         db_path = os.path.join(instance_dir, 'hrkmso.db')
         backup_dir = 'backups'
@@ -293,14 +290,9 @@ def run_backup_in_background():
             else:
                 print("[WARN] Supabase client is not initialized (Check URL/KEY).")
             
-            # Email erguus background thread keessatti gaggeessuu
-            send_async_backup_notification(backup_filename)
+            send_backup_notification(backup_filename)
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
-
-def create_local_backup():
-    # Backuphin akka system hin tursiisne fi network error hin fiduuf Background Thread-tti dabarsina
-    threading.Thread(target=run_backup_in_background, daemon=True).start()
 
 @app.route('/admin/trigger-backup', methods=['POST', 'GET'])
 @login_required
@@ -1464,13 +1456,35 @@ def branches():
 @app.route('/transfers')
 @login_required
 def transfers():
-    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
     branches = Branch.query.all()
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    
+    # Query jijjiirraa jalqabaa (Gonfoo hin taane)
+    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+
+    # Qajeelfama eeguuf: Admin yoo ta'e hunda arga, Branch User yoo ta'e immoo jijjiirraa damee isaa qofa arga
     if current_user.role == 'admin':
+        branch_id_filter = request.args.get('branch_id')
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_int = int(branch_id_filter)
+            query = query.filter(db.or_(Employee.branch_id == b_int, Transfer.to_branch_id == b_int))
+        transfers_list = query.all()
         employees = Employee.query.filter_by(status='Active').all()
     else:
-        employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
+        if user_b_val:
+            query = query.filter(
+                db.or_(
+                    Employee.branch_id == user_b_val,
+                    Transfer.to_branch_id == user_b_val,
+                    Transfer.from_branch_id == user_b_val
+                )
+            )
+            transfers_list = query.all()
+            employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all()
+        else:
+            transfers_list = []
+            employees = []
+
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/employees')
