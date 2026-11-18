@@ -1078,71 +1078,6 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
-# --- TRANSFER REPORT ROUTE (HEAD OFFICE ADMIN) ---
-@app.route('/reports/transfers')
-@login_required
-def transfer_report():
-    if current_user.role != 'admin':
-        flash('Gabaasni kun kan Head Office Admin qofaati!', 'danger')
-        return redirect(url_for('dashboard'))
-        
-    transfers = Transfer.query.filter_by(status='Approved').filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).order_by(Transfer.id.desc()).all()
-    total_transfers = len(transfers)
-    
-    return render_template('transfer_report.html', transfers=transfers, total_transfers=total_transfers)
-
-# --- ADMIN DIRECT TRANSFER ROUTE ---
-@app.route('/admin/direct-transfer', methods=['POST'])
-@login_required
-def admin_direct_transfer():
-    if current_user.role != 'admin':
-        flash('Hayyamni kun Head Office Admin qofaaf kenname!', 'danger')
-        return redirect(url_for('dashboard'))
-        
-    try:
-        create_local_backup()
-        employee_id = request.form.get('employee_id')
-        to_branch_id = request.form.get('to_branch_id')
-        reason = request.form.get('reason', 'Admin-iin Kallattiidhaan Kan Jijjiirame')
-        
-        if not employee_id or not to_branch_id:
-            flash('Hojjetaa fi Dameen haaraan dirqama guutamuu qabu!', 'danger')
-            return redirect(url_for('transfers'))
-
-        emp = Employee.query.get_or_404(int(employee_id))
-        old_branch_id = emp.branch_id
-        
-        if int(old_branch_id) == int(to_branch_id):
-            flash('Hojjetaan kun yeroo ammaa damee kana irra jira!', 'warning')
-            return redirect(url_for('transfers'))
-
-        emp.branch_id = int(to_branch_id)
-        
-        new_transfer = Transfer(
-            employee_id=emp.id,
-            from_branch_id=old_branch_id,
-            to_branch_id=int(to_branch_id),
-            reason=f"Admin Direct Transfer: {reason}",
-            transfer_date=datetime.now().strftime('%Y-%m-%d'),
-            status='Approved'
-        )
-        db.session.add(new_transfer)
-        
-        log_entry = AuditLog(
-            user_id=current_user.id,
-            action="Admin Kallattiidhaan Jijjiire",
-            details=f"Hojjetaa {emp.full_name} damee duraanii irraa gara damee haaraatti kallattiidhaan jijjiirameera."
-        )
-        db.session.add(log_entry)
-
-        db.session.commit()
-        flash("Hojjetaan milkaa'inaan gara damee haaraatti jijjiirameera!", 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
-
-    return redirect(url_for('transfers'))
-
 @app.route('/update_transfer_status/<int:id>', methods=['POST'])
 @login_required
 def update_transfer_status(id):
@@ -1172,6 +1107,67 @@ def update_transfer_status(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('transfers'))
+
+@app.route('/delete_transfer/<int:id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_transfer(id):
+    transfer = Transfer.query.get_or_404(id)
+    try:
+        create_local_backup()
+        db.session.delete(transfer)
+        db.session.commit()
+        flash("Galmeen jijjiirraa milkaa'inaan haqameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+    return redirect(url_for('transfers'))
+
+@app.route('/admin_direct_transfer', methods=['POST'])
+@login_required
+@admin_required
+def admin_direct_transfer():
+    try:
+        create_local_backup()
+        employee_id = request.form.get('employee_id')
+        to_branch_id = request.form.get('to_branch_id')
+        reason = request.form.get('reason')
+        transfer_date = request.form.get('transfer_date')
+
+        if not employee_id or not to_branch_id:
+            flash('Hojjetaa fi Dameen haaraan dirqama guutamuu qabu!', 'danger')
+            return redirect(url_for('transfers'))
+
+        emp = Employee.query.get_or_404(int(employee_id))
+        from_branch_id = emp.branch_id
+
+        new_transfer = Transfer(
+            employee_id=emp.id,
+            from_branch_id=from_branch_id,
+            to_branch_id=int(to_branch_id) if str(to_branch_id).isdigit() else None,
+            reason=reason,
+            transfer_date=transfer_date,
+            status='Approved',
+            approval_reason="Kallattiidhaan Adminiin kan ragga'e"
+        )
+        
+        emp.branch_id = int(to_branch_id) if str(to_branch_id).isdigit() else emp.branch_id
+        db.session.add(new_transfer)
+        
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Kallattiidhaan Jijjiire",
+            details=f"Hojjetaa {emp.full_name} kallattiidhaan gara damee haaraatti jijjiirameera."
+        )
+        db.session.add(log_entry)
+
+        db.session.commit()
+        flash("Hojjetaan milkaa'inaan kallattiidhaan jijjiirameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
     return redirect(url_for('transfers'))
 
 @app.route('/approve_promotion/<int:id>', methods=['POST'])
@@ -1521,47 +1517,13 @@ def branches():
 @app.route('/transfers')
 @login_required
 def transfers():
-    search_query = request.args.get('search', '').strip()
-    branch_id_filter = request.args.get('branch_id')
-    
-    query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
-    
-    # -- Search fi Filter hojiirra oolchuu --
-    if search_query:
-        query = query.join(Employee).filter(
-            db.or_(
-                Employee.full_name.ilike(f'%{search_query}%'),
-                Employee.unique_id.ilike(f'%{search_query}%'),
-                Employee.job_position.ilike(f'%{search_query}%')
-            )
-        )
-        
-    if current_user.role == 'admin':
-        if branch_id_filter and str(branch_id_filter).isdigit():
-            b_int = int(branch_id_filter)
-            query = query.filter(
-                db.or_(Transfer.from_branch_id == b_int, Transfer.to_branch_id == b_int)
-            )
-        transfers_list = query.all()
-    else:
-        user_b = current_user.branch_id
-        if user_b:
-            b_val = int(user_b) if str(user_b).isdigit() else user_b
-            query = query.filter(
-                db.or_(Transfer.from_branch_id == b_val, Transfer.to_branch_id == b_val)
-            )
-        else:
-            query = query.filter(False)
-        transfers_list = query.all()
-
+    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
     branches = Branch.query.all()
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
-    
     if current_user.role == 'admin':
         employees = Employee.query.filter_by(status='Active').all()
     else:
         employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
-        
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/employees')
