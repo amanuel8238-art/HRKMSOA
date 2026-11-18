@@ -410,11 +410,10 @@ with app.app_context():
         "Shaggar", "Aallee", "Arsii Roobee"
     ]
     
-    # Dameewwan karaan ala ta'an database irraa haquu (Yoo hojjetaa hin qabne)
+    # Dameewwan karaan ala ta'an database irraa haquu
     branches_in_db = Branch.query.all()
     for b in branches_in_db:
         if b.name not in official_branches_39:
-            # Hojjettoota damee sana jiran gara Head Office (ykn ID 1) jijjiiruu yoo barbaadame
             db.session.delete(b)
             
     # Dameewwan 39an qofa mirkaneessuun dabaluu
