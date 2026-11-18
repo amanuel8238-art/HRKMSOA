@@ -47,42 +47,6 @@
                 {% endif %}
             {% endwith %}
 
-            <!-- SEARCH & FILTER SECTION (Table gubbaatti akka ta'uutti qindaa'e) -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <form method="GET" action="{{ url_for('transfers') }}" class="flex flex-col md:flex-row items-center gap-4">
-                    
-                    <!-- Search Input -->
-                    <div class="w-full md:flex-1">
-                        <label class="block text-xs font-bold text-slate-700 mb-1"><i class="fas fa-search me-1"></i> Barbaadi (Search)</label>
-                        <input type="text" name="search" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500" value="{{ request.args.get('search', '') }}" placeholder="Maqaa hojjetaa, ID Addaa ykn gita hojii...">
-                    </div>
-
-                    <!-- Branch Filter (Yoo Admin ta'e qofa) -->
-                    {% if current_user.role == 'admin' %}
-                    <div class="w-full md:w-72">
-                        <label class="block text-xs font-bold text-slate-700 mb-1"><i class="fas fa-building me-1"></i> Damee (Branch)</label>
-                        <select name="branch_id" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500">
-                            <option value="">-- Damee Hundaa --</option>
-                            {% for b in branches %}
-                            <option value="{{ b.id }}" {% if request.args.get('branch_id') == b.id|string %}selected{% endif %}>{{ b.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    {% endif %}
-
-                    <!-- Action Buttons -->
-                    <div class="w-full md:w-auto flex items-end gap-2 pt-1 md:pt-5">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition shadow-sm flex items-center gap-1">
-                            <i class="fas fa-filter"></i> Calali / Barbaadi
-                        </button>
-                        <a href="{{ url_for('transfers') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs transition flex items-center gap-1" title="Haaroomsi (Reset)">
-                            <i class="fas fa-sync-alt"></i> Haaraa
-                        </a>
-                    </div>
-
-                </form>
-            </div>
-
             <!-- Table Card -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex justify-between items-center">
@@ -189,62 +153,87 @@
             </div>
         </main>
 
-        <!-- Modal Gaaffii Jijjiirraa Galchuuf (Add Transfer Modal) -->
-        <div x-show="openAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;">
-            <div @click.away="openAddModal = false" class="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
+        <!-- Modal Gaaffii Jijjiirraa Galchuuf (Add Transfer Modal with Branch Filter) -->
+        <div x-show="openAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;" 
+             x-data="{ filterBranchId: '', selectedEmpId: '' }">
+            <div @click.away="openAddModal = false" class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-xl">
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="font-bold text-sm text-slate-800">Gaaffii Jijjiirraa Haaraa Galchi</h3>
+                    <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-exchange-alt me-1 text-indigo-600"></i> Gaaffii Jijjiirraa Haaraa Galchi</h3>
                     <button @click="openAddModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
                 </div>
+                
                 <form method="POST" action="{{ url_for('add_transfer') }}" class="space-y-3">
+                    
+                    <!-- 1. Filter by Branch (Hojjettoota damee sana qofa argachuuf) -->
+                    {% if current_user.role == 'admin' %}
                     <div>
-                        <label class="block text-slate-700 font-semibold mb-1">Hojjetaa Jijjiiramu *</label>
-                        <select name="employee_id" x-model="selectedEmployeeId" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
-                            <option value="">Hojjetaa filadhu</option>
-                            {% for emp in employees %}
-                                <option value="{{ emp.id }}" data-branch="{{ emp.branch.name if emp.branch else '-' }}">
-                                    {{ emp.full_name }} (ID: {{ emp.unique_id or '-' }}) - Damee: {{ emp.branch.name if emp.branch else '-' }}
-                                </option>
+                        <label class="block text-slate-700 font-semibold mb-1 text-xs"><i class="fas fa-building me-1"></i> Damee Hojjetaan Irraa Jiru (Filter by Branch)</label>
+                        <select x-model="filterBranchId" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                            <option value="">-- Damee Hundaa (Hojjettoota Hunda) --</option>
+                            {% for branch in branches %}
+                                <option value="{{ branch.id }}">{{ branch.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    {% endif %}
 
-                    <!-- Damee Duraanii (From Branch) - Automatically displayed based on selected employee -->
+                    <!-- 2. Hojjetaa Filachuu -->
                     <div>
-                        <label class="block text-slate-700 font-semibold mb-1">Damee Duraanii (From Branch)</label>
-                        <div class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-xs text-slate-600 font-medium">
-                            <template x-if="selectedEmployeeId">
-                                <span>
-                                    <span x-text="document.querySelector(`option[value='${selectedEmployeeId}']`)?.getAttribute('data-branch') || '-'"></span>
-                                </span>
+                        <label class="block text-slate-700 font-semibold mb-1 text-xs">Hojjetaa Jijjiiramu *</label>
+                        <select name="employee_id" x-model="selectedEmpId" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Hojjetaa filadhu...</option>
+                            {% for emp in employees %}
+                                <option value="{{ emp.id }}" 
+                                        data-branch-id="{{ emp.branch_id }}" 
+                                        data-branch-name="{{ emp.branch.name if emp.branch else '-' }}"
+                                        x-show="!filterBranchId || filterBranchId == '{{ emp.branch_id }}'">
+                                    {{ emp.full_name }} (ID: {{ emp.unique_id or '-' }}) - [{{ emp.branch.name if emp.branch else '-' }}]
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-slate-500 text-[10px]">* Damee olii filachuun hojjettoota damee sanaa qofa calaluu dandeessa.</small>
+                    </div>
+
+                    <!-- Damee Duraanii (From Branch) - Automatically displayed -->
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1 text-xs">Damee Duraanii (From Branch)</label>
+                        <div class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-xs text-slate-700 font-medium">
+                            <template x-if="selectedEmpId">
+                                <span x-text="document.querySelector(`option[value='${selectedEmpId}']`)?.getAttribute('data-branch-name') || '-'"></span>
                             </template>
-                            <template x-if="!selectedEmployeeId">
+                            <template x-if="!selectedEmpId">
                                 <span class="text-slate-400 italic">Mee dura hojjetaa filadhu...</span>
                             </template>
                         </div>
                     </div>
 
+                    <!-- Gara Damee Kamiitti? -->
                     <div>
-                        <label class="block text-slate-700 font-semibold mb-1">Gara Damee Kamiitti? (To Branch) *</label>
+                        <label class="block text-slate-700 font-semibold mb-1 text-xs">Gara Damee Kamiitti? (To Branch) *</label>
                         <select name="to_branch_id" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
-                            <option value="">Damee haaraa filadhu</option>
+                            <option value="">Damee haaraa filadhu...</option>
                             {% for branch in branches %}
                                 <option value="{{ branch.id }}">{{ branch.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Sababa Jijjiirraa -->
                     <div>
-                        <label class="block text-slate-700 font-semibold mb-1">Sababa Jijjiirraa Gaafatame *</label>
-                        <textarea name="reason" rows="3" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required placeholder="Sababa jijjiirraa barreessi..."></textarea>
+                        <label class="block text-slate-700 font-semibold mb-1 text-xs">Sababa Jijjiirraa Gaafatame *</label>
+                        <textarea name="reason" rows="2" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required placeholder="Sababa jijjiirraa barreessi..."></textarea>
                     </div>
+
+                    <!-- Guyyaa Gaaffiin Dhiyaate -->
                     <div>
-                        <label class="block text-slate-700 font-semibold mb-1">Guyyaa Gaaffiin Dhiyaate *</label>
+                        <label class="block text-slate-700 font-semibold mb-1 text-xs">Guyyaa Gaaffiin Dhiyaate *</label>
                         <input type="text" name="transfer_date" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" placeholder="DD/MM/YYYY" required value="{{ current_date or '' }}">
                     </div>
+
+                    <!-- Action Buttons -->
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" @click="openAddModal = false" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-xs">Cufi</button>
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded text-xs font-bold">Gaaffii Ergi</button>
+                        <button type="button" @click="openAddModal = false" class="bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded text-xs font-semibold">Cufi</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded text-xs font-bold shadow-sm">Gaaffii Ergi</button>
                     </div>
                 </form>
             </div>
