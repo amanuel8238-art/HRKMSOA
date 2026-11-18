@@ -1116,10 +1116,8 @@ def admin_direct_transfer():
             flash('Hojjetaan kun yeroo ammaa damee kana irra jira!', 'warning')
             return redirect(url_for('transfers'))
 
-        # 1. Hojjetaa damee isaa jijjiiruu
         emp.branch_id = int(to_branch_id)
         
-        # 2. Seenaa jijjiirraa (Transfer Table) keessatti Kallattiidhaan Approved ta'ee galmeessuu
         new_transfer = Transfer(
             employee_id=emp.id,
             from_branch_id=old_branch_id,
@@ -1523,13 +1521,47 @@ def branches():
 @app.route('/transfers')
 @login_required
 def transfers():
-    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
+    search_query = request.args.get('search', '').strip()
+    branch_id_filter = request.args.get('branch_id')
+    
+    query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+    
+    # -- Search fi Filter hojiirra oolchuu --
+    if search_query:
+        query = query.join(Employee).filter(
+            db.or_(
+                Employee.full_name.ilike(f'%{search_query}%'),
+                Employee.unique_id.ilike(f'%{search_query}%'),
+                Employee.job_position.ilike(f'%{search_query}%')
+            )
+        )
+        
+    if current_user.role == 'admin':
+        if branch_id_filter and str(branch_id_filter).isdigit():
+            b_int = int(branch_id_filter)
+            query = query.filter(
+                db.or_(Transfer.from_branch_id == b_int, Transfer.to_branch_id == b_int)
+            )
+        transfers_list = query.all()
+    else:
+        user_b = current_user.branch_id
+        if user_b:
+            b_val = int(user_b) if str(user_b).isdigit() else user_b
+            query = query.filter(
+                db.or_(Transfer.from_branch_id == b_val, Transfer.to_branch_id == b_val)
+            )
+        else:
+            query = query.filter(False)
+        transfers_list = query.all()
+
     branches = Branch.query.all()
     user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
+    
     if current_user.role == 'admin':
         employees = Employee.query.filter_by(status='Active').all()
     else:
         employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
+        
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/employees')
