@@ -60,12 +60,12 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu (Damee guddaa fi hojjettoota hedduuf)
+# Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["4000 per day", "800 per hour"]
+    default_limits=["200 per day", "50 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -331,8 +331,6 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN phone_number VARCHAR(50)"))
-            if 'birth_place' not in columns:
-                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)")) # <-- Bakka Dhalootaa
             if 'food_allowance' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN food_allowance FLOAT DEFAULT 0.0"))
             if 'responsibility_allowance' not in columns:
@@ -1080,6 +1078,21 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
+# --- 1. TRANSFER REPORT ROUTE (HEAD OFFICE ADMIN) ---
+@app.route('/reports/transfers')
+@login_required
+def transfer_report():
+    if current_user.role != 'admin':
+        flash('Gabaasni kun kan Head Office Admin qofaati!', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    # Jijjiirroowwan damee gidduutti ragga'an hundaa fiduu (Gaaffii gonfoo dhiibbaa malee)
+    transfers = Transfer.query.filter_by(status='Approved').filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).order_by(Transfer.id.desc()).all()
+    total_transfers = len(transfers)
+    
+    return render_template('transfer_report.html', transfers=transfers, total_transfers=total_transfers)
+
+# --- 2. UPDATE TRANSFER STATUS & BRANCH ID ROUTE ---
 @app.route('/update_transfer_status/<int:id>', methods=['POST'])
 @login_required
 def update_transfer_status(id):
@@ -1094,6 +1107,7 @@ def update_transfer_status(id):
         if approval_reason is not None:
             transfer.approval_reason = approval_reason
             
+        # Hojjetaan kun yeroo Approved jedhamu damee haaraatti dabarsuu
         if status == 'Approved' and transfer.employee and transfer.to_branch_id:
             transfer.employee.branch_id = transfer.to_branch_id
 
@@ -1301,7 +1315,6 @@ def add_employee():
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
         birth_date = request.form.get('birth_date')
-        birth_place = request.form.get('birth_place')  # <-- Bakka Dhalootaa
         rank_date = request.form.get('rank_date')
 
         new_emp = Employee(
@@ -1310,7 +1323,6 @@ def add_employee():
             pension_number=pension_number,
             phone_number=phone_number,
             gender=gender,
-            birth_place=birth_place,  # <-- Bakka Dhalootaa
             branch_id=int(branch_id) if branch_id and str(branch_id).isdigit() else None,
             rank_id=int(rank_id) if rank_id and str(rank_id).isdigit() else None,
             job_position=job_position,
@@ -1418,7 +1430,6 @@ def edit_employee(id):
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)  # <-- Bakka Dhalootaa
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
 
@@ -1658,7 +1669,6 @@ def export_employees_excel():
                 'Maqaa Guutuu': e.full_name,
                 'Saala': e.gender if e.gender else '-',
                 'Umrii': emp_age,
-                'Bakka Dhalootaa': e.birth_place if getattr(e, 'birth_place', None) else '-',
                 'Guyyaa Dhalootaa': format_ethiopian_date(e.birth_date) if e.birth_date else '-',
                 'Guyyaa Qacaramuu': format_ethiopian_date(e.hire_date) if e.hire_date else '-',
                 'Hanga Tajaajilaa': calculate_service_duration(e.hire_date),
@@ -1677,7 +1687,7 @@ def export_employees_excel():
         df = pd.DataFrame(data)
     else:
         df = pd.DataFrame(columns=[
-            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Bakka Dhalootaa', 'Guyyaa Dhalootaa', 
+            'Lakk.', 'ID Addaa', 'Gulantaa / Rank', 'Maqaa Guutuu', 'Saala', 'Umrii', 'Guyyaa Dhalootaa', 
             'Guyyaa Qacaramuu', 'Hanga Tajaajilaa', 'Guyyaa Gulantaa', 'Damee (Branch)', 'Gita Hojii', 
             'Sadarkaa Barumsaa', 'Gosa Barumsaa', 'Mindaa Gulantaa', 
             'Kaffaltii Iddoo', 'Durgoo Nyaataa', 'Lakk. Sooromaa', 'Lakk. Bilbilaa', 'Status'
