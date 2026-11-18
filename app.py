@@ -399,19 +399,18 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+    # --- OFFICIAL 39 BRANCHES OF KOMISHINII MANNEEN SIRREESSAA OROMIYAA ---
+    official_branches_39 = [
+        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee", "Arsii", 
+        "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo", 
+        "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa", "Habroo", "Dalloo Mannaa", 
+        "Martii", "Mattuu", "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo", 
+        "Adaamaa", "Amboo", "Walisoo", "Fichee", "Gindhiir", "Haraar", "Ciroo", 
+        "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee", "Shaashamannee", 
+        "Shaggar", "Aallee", "Arsii Roobee"
     ]
     
-    for b_name in branches_list:
+    for b_name in official_branches_39:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
             
