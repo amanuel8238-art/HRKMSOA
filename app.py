@@ -1517,13 +1517,30 @@ def branches():
 @app.route('/transfers')
 @login_required
 def transfers():
-    transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
-    branches = Branch.query.all()
-    user_b_val = int(current_user.branch_id) if current_user.branch_id and str(current_user.branch_id).isdigit() else current_user.branch_id
     if current_user.role == 'admin':
+        transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
         employees = Employee.query.filter_by(status='Active').all()
     else:
-        employees = Employee.query.filter_by(branch_id=user_b_val, status='Active').all() if user_b_val else []
+        user_b = current_user.branch_id
+        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        if b_val:
+            b_str = str(b_val)
+            to_col = getattr(Transfer, 'to_branch_id', getattr(Transfer, 'to_branch', None))
+            from_col = getattr(Transfer, 'from_branch_id', None)
+            conditions = []
+            if from_col is not None:
+                conditions.append(db.cast(from_col, db.String) == b_str)
+            if to_col is not None:
+                conditions.append(db.cast(to_col, db.String) == b_str)
+            
+            branch_transfers = Transfer.query.filter(db.or_(*conditions)).all() if conditions else []
+            transfers_list = [t for t in branch_transfers if not (t.reason and "Gaaffii Gonfoo" in t.reason)]
+            employees = Employee.query.filter_by(branch_id=b_val, status='Active').all()
+        else:
+            transfers_list = []
+            employees = []
+
+    branches = Branch.query.all()
     return render_template('transfers.html', transfers=transfers_list, employees=employees, branches=branches)
 
 @app.route('/employees')
