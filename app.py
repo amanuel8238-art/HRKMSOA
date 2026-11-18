@@ -1078,7 +1078,7 @@ def add_discipline(employee_id):
 
     return render_template('add_discipline.html', employee=emp)
 
-# --- 1. TRANSFER REPORT ROUTE (HEAD OFFICE ADMIN) ---
+# --- TRANSFER REPORT ROUTE (HEAD OFFICE ADMIN) ---
 @app.route('/reports/transfers')
 @login_required
 def transfer_report():
@@ -1086,13 +1086,65 @@ def transfer_report():
         flash('Gabaasni kun kan Head Office Admin qofaati!', 'danger')
         return redirect(url_for('dashboard'))
         
-    # Jijjiirroowwan damee gidduutti ragga'an hundaa fiduu (Gaaffii gonfoo dhiibbaa malee)
     transfers = Transfer.query.filter_by(status='Approved').filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).order_by(Transfer.id.desc()).all()
     total_transfers = len(transfers)
     
     return render_template('transfer_report.html', transfers=transfers, total_transfers=total_transfers)
 
-# --- 2. UPDATE TRANSFER STATUS & BRANCH ID ROUTE ---
+# --- ADMIN DIRECT TRANSFER ROUTE ---
+@app.route('/admin/direct-transfer', methods=['POST'])
+@login_required
+def admin_direct_transfer():
+    if current_user.role != 'admin':
+        flash('Hayyamni kun Head Office Admin qofaaf kenname!', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    try:
+        create_local_backup()
+        employee_id = request.form.get('employee_id')
+        to_branch_id = request.form.get('to_branch_id')
+        reason = request.form.get('reason', 'Admin-iin Kallattiidhaan Kan Jijjiirame')
+        
+        if not employee_id or not to_branch_id:
+            flash('Hojjetaa fi Dameen haaraan dirqama guutamuu qabu!', 'danger')
+            return redirect(url_for('transfers'))
+
+        emp = Employee.query.get_or_404(int(employee_id))
+        old_branch_id = emp.branch_id
+        
+        if int(old_branch_id) == int(to_branch_id):
+            flash('Hojjetaan kun yeroo ammaa damee kana irra jira!', 'warning')
+            return redirect(url_for('transfers'))
+
+        # 1. Hojjetaa damee isaa jijjiiruu
+        emp.branch_id = int(to_branch_id)
+        
+        # 2. Seenaa jijjiirraa (Transfer Table) keessatti Kallattiidhaan Approved ta'ee galmeessuu
+        new_transfer = Transfer(
+            employee_id=emp.id,
+            from_branch_id=old_branch_id,
+            to_branch_id=int(to_branch_id),
+            reason=f"Admin Direct Transfer: {reason}",
+            transfer_date=datetime.now().strftime('%Y-%m-%d'),
+            status='Approved'
+        )
+        db.session.add(new_transfer)
+        
+        log_entry = AuditLog(
+            user_id=current_user.id,
+            action="Admin Kallattiidhaan Jijjiire",
+            details=f"Hojjetaa {emp.full_name} damee duraanii irraa gara damee haaraatti kallattiidhaan jijjiirameera."
+        )
+        db.session.add(log_entry)
+
+        db.session.commit()
+        flash("Hojjetaan milkaa'inaan gara damee haaraatti jijjiirameera!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Dogoggorri uumameera: {str(e)}', 'danger')
+
+    return redirect(url_for('transfers'))
+
 @app.route('/update_transfer_status/<int:id>', methods=['POST'])
 @login_required
 def update_transfer_status(id):
@@ -1107,7 +1159,6 @@ def update_transfer_status(id):
         if approval_reason is not None:
             transfer.approval_reason = approval_reason
             
-        # Hojjetaan kun yeroo Approved jedhamu damee haaraatti dabarsuu
         if status == 'Approved' and transfer.employee and transfer.to_branch_id:
             transfer.employee.branch_id = transfer.to_branch_id
 
