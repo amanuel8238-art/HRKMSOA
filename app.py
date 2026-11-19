@@ -46,9 +46,9 @@ try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 except ImportError:
     def to_ethiopian(year, month, day):
-        return year, month, day
+        return year - 8, month, day
     def to_gregorian(year, month, day):
-        return year, month, day
+        return year + 8, month, day
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
@@ -60,12 +60,12 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu (Damee 39f akka mijatutti guddisame)
+# Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["15000 per day", "2500 per hour"]
+    default_limits=["8000 per day", "800 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -92,21 +92,24 @@ def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
         return "Hin ibsamne"
     try:
-        s = str(date_str).strip().split()[0]
+        s = str(date_str).strip()
+        if s.isdigit() and len(s) == 4:
+            g_year = int(s)
+            return str(g_year - 8)
+        
         if '-' in s:
-            parts = s.split('-')
+            parts = s.split()[0].split('-')
             if len(parts) == 3:
-                if len(parts[0]) == 4:
-                    y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
-                    return f"{d:02d}/{m:02d}/{y}"
-                else:
-                    d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
-                    return f"{d:02d}/{m:02d}/{y}"
+                gy, gm, gd = int(parts[0]), int(parts[1]), int(parts[2])
+                ey, em, ed = to_ethiopian(gy, gm, gd)
+                return f"{ed:02d}/{em:02d}/{ey}"
         elif '/' in s:
-            parts = s.split('/')
+            parts = s.split()[0].split('/')
             if len(parts) == 3:
-                d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
-                return f"{d:02d}/{m:02d}/{y}"
+                if len(parts[2]) == 4:
+                    gd, gm, gy = int(parts[0]), int(parts[1]), int(parts[2])
+                    ey, em, ed = to_ethiopian(gy, gm, gd)
+                    return f"{ed:02d}/{em:02d}/{ey}"
         return s
     except Exception:
         return str(date_str)
@@ -397,15 +400,14 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee",
+        "Arsii", "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa",
+        "Dodolaa", "Shanoo", "Jimmaa Arjoo", "Eejeree", "Gursum",
+        "Girawaa", "Habroo", "Dalloo Mannaa", "Martii", "Mattuu",
+        "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo", "Adaamaa",
+        "Amboo", "Walisoo", "Fichee", "Gindhiir", "Haraar",
+        "Ciroo", "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee",
+        "Shaashamannee", "Shaggar", "Aallee", "Arsii Roobee"
     ]
     
     for b_name in branches_list:
@@ -1509,7 +1511,21 @@ def delete_employee(id):
 @login_required
 def branches():
     all_branches = Branch.query.all()
-    return render_template('branches.html', branches=all_branches)
+    active_branches = []
+    for b in all_branches:
+        emp_total = Employee.query.filter_by(branch_id=b.id).count()
+        if emp_total > 0:
+            active_branches.append(b)
+        else:
+            try:
+                db.session.delete(b)
+            except Exception:
+                pass
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return render_template('branches.html', branches=active_branches)
 
 @app.route('/transfers')
 @login_required
