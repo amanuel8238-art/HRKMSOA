@@ -46,9 +46,9 @@ try:
     from py_ethiopian_date_converter import to_ethiopian, to_gregorian
 except ImportError:
     def to_ethiopian(year, month, day):
-        return year - 8, month, day
+        return year, month, day
     def to_gregorian(year, month, day):
-        return year + 8, month, day
+        return year, month, day
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
@@ -60,12 +60,12 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 def make_session_permanent():
     session.permanent = True
 
-# Flask-Migrate fi Flask-Limiter Qindeessuu
+# Flask-Migrate fi Flask-Limiter Qindeessuu (Damee 39f akka mijatutti guddisame)
 migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["15000 per day", "2500 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -92,24 +92,21 @@ def format_ethiopian_date(date_str):
     if not date_str or str(date_str).strip() in ['', 'None', 'Hin ibsamne']:
         return "Hin ibsamne"
     try:
-        s = str(date_str).strip()
-        if s.isdigit() and len(s) == 4:
-            g_year = int(s)
-            return str(g_year - 8)
-        
+        s = str(date_str).strip().split()[0]
         if '-' in s:
-            parts = s.split()[0].split('-')
+            parts = s.split('-')
             if len(parts) == 3:
-                gy, gm, gd = int(parts[0]), int(parts[1]), int(parts[2])
-                ey, em, ed = to_ethiopian(gy, gm, gd)
-                return f"{ed:02d}/{em:02d}/{ey}"
+                if len(parts[0]) == 4:
+                    y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+                    return f"{d:02d}/{m:02d}/{y}"
+                else:
+                    d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
+                    return f"{d:02d}/{m:02d}/{y}"
         elif '/' in s:
-            parts = s.split()[0].split('/')
+            parts = s.split('/')
             if len(parts) == 3:
-                if len(parts[2]) == 4:
-                    gd, gm, gy = int(parts[0]), int(parts[1]), int(parts[2])
-                    ey, em, ed = to_ethiopian(gy, gm, gd)
-                    return f"{ed:02d}/{em:02d}/{ey}"
+                d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
+                return f"{d:02d}/{m:02d}/{y}"
         return s
     except Exception:
         return str(date_str)
@@ -399,25 +396,19 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    # --- OFFICIAL 39 BRANCHES OF KOMISHINII MANNEEN SIRREESSAA OROMIYAA ---
-    official_branches_39 = [
-        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee", "Arsii", 
-        "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo", 
-        "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa", "Habroo", "Dalloo Mannaa", 
-        "Martii", "Mattuu", "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo", 
-        "Adaamaa", "Amboo", "Walisoo", "Fichee", "Gindhiir", "Haraar", "Ciroo", 
-        "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee", "Shaashamannee", 
-        "Shaggar", "Aallee", "Arsii Roobee"
+    branches_list = [
+        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
     ]
     
-    # Dameewwan karaan ala ta'an database irraa haquu
-    branches_in_db = Branch.query.all()
-    for b in branches_in_db:
-        if b.name not in official_branches_39:
-            db.session.delete(b)
-            
-    # Dameewwan 39an qofa mirkaneessuun dabaluu
-    for b_name in official_branches_39:
+    for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
             
@@ -1880,7 +1871,7 @@ def export_ranks_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Gulantaalee')
+        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
     output.seek(0)
     return send_file(
         output, 
