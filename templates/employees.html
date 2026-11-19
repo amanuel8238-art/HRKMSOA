@@ -163,7 +163,7 @@
                                 <td class="ps-3">{{ loop.index }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ emp.unique_id if emp.unique_id else '-' }}</span></td>
                                 <td><strong>{{ emp.rank.name if emp.rank else '-' }}</strong></td>
-                                <td style="cursor: pointer;" ondblclick="var m = new bootstrap.Modal(document.getElementById('documentModal{{ emp.id }}')); m.show();" title="Double-click to open documents"><strong class="text-dark">{{ emp.full_name }}</strong></td>
+                                <td style="cursor: pointer;" ondblclick="window.location.href='{{ url_for('edit_employee', id=emp.id) }}';" title="Unkaa Fooyyessuuf Double-Click godhi"><strong class="text-dark">{{ emp.full_name }}</strong></td>
                                 <td>{{ emp.gender if emp.gender else '-' }}</td>
                                 <td>
                                     {% if emp.birth_date %}
