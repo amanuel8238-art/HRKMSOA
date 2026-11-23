@@ -65,7 +65,7 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["8000 per day", "800 per hour"]
+    default_limits=["200 per day", "50 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -327,6 +327,8 @@ with app.app_context():
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
+            if 'birth_place' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
             if 'pension_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
@@ -400,14 +402,15 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee",
-        "Arsii", "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa",
-        "Dodolaa", "Shanoo", "Jimmaa Arjoo", "Eejeree", "Gursum",
-        "Girawaa", "Habroo", "Dalloo Mannaa", "Martii", "Mattuu",
-        "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo", "Adaamaa",
-        "Amboo", "Walisoo", "Fichee", "Gindhiir", "Haraar",
-        "Ciroo", "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee",
-        "Shaashamannee", "Shaggar", "Aallee", "Arsii Roobee"
+        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
     ]
     
     for b_name in branches_list:
@@ -1358,6 +1361,7 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
+        birth_place = request.form.get('birth_place')
         birth_date = request.form.get('birth_date')
         rank_date = request.form.get('rank_date')
 
@@ -1376,6 +1380,7 @@ def add_employee():
             location_allowance=location_allowance,
             food_allowance=food_allowance,
             hire_date=hire_date,
+            birth_place=birth_place,
             birth_date=birth_date,
             rank_date=rank_date,
             status='Active'
@@ -1473,6 +1478,7 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
@@ -1511,21 +1517,7 @@ def delete_employee(id):
 @login_required
 def branches():
     all_branches = Branch.query.all()
-    active_branches = []
-    for b in all_branches:
-        emp_total = Employee.query.filter_by(branch_id=b.id).count()
-        if emp_total > 0:
-            active_branches.append(b)
-        else:
-            try:
-                db.session.delete(b)
-            except Exception:
-                pass
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-    return render_template('branches.html', branches=active_branches)
+    return render_template('branches.html', branches=all_branches)
 
 @app.route('/transfers')
 @login_required
@@ -1887,7 +1879,7 @@ def export_ranks_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
+        df.to_excel(output, index=False, sheet_name='Gulantaalee')
     output.seek(0)
     return send_file(
         output, 
