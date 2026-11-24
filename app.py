@@ -65,8 +65,7 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["2000 per hour", "20000 per day"],
-    storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+    default_limits=["200 per day", "50 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -401,21 +400,51 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+        "Head Office (Finfinnee)",
+        "Jimmaa",
+        "Bunoo Beddellee",
+        "Baalee",
+        "Arsii",
+        "GGLTO",
+        "Dadar",
+        "Baatuu",
+        "Aggaroo",
+        "Mayyaa",
+        "Dodolaa",
+        "Shanoo",
+        "Jimmaa Arjoo",
+        "Eejeree",
+        "Gursum",
+        "Girawaa",
+        "Habroo",
+        "Dalloo Mannaa",
+        "Martii",
+        "Mattuu",
+        "Naqamtee",
+        "Gimbii",
+        "Shaambuu",
+        "Dambii Doolloo",
+        "Adaamaa",
+        "Amboo",
+        "Walisoo",
+        "Fichee",
+        "Gindhiir",
+        "Haraar",
+        "Ciroo",
+        "Adoolaa",
+        "Bulee Horaa",
+        "Yaabelloo",
+        "Nageellee",
+        "Shaashamannee",
+        "Shaggar",
+        "Aallee",
+        "Arsii Roobee"
     ]
-    
+
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
-            
+
     db.session.commit()
 
 def get_retired_employees_list(active_employees):
@@ -1512,8 +1541,17 @@ def delete_employee(id):
 @app.route('/branches')
 @login_required
 def branches():
-    all_branches = Branch.query.all()
-    return render_template('branches.html', branches=all_branches)
+    branches_with_employees = (
+        db.session.query(Branch, db.func.count(Employee.id).label('emp_count'))
+        .join(Employee, Employee.branch_id == Branch.id)
+        .filter(Employee.status == 'Active')
+        .group_by(Branch.id)
+        .having(db.func.count(Employee.id) > 0)
+        .order_by(Branch.id.asc())
+        .all()
+    )
+    active_branches = [b for b, _ in branches_with_employees]
+    return render_template('branches.html', branches=active_branches)
 
 @app.route('/transfers')
 @login_required
@@ -1875,7 +1913,7 @@ def export_ranks_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Gulantaalee')
+        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
     output.seek(0)
     return send_file(
         output, 
