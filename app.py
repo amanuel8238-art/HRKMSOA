@@ -447,6 +447,55 @@ with app.app_context():
 
     db.session.commit()
 
+    # --- MERGE & CLEAN SPECIFIC BRANCHES ("Wallaggaa Lixaa" -> "Gimbii", "Aanaa Aallee" -> "Aallee") ---
+    merge_map = {
+        "Wallaggaa Lixaa": "Gimbii",
+        "Aanaa Aallee": "Aallee"
+    }
+
+    for old_name, target_name in merge_map.items():
+        old_branch = Branch.query.filter(Branch.name.ilike(old_name.strip())).first()
+        target_branch = Branch.query.filter(Branch.name.ilike(target_name.strip())).first()
+
+        if old_branch:
+            if not target_branch:
+                target_branch = Branch(name=target_name, location=old_branch.location or 'Oromia')
+                db.session.add(target_branch)
+                db.session.flush()
+
+            # Hojjettoota hunda gara target_branch dabarsuu
+            Employee.query.filter_by(branch_id=old_branch.id).update(
+                {Employee.branch_id: target_branch.id},
+                synchronize_session=False
+            )
+
+            # Transfer references yoo jiraatan gara target_branch dabarsuu
+            if hasattr(Transfer, 'from_branch_id'):
+                Transfer.query.filter_by(from_branch_id=old_branch.id).update(
+                    {Transfer.from_branch_id: target_branch.id},
+                    synchronize_session=False
+                )
+            if hasattr(Transfer, 'to_branch_id'):
+                Transfer.query.filter_by(to_branch_id=old_branch.id).update(
+                    {Transfer.to_branch_id: target_branch.id},
+                    synchronize_session=False
+                )
+
+            # User references yoo jiraatan gara target_branch dabarsuu
+            User.query.filter_by(branch_id=old_branch.id).update(
+                {User.branch_id: target_branch.id},
+                synchronize_session=False
+            )
+
+            db.session.flush()
+
+            # Yoo old_branch jalatti hojjetaan tokkollee hin hafne, damee sana haquu
+            remaining_emps = Employee.query.filter_by(branch_id=old_branch.id).count()
+            if remaining_emps == 0:
+                db.session.delete(old_branch)
+
+    db.session.commit()
+
 def get_retired_employees_list(active_employees):
     retired_list = []
     current_eth_year = 2019
