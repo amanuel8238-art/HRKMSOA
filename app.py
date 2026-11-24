@@ -65,7 +65,8 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["2000 per hour", "20000 per day"],
+    storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -327,8 +328,6 @@ with app.app_context():
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
-            if 'birth_place' not in columns:
-                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
             if 'pension_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
@@ -1361,7 +1360,6 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
-        birth_place = request.form.get('birth_place')
         birth_date = request.form.get('birth_date')
         rank_date = request.form.get('rank_date')
 
@@ -1380,7 +1378,6 @@ def add_employee():
             location_allowance=location_allowance,
             food_allowance=food_allowance,
             hire_date=hire_date,
-            birth_place=birth_place,
             birth_date=birth_date,
             rank_date=rank_date,
             status='Active'
@@ -1478,7 +1475,6 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
