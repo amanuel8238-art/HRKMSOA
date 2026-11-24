@@ -10,7 +10,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800">
-    <div class="min-h-screen flex flex-col" x-data="{ openAddModal: false, selectedEmployeeId: '', selectedBranchName: '' }">
+    <div class="min-h-screen flex flex-col" x-data="{ openAddModal: false }">
         <!-- Header -->
         <header class="bg-indigo-900 text-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -197,8 +197,7 @@
         </main>
 
         <!-- Modal Gaaffii Jijjiirraa Galchuuf (Add Transfer Modal with Branch Filter & Direct Transfer) -->
-        <div x-show="openAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;" 
-             x-data="{ filterBranchId: '', selectedEmpId: '' }">
+        <div x-show="openAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style="display: none;">
             <div @click.away="openAddModal = false" class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-xl">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-exchange-alt me-1 text-indigo-600"></i> Gaaffii Jijjiirraa Haaraa Galchi</h3>
@@ -211,7 +210,7 @@
                     {% if current_user.role == 'admin' %}
                     <div>
                         <label class="block text-slate-700 font-semibold mb-1 text-xs"><i class="fas fa-building me-1"></i> Damee Hojjetaan Irraa Jiru (Filter by Branch)</label>
-                        <select x-model="filterBranchId" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        <select id="modalBranchFilter" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500 bg-slate-50">
                             <option value="">-- Damee Hundaa (Hojjettoota Hunda) --</option>
                             {% for branch in branches %}
                                 <option value="{{ branch.id }}">{{ branch.name }}</option>
@@ -223,16 +222,8 @@
                     <!-- 2. Hojjetaa Filachuu -->
                     <div>
                         <label class="block text-slate-700 font-semibold mb-1 text-xs">Hojjetaa Jijjiiramu *</label>
-                        <select name="employee_id" x-model="selectedEmpId" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
+                        <select id="modalEmployeeSelect" name="employee_id" class="w-full border rounded p-2 text-xs focus:ring-2 focus:ring-indigo-500" required>
                             <option value="">Hojjetaa filadhu...</option>
-                            {% for emp in employees %}
-                                <option value="{{ emp.id }}" 
-                                        data-branch-id="{{ emp.branch_id }}" 
-                                        data-branch-name="{{ emp.branch.name if emp.branch else '-' }}"
-                                        x-show="!filterBranchId || filterBranchId == '{{ emp.branch_id }}'">
-                                    {{ emp.full_name }} (ID: {{ emp.unique_id or '-' }}) - [{{ emp.branch.name if emp.branch else '-' }}]
-                                </option>
-                            {% endfor %}
                         </select>
                         <small class="text-slate-500 text-[10px]">* Damee olii filachuun hojjettoota damee sanaa qofa calaluu dandeessa.</small>
                     </div>
@@ -240,13 +231,8 @@
                     <!-- Damee Duraanii (From Branch) - Automatically displayed -->
                     <div>
                         <label class="block text-slate-700 font-semibold mb-1 text-xs">Damee Duraanii (From Branch)</label>
-                        <div class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-xs text-slate-700 font-medium">
-                            <template x-if="selectedEmpId">
-                                <span x-text="document.querySelector(`option[value='${selectedEmpId}']`)?.getAttribute('data-branch-name') || '-'"></span>
-                            </template>
-                            <template x-if="!selectedEmpId">
-                                <span class="text-slate-400 italic">Mee dura hojjetaa filadhu...</span>
-                            </template>
+                        <div id="modalFromBranchDisplay" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-xs text-slate-400 italic font-medium">
+                            Mee dura hojjetaa filadhu...
                         </div>
                     </div>
 
@@ -284,5 +270,79 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const allEmployees = [
+                {% for emp in employees %}
+                {
+                    id: "{{ emp.id }}",
+                    full_name: {{ (emp.full_name or '') | tojson }},
+                    unique_id: {{ (emp.unique_id or '-') | tojson }},
+                    rank_name: {{ (emp.rank.name if emp.rank else '') | tojson }},
+                    branch_id: "{{ emp.branch_id if emp.branch_id is not none else '' }}",
+                    branch_name: {{ (emp.branch.name if emp.branch else '-') | tojson }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            const branchFilter = document.getElementById('modalBranchFilter');
+            const employeeSelect = document.getElementById('modalEmployeeSelect');
+            const fromBranchDisplay = document.getElementById('modalFromBranchDisplay');
+
+            function updateFromBranchDisplay() {
+                if (!employeeSelect || !fromBranchDisplay) return;
+                const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+                const branchName = selectedOption ? selectedOption.getAttribute('data-branch-name') : '';
+
+                if (employeeSelect.value && branchName) {
+                    fromBranchDisplay.textContent = branchName;
+                    fromBranchDisplay.className = 'w-full bg-slate-50 border border-slate-200 rounded p-2 text-xs text-slate-700 font-medium';
+                } else {
+                    fromBranchDisplay.textContent = 'Mee dura hojjetaa filadhu...';
+                    fromBranchDisplay.className = 'w-full bg-slate-50 border border-slate-200 rounded p-2 text-xs text-slate-400 italic font-medium';
+                }
+            }
+
+            function populateEmployees() {
+                if (!employeeSelect) return;
+                const selectedBranchId = branchFilter ? String(branchFilter.value || '').trim() : '';
+
+                const filtered = selectedBranchId
+                    ? allEmployees.filter(emp => String(emp.branch_id || '').trim() === selectedBranchId)
+                    : allEmployees;
+
+                employeeSelect.innerHTML = '';
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.textContent = filtered.length > 0
+                    ? 'Hojjetaa filadhu...'
+                    : 'Damee kana keessa hojjetaan hin jiru';
+                employeeSelect.appendChild(defaultOpt);
+
+                filtered.forEach(emp => {
+                    const opt = document.createElement('option');
+                    opt.value = emp.id;
+                    opt.setAttribute('data-branch-id', emp.branch_id);
+                    opt.setAttribute('data-branch-name', emp.branch_name);
+                    const rankPrefix = emp.rank_name ? `${emp.rank_name} ` : '';
+                    opt.textContent = `${rankPrefix}${emp.full_name} (ID: ${emp.unique_id}) - [${emp.branch_name}]`;
+                    employeeSelect.appendChild(opt);
+                });
+
+                updateFromBranchDisplay();
+            }
+
+            if (branchFilter) {
+                branchFilter.addEventListener('change', populateEmployees);
+            }
+            if (employeeSelect) {
+                employeeSelect.addEventListener('change', updateFromBranchDisplay);
+            }
+
+            document.addEventListener('DOMContentLoaded', populateEmployees);
+            populateEmployees();
+        })();
+    </script>
 </body>
 </html>
