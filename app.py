@@ -381,6 +381,12 @@ def export_json_backup():
         flash(f"Backup JSON uumuu irratti dogoggorri uumameera: {str(e)}", "danger")
         return redirect(url_for('dashboard'))
 
+@app.route('/admin/trigger-backup', methods=['POST', 'GET'])
+@login_required
+@admin_required
+def trigger_backup():
+    return redirect(url_for('export_json_backup'))
+
 @app.route('/admin/clean-branches', methods=['POST', 'GET'])
 @login_required
 @admin_required
@@ -596,22 +602,21 @@ def uploaded_document(filename):
     file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], filename)
     if os.path.exists(file_path):
         return send_file(file_path)
-    
+
     if supabase:
         try:
             signed = supabase.storage.from_('hrkmso-documents').create_signed_url(filename, 300)
             if isinstance(signed, dict) and signed.get('signedURL'):
                 return redirect(signed['signedURL'])
-            if hasattr(signed, 'get') and signed.get('signed_url'):
+            if isinstance(signed, dict) and signed.get('signed_url'):
                 return redirect(signed['signed_url'])
-            res = supabase.storage.from_('hrkmso-documents').get_public_url(filename)
-            if isinstance(res, dict) and res.get('publicUrl'):
-                return redirect(res['publicUrl'])
-            if res:
-                return redirect(str(res))
         except Exception as e:
-            print(f"[ERR] Supabase file fetch error: {e}")
-            
+            print(f"[WARN] Signed URL fallback error: {e}")
+
+    if SUPABASE_URL:
+        public_url = f"{SUPABASE_URL.rstrip('/')}/storage/v1/object/public/hrkmso-documents/{filename}"
+        return redirect(public_url)
+
     abort(404)
 
 @app.route('/delete_document/<int:id>', methods=['POST'])
