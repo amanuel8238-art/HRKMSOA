@@ -8,7 +8,6 @@ from flask import Flask, render_template, redirect, url_for, request, flash, abo
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from werkzeug.middleware.proxy_fix import ProxyFix
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord, AuditLog, EmployeeDocument
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
@@ -54,9 +53,6 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
-# Render / Reverse Proxy irratti IP dhugaa fayyadamaa adda baasuuf
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-
 # Flask Session Lifetime Qindeessuu (Server Side Timeout - Daqiiqaa 30)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
@@ -67,18 +63,10 @@ def make_session_permanent():
 # Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
 limiter = Limiter(
-    key_func=get_remote_address,
     app=app,
-    default_limits=["20000 per day", "5000 per hour"],
-    storage_uri="memory://"
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
 )
-
-@limiter.request_filter
-def exempt_static_and_bots():
-    return (
-        request.path.startswith('/static')
-        or 'UptimeRobot' in request.headers.get('User-Agent', '')
-    )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -412,21 +400,35 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Mattuu", "Jimmaa", "Bunoo Beddellee",
-        "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo",
-        "Adaamaa", "Amboo", "Walisoo", "Fichee",
-        "Baalee", "Gindhiir", "Haraar", "Ciroo",
-        "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee",
-        "Arsii", "Shaashamannee", "GGLTO", "Dadar",
-        "Shaggar", "Baatuu", "Aggaroo", "Mayyaa",
-        "Dodolaa", "Shanoo", "Aallee", "Jimmaa Arjoo",
-        "Eejeree", "Gursum", "Girawaa", "Habroo",
-        "Dalloo Mannaa", "Martii", "Arsii Roobee"
+        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
     ]
     
+    # Dameewwan 39n haaraa dabaluu
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
+
+    db.session.flush()
+
+    # Dameewwan 39n keessa hin jirre kan hojjetaa tokko illee hin qabne haquu
+    extra_branches = Branch.query.filter(db.not_(Branch.name.in_(branches_list))).all()
+    for extra_b in extra_branches:
+        has_emps = Employee.query.filter_by(branch_id=extra_b.id).count() > 0
+        has_users = User.query.filter_by(branch_id=extra_b.id).count() > 0
+        if not has_emps and not has_users:
+            # References in Transfer if any
+            Transfer.query.filter(
+                db.or_(Transfer.from_branch_id == extra_b.id, Transfer.to_branch_id == extra_b.id)
+            ).delete(synchronize_session=False)
+            db.session.delete(extra_b)
             
     db.session.commit()
 
