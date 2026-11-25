@@ -8,6 +8,7 @@ from flask import Flask, render_template, redirect, url_for, request, flash, abo
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 from models import db, User, Employee, Branch, Rank, Transfer, DisciplineRecord, AuditLog, EmployeeDocument
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
@@ -53,6 +54,9 @@ except ImportError:
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'hrkmso-secret-key-2026')
 
+# Render / Reverse Proxy irratti IP dhugaa fayyadamaa adda baasuuf
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 # Flask Session Lifetime Qindeessuu (Server Side Timeout - Daqiiqaa 30)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
@@ -63,10 +67,18 @@ def make_session_permanent():
 # Flask-Migrate fi Flask-Limiter Qindeessuu
 migrate = Migrate(app, db)
 limiter = Limiter(
-    app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    app=app,
+    default_limits=["20000 per day", "5000 per hour"],
+    storage_uri="memory://"
 )
+
+@limiter.request_filter
+def exempt_static_and_bots():
+    return (
+        request.path.startswith('/static')
+        or 'UptimeRobot' in request.headers.get('User-Agent', '')
+    )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -400,100 +412,22 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)",
-        "Jimmaa",
-        "Bunoo Beddellee",
-        "Baalee",
-        "Arsii",
-        "GGLTO",
-        "Dadar",
-        "Baatuu",
-        "Aggaroo",
-        "Mayyaa",
-        "Dodolaa",
-        "Shanoo",
-        "Jimmaa Arjoo",
-        "Eejeree",
-        "Gursum",
-        "Girawaa",
-        "Habroo",
-        "Dalloo Mannaa",
-        "Martii",
-        "Mattuu",
-        "Naqamtee",
-        "Gimbii",
-        "Shaambuu",
-        "Dambii Doolloo",
-        "Adaamaa",
-        "Amboo",
-        "Walisoo",
-        "Fichee",
-        "Gindhiir",
-        "Haraar",
-        "Ciroo",
-        "Adoolaa",
-        "Bulee Horaa",
-        "Yaabelloo",
-        "Nageellee",
-        "Shaashamannee",
-        "Shaggar",
-        "Aallee",
-        "Arsii Roobee"
+        "Head Office (Finfinnee)", "Mattuu", "Jimmaa", "Bunoo Beddellee",
+        "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo",
+        "Adaamaa", "Amboo", "Walisoo", "Fichee",
+        "Baalee", "Gindhiir", "Haraar", "Ciroo",
+        "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee",
+        "Arsii", "Shaashamannee", "GGLTO", "Dadar",
+        "Shaggar", "Baatuu", "Aggaroo", "Mayyaa",
+        "Dodolaa", "Shanoo", "Aallee", "Jimmaa Arjoo",
+        "Eejeree", "Gursum", "Girawaa", "Habroo",
+        "Dalloo Mannaa", "Martii", "Arsii Roobee"
     ]
-
+    
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
-
-    db.session.commit()
-
-    # --- MERGE & CLEAN SPECIFIC BRANCHES ("Wallaggaa Lixaa" -> "Gimbii", "Aanaa Aallee" -> "Aallee") ---
-    merge_map = {
-        "Wallaggaa Lixaa": "Gimbii",
-        "Aanaa Aallee": "Aallee"
-    }
-
-    for old_name, target_name in merge_map.items():
-        old_branch = Branch.query.filter(Branch.name.ilike(old_name.strip())).first()
-        target_branch = Branch.query.filter(Branch.name.ilike(target_name.strip())).first()
-
-        if old_branch:
-            if not target_branch:
-                target_branch = Branch(name=target_name, location=old_branch.location or 'Oromia')
-                db.session.add(target_branch)
-                db.session.flush()
-
-            # Hojjettoota hunda gara target_branch dabarsuu
-            Employee.query.filter_by(branch_id=old_branch.id).update(
-                {Employee.branch_id: target_branch.id},
-                synchronize_session=False
-            )
-
-            # Transfer references yoo jiraatan gara target_branch dabarsuu
-            if hasattr(Transfer, 'from_branch_id'):
-                Transfer.query.filter_by(from_branch_id=old_branch.id).update(
-                    {Transfer.from_branch_id: target_branch.id},
-                    synchronize_session=False
-                )
-            if hasattr(Transfer, 'to_branch_id'):
-                Transfer.query.filter_by(to_branch_id=old_branch.id).update(
-                    {Transfer.to_branch_id: target_branch.id},
-                    synchronize_session=False
-                )
-
-            # User references yoo jiraatan gara target_branch dabarsuu
-            User.query.filter_by(branch_id=old_branch.id).update(
-                {User.branch_id: target_branch.id},
-                synchronize_session=False
-            )
-
-            db.session.flush()
-
-            # Yoo old_branch jalatti hojjetaan tokkollee hin hafne, damee sana haquu
-            remaining_emps = Employee.query.filter_by(branch_id=old_branch.id).count()
-            if remaining_emps == 0:
-                db.session.delete(old_branch)
-
+            
     db.session.commit()
 
 def get_retired_employees_list(active_employees):
@@ -1590,17 +1524,8 @@ def delete_employee(id):
 @app.route('/branches')
 @login_required
 def branches():
-    branches_with_employees = (
-        db.session.query(Branch, db.func.count(Employee.id).label('emp_count'))
-        .join(Employee, Employee.branch_id == Branch.id)
-        .filter(Employee.status == 'Active')
-        .group_by(Branch.id)
-        .having(db.func.count(Employee.id) > 0)
-        .order_by(Branch.id.asc())
-        .all()
-    )
-    active_branches = [b for b, _ in branches_with_employees]
-    return render_template('branches.html', branches=active_branches)
+    all_branches = Branch.query.all()
+    return render_template('branches.html', branches=all_branches)
 
 @app.route('/transfers')
 @login_required
@@ -2127,3 +2052,4 @@ def generate_letter():
 
 if __name__ == '__main__':
     app.run(debug=True)
+```[cite: 1]
