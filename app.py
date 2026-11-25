@@ -1881,15 +1881,10 @@ def export_employees_excel():
 @login_required
 def export_promotions_excel():
     branch_id = request.args.get('branch_id')
-    status_filter = request.args.get('status', 'All')
+    status_filter = request.args.get('status', 'Pending')
     rank_id_filter = request.args.get('rank_id')
 
-    query = Transfer.query.outerjoin(Employee, Transfer.employee_id == Employee.id).filter(
-        db.or_(
-            Transfer.reason.ilike('%Gaaffii Gonfoo%'),
-            Transfer.reason.ilike('%Gonfoo%')
-        )
-    )
+    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
 
     if status_filter and status_filter != 'All':
         query = query.filter(Transfer.status == status_filter)
