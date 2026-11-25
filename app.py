@@ -66,7 +66,7 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["20000 per day", "2000 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
