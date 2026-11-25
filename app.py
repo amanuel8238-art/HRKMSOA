@@ -294,6 +294,41 @@ def create_local_backup():
     except Exception as e:
         print(f"[ERR] Backup error: {e}")
 
+def sync_and_clean_39_branches():
+    branches_39 = [
+        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee",
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+    ]
+
+    for b_name in branches_39:
+        if not Branch.query.filter_by(name=b_name).first():
+            db.session.add(Branch(name=b_name, location='Oromia'))
+
+    db.session.flush()
+
+    removed_count = 0
+    all_branches = Branch.query.all()
+    for b in all_branches:
+        if b.name not in branches_39:
+            emp_total = Employee.query.filter_by(branch_id=b.id).count()
+            user_total = User.query.filter_by(branch_id=b.id).count()
+            if emp_total == 0 and user_total == 0:
+                Transfer.query.filter(
+                    db.or_(Transfer.from_branch_id == b.id, Transfer.to_branch_id == b.id)
+                ).delete(synchronize_session=False)
+                db.session.delete(b)
+                removed_count += 1
+
+    db.session.commit()
+    return removed_count
+
 @app.route('/admin/trigger-backup', methods=['POST', 'GET'])
 @login_required
 @admin_required
@@ -315,6 +350,18 @@ def trigger_backup():
         flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
         
     return redirect(url_for('dashboard'))
+
+@app.route('/admin/clean-branches', methods=['POST', 'GET'])
+@login_required
+@admin_required
+def clean_branches():
+    try:
+        removed = sync_and_clean_39_branches()
+        flash(f"Dameewwan duwwaa/hin barbaachifne {removed} haqamaniiru. Amma dameewwan 39 irratti qindaa'eera!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Dameewwan qulqulleessuu irratti dogoggorri uumame: {str(e)}", "danger")
+    return redirect(url_for('branches'))
 
 with app.app_context():
     db.create_all()
@@ -399,38 +446,11 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
-    ]
-    
-    # Dameewwan 39n haaraa dabaluu
-    for b_name in branches_list:
-        if not Branch.query.filter_by(name=b_name).first():
-            db.session.add(Branch(name=b_name, location='Oromia'))
-
-    db.session.flush()
-
-    # Dameewwan 39n keessa hin jirre kan hojjetaa tokko illee hin qabne haquu
-    extra_branches = Branch.query.filter(db.not_(Branch.name.in_(branches_list))).all()
-    for extra_b in extra_branches:
-        has_emps = Employee.query.filter_by(branch_id=extra_b.id).count() > 0
-        has_users = User.query.filter_by(branch_id=extra_b.id).count() > 0
-        if not has_emps and not has_users:
-            # References in Transfer if any
-            Transfer.query.filter(
-                db.or_(Transfer.from_branch_id == extra_b.id, Transfer.to_branch_id == extra_b.id)
-            ).delete(synchronize_session=False)
-            db.session.delete(extra_b)
-            
-    db.session.commit()
+    try:
+        sync_and_clean_39_branches()
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERR] Branch sync error: {e}")
 
 def get_retired_employees_list(active_employees):
     retired_list = []
