@@ -1,10 +1,11 @@
 import os
 import io
+import json
 import shutil
 import socket
 import resend
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -249,50 +250,20 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-def send_backup_notification(filename):
-    try:
-        socket.setdefaulttimeout(5)
-        admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
-        msg = Message("HRKMSO Backup Milkaa'eera",
-                      sender=app.config['MAIL_USERNAME'],
-                      recipients=[admin_email])
-        msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
-        mail.send(msg)
-        print(f"[INFO] Backup email notification sent for {filename}")
-    except Exception as e:
-        print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored): {e}")
+def _serialize_val(val):
+    if isinstance(val, (datetime, date)):
+        return val.isoformat()
+    return val
 
-def create_local_backup():
-    try:
-        db_path = os.path.join(instance_dir, 'hrkmso.db')
-        backup_dir = 'backups'
-        if not os.path.exists(backup_dir):
-            os.makedirs(backup_dir)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_filename = f'hrkmso_backup_{timestamp}.db'
-        backup_file_path = os.path.join(backup_dir, backup_filename)
-        
-        if os.path.exists(db_path):
-            shutil.copy(db_path, backup_file_path)
-            print(f"[INFO] Local Backup successful: {backup_file_path}")
-            
-            if supabase:
-                try:
-                    with open(backup_file_path, 'rb') as f:
-                        res = supabase.storage.from_('hrkmso-backups').upload(
-                            path=backup_filename,
-                            file=f,
-                            file_options={"content-type": "application/x-sqlite3"}
-                        )
-                    print(f"[INFO] Supabase Storage upload successful: {backup_filename}")
-                except Exception as ex:
-                    print(f"[ERR] Supabase Storage upload error: {ex}")
-            else:
-                print("[WARN] Supabase client is not initialized (Check URL/KEY).")
-            
-            send_backup_notification(backup_filename)
-    except Exception as e:
-        print(f"[ERR] Backup error: {e}")
+def _model_to_dict(obj):
+    if not obj:
+        return None
+    data = {}
+    for col in obj.__table__.columns:
+        if col.name == 'password':
+            continue
+        data[col.name] = _serialize_val(getattr(obj, col.name))
+    return data
 
 def sync_and_clean_39_branches():
     branches_39 = [
@@ -359,27 +330,56 @@ def sync_and_clean_39_branches():
     db.session.commit()
     return removed_count
 
-@app.route('/admin/trigger-backup', methods=['POST', 'GET'])
+@app.route('/admin/export-json-backup', methods=['GET'])
 @login_required
 @admin_required
-def trigger_backup():
+def export_json_backup():
     try:
-        create_local_backup()
-        db_path = os.path.join(instance_dir, 'hrkmso.db')
-        
-        if os.path.exists(db_path):
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            return send_file(
-                db_path,
-                as_attachment=True,
-                download_name=f'hrkmso_backup_{timestamp}.db'
+        snapshot = {
+            "exported_at": datetime.utcnow().isoformat() + "Z",
+            "system": "HRKMSO - Komishinii Manneen Sirreessaa Oromiyaa",
+            "counts": {
+                "branches": Branch.query.count(),
+                "ranks": Rank.query.count(),
+                "employees": Employee.query.count(),
+                "transfers": Transfer.query.count(),
+                "discipline_records": DisciplineRecord.query.count(),
+                "employee_documents": EmployeeDocument.query.count(),
+                "users": User.query.count(),
+                "audit_logs": AuditLog.query.count(),
+            },
+            "branches": [_model_to_dict(b) for b in Branch.query.order_by(Branch.id.asc()).all()],
+            "ranks": [_model_to_dict(r) for r in Rank.query.order_by(Rank.id.asc()).all()],
+            "employees": [_model_to_dict(e) for e in Employee.query.order_by(Employee.id.asc()).all()],
+            "transfers": [_model_to_dict(t) for t in Transfer.query.order_by(Transfer.id.asc()).all()],
+            "discipline_records": [_model_to_dict(d) for d in DisciplineRecord.query.order_by(DisciplineRecord.id.asc()).all()],
+            "employee_documents": [_model_to_dict(doc) for doc in EmployeeDocument.query.order_by(EmployeeDocument.id.asc()).all()],
+            "users": [_model_to_dict(u) for u in User.query.order_by(User.id.asc()).all()],
+        }
+
+        try:
+            log_entry = AuditLog(
+                user_id=current_user.id,
+                action="Backup JSON Buufate",
+                details="Admin guutummaa database PostgreSQL gara JSON backup tti buufateera."
             )
-        
-        flash("Database backup milkaa'inaan uumameera!", "success")
+            db.session.add(log_entry)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+        payload = json.dumps(snapshot, ensure_ascii=False, indent=2).encode('utf-8')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        return Response(
+            payload,
+            mimetype='application/json; charset=utf-8',
+            headers={
+                'Content-Disposition': f'attachment; filename=hrkmso_postgres_backup_{timestamp}.json'
+            }
+        )
     except Exception as e:
-        flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
-        
-    return redirect(url_for('dashboard'))
+        flash(f"Backup JSON uumuu irratti dogoggorri uumameera: {str(e)}", "danger")
+        return redirect(url_for('dashboard'))
 
 @app.route('/admin/clean-branches', methods=['POST', 'GET'])
 @login_required
@@ -729,7 +729,6 @@ def reset_token(token):
     
     if request.method == 'POST':
         try:
-            create_local_backup()
             password = request.form.get('password')
             if not password or len(password.strip()) < 4:
                 flash("Jechi iccitii guutamuu qaba (yoo xiqqaate tahuu qaba).", "danger")
