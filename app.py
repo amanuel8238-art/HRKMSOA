@@ -395,7 +395,6 @@ def clean_branches():
 
 with app.app_context():
     db.create_all()
-    create_local_backup()
     
     import sqlalchemy as sa
     engine = db.engine
@@ -600,9 +599,16 @@ def uploaded_document(filename):
     
     if supabase:
         try:
+            signed = supabase.storage.from_('hrkmso-documents').create_signed_url(filename, 300)
+            if isinstance(signed, dict) and signed.get('signedURL'):
+                return redirect(signed['signedURL'])
+            if hasattr(signed, 'get') and signed.get('signed_url'):
+                return redirect(signed['signed_url'])
             res = supabase.storage.from_('hrkmso-documents').get_public_url(filename)
+            if isinstance(res, dict) and res.get('publicUrl'):
+                return redirect(res['publicUrl'])
             if res:
-                return redirect(res)
+                return redirect(str(res))
         except Exception as e:
             print(f"[ERR] Supabase file fetch error: {e}")
             
@@ -686,7 +692,6 @@ def forgot_password():
                 token = get_reset_token(user)
                 reset_url = url_for('reset_token', token=token, _external=True)
                 
-                # Resend API fayyadamuun email erguu (Port 443 - HTTPS)
                 params = {
                     "from": "HRKMSO <onboarding@resend.dev>",
                     "to": [os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')],
@@ -759,7 +764,9 @@ def dashboard():
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
         branch_count = Branch.query.count()
-        transfer_count = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).count()
+        transfer_count = Transfer.query.filter(
+            db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+        ).count()
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
@@ -767,21 +774,32 @@ def dashboard():
         all_emps = Employee.query.filter_by(status='Active').all()
         
         local_committee_count = DisciplineRecord.query.filter(
-            DisciplineRecord.local_committee_date != None,
-            DisciplineRecord.local_committee_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
+                DisciplineRecord.discipline_status.ilike('%koree%m%')
+            )
         ).count()
         
         zone_committee_count = DisciplineRecord.query.filter(
-            DisciplineRecord.zone_committee_date != None,
-            DisciplineRecord.zone_committee_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
+                DisciplineRecord.discipline_status.ilike('%godina%')
+            )
         ).count()
         
         commission_pending_count = DisciplineRecord.query.filter(
-            DisciplineRecord.commission_sent_date != None,
-            DisciplineRecord.commission_sent_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
+                DisciplineRecord.discipline_status.ilike('%komishin%')
+            )
         ).count()
         
-        final_decided_count = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
+        final_decided_count = DisciplineRecord.query.filter(
+            db.or_(
+                DisciplineRecord.discipline_status == 'murtaae',
+                db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
+            )
+        ).count()
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
@@ -808,25 +826,34 @@ def dashboard():
             
             local_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                DisciplineRecord.local_committee_date != None,
-                DisciplineRecord.local_committee_date != ''
+                db.or_(
+                    db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
+                    DisciplineRecord.discipline_status.ilike('%koree%m%')
+                )
             ).count()
 
             zone_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                DisciplineRecord.zone_committee_date != None,
-                DisciplineRecord.zone_committee_date != ''
+                db.or_(
+                    db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
+                    DisciplineRecord.discipline_status.ilike('%godina%')
+                )
             ).count()
 
             commission_pending_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                DisciplineRecord.commission_sent_date != None,
-                DisciplineRecord.commission_sent_date != ''
+                db.or_(
+                    db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
+                    DisciplineRecord.discipline_status.ilike('%komishin%')
+                )
             ).count()
 
             final_decided_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                DisciplineRecord.discipline_status == 'murtaae'
+                db.or_(
+                    DisciplineRecord.discipline_status == 'murtaae',
+                    db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
+                )
             ).count()
         else:
             transfer_count = 0
@@ -836,7 +863,7 @@ def dashboard():
     
     if current_user.role == 'admin':
         warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
-        penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
+        penalty_count = DisciplineRecord.query.filter(db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))).count()
         promotion_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
     else:
         warning_count = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
@@ -846,7 +873,7 @@ def dashboard():
         
         penalty_count = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
             Employee.branch_id == branch_id_val,
-            db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
+            db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
         ).count() if user_b else 0
 
         promotion_count = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
@@ -886,20 +913,34 @@ def get_branch_stats(branch_id):
         emp_query = Employee.query.filter_by(status='Active')
         all_active_for_retired = emp_query.all()
         promo_query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
-        trans_query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+        trans_query = Transfer.query.filter(db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))))
         warning_query = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
-        penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
+        penalty_query = DisciplineRecord.query.filter(db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))))
         
         local_committee = DisciplineRecord.query.filter(
-            DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
+                DisciplineRecord.discipline_status.ilike('%koree%m%')
+            )
         ).count()
         zone_committee = DisciplineRecord.query.filter(
-            DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
+                DisciplineRecord.discipline_status.ilike('%godina%')
+            )
         ).count()
         commission_pending = DisciplineRecord.query.filter(
-            DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
+                DisciplineRecord.discipline_status.ilike('%komishin%')
+            )
         ).count()
-        final_decided = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
+        final_decided = DisciplineRecord.query.filter(
+            db.or_(
+                DisciplineRecord.discipline_status == 'murtaae',
+                db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
+            )
+        ).count()
     else:
         b_id_str = str(branch_id)
         
@@ -916,7 +957,7 @@ def get_branch_stats(branch_id):
                 db.cast(Transfer.from_branch_id, db.String) == b_id_str,
                 db.cast(Transfer.to_branch_id, db.String) == b_id_str
             ),
-            db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+            db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
         )
         
         warning_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
@@ -926,27 +967,39 @@ def get_branch_stats(branch_id):
         
         penalty_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
+            db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
         )
         
         local_committee = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
+                DisciplineRecord.discipline_status.ilike('%koree%m%')
+            )
         ).count()
         
         zone_committee = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
+                DisciplineRecord.discipline_status.ilike('%godina%')
+            )
         ).count()
         
         commission_pending = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''
+            db.or_(
+                db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
+                DisciplineRecord.discipline_status.ilike('%komishin%')
+            )
         ).count()
         
         final_decided = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            DisciplineRecord.discipline_status == 'murtaae'
+            db.or_(
+                DisciplineRecord.discipline_status == 'murtaae',
+                db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
+            )
         ).count()
 
     retired_count = len(get_retired_employees_list(all_active_for_retired))
@@ -1049,7 +1102,6 @@ def delete_discipline(id):
         abort(403)
         
     try:
-        create_local_backup()
         db.session.delete(record)
         db.session.commit()
         flash("Galmeen naamusaa milkaa'inaan tarree irraa haqameera!", 'success')
@@ -1065,7 +1117,6 @@ def delete_discipline(id):
 def update_discipline_decision(id):
     record = DisciplineRecord.query.get_or_404(id)
     try:
-        create_local_backup()
         final_decision = request.form.get('final_decision')
         discipline_status = request.form.get('discipline_status')
         
@@ -1091,7 +1142,6 @@ def add_discipline(employee_id):
 
     if request.method == 'POST':
         try:
-            create_local_backup()
             penalty_type = request.form.get('penalty_type')
             offense_type = request.form.get('offense_type')
             reason = request.form.get('reason')
@@ -1148,7 +1198,6 @@ def add_discipline(employee_id):
 def update_transfer_status(id):
     transfer = Transfer.query.get_or_404(id)
     try:
-        create_local_backup()
         status = request.form.get('status')
         approval_reason = request.form.get('approval_reason')
         
@@ -1180,7 +1229,6 @@ def update_transfer_status(id):
 def delete_transfer(id):
     transfer = Transfer.query.get_or_404(id)
     try:
-        create_local_backup()
         db.session.delete(transfer)
         db.session.commit()
         flash("Galmeen jijjiirraa milkaa'inaan haqameera!", 'success')
@@ -1194,7 +1242,6 @@ def delete_transfer(id):
 @admin_required
 def admin_direct_transfer():
     try:
-        create_local_backup()
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
@@ -1244,7 +1291,6 @@ def approve_promotion(id):
         abort(403)
         
     try:
-        create_local_backup()
         transfer.status = 'Approved'
         
         log_entry = AuditLog(
@@ -1271,7 +1317,6 @@ def reject_promotion(id):
         abort(403)
         
     try:
-        create_local_backup()
         transfer.status = 'Rejected'
         
         log_entry = AuditLog(
@@ -1298,7 +1343,6 @@ def delete_promotion(id):
         abort(403)
         
     try:
-        create_local_backup()
         db.session.delete(transfer)
         db.session.commit()
         flash("Gaaffiin Gonfoo tarree irraa haqameera!", 'success')
@@ -1312,7 +1356,6 @@ def delete_promotion(id):
 @login_required
 def add_transfer():
     try:
-        create_local_backup()
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
@@ -1354,7 +1397,6 @@ def add_transfer():
 @login_required
 def add_rank():
     try:
-        create_local_backup()
         name = request.form.get('name')
         description = request.form.get('description', '')
         if name:
@@ -1372,7 +1414,6 @@ def add_rank():
 def update_rank_status(id):
     rank = Rank.query.get_or_404(id)
     try:
-        create_local_backup()
         name = request.form.get('name')
         description = request.form.get('description')
         if name:
@@ -1391,7 +1432,6 @@ def update_rank_status(id):
 def delete_rank(id):
     rank = Rank.query.get_or_404(id)
     try:
-        create_local_backup()
         db.session.delete(rank)
         db.session.commit()
         flash("Gulantaan milkaa'inaan haqameera!", 'success')
@@ -1404,7 +1444,6 @@ def delete_rank(id):
 @login_required
 def add_employee():
     try:
-        create_local_backup()
         full_name = request.form.get('full_name')
         unique_id = request.form.get('unique_id')
         pension_number = request.form.get('pension_number')
@@ -1473,7 +1512,6 @@ def evaluate_employee(id):
 
     if request.method == 'POST':
         try:
-            create_local_backup()
             emp.perf_score = float(request.form.get('performance_score', 0) or 0)
             emp.edu_score = float(request.form.get('education_score', 0) or 0)
             emp.discipline_score = float(request.form.get('discipline_score', 0) or 0)
@@ -1517,7 +1555,6 @@ def edit_employee(id):
 
     if request.method == 'POST':
         try:
-            create_local_backup()
             emp.full_name = request.form.get('full_name', emp.full_name)
             emp.unique_id = request.form.get('unique_id', emp.unique_id)
             emp.pension_number = request.form.get('pension_number', emp.pension_number)
@@ -1563,7 +1600,6 @@ def delete_employee(id):
         abort(403)
         
     try:
-        create_local_backup()
         db.session.delete(emp)
         db.session.commit()
         flash("Hojjetaan milkaa'inaan haqameera!", 'success')
@@ -1583,7 +1619,9 @@ def branches():
 @login_required
 def transfers():
     if current_user.role == 'admin':
-        transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
+        transfers_list = Transfer.query.filter(
+            db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+        ).all()
         employees = Employee.query.filter_by(status='Active').all()
     else:
         user_b = current_user.branch_id
@@ -1634,7 +1672,6 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
-    # --- FILTER SAALAA (GENDER) ---
     if gender:
         if gender in ['Dhalaa', 'Dubartii']:
             query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
@@ -1643,7 +1680,6 @@ def employees():
         else:
             query = query.filter_by(gender=gender)
 
-    # Ramaddii / Allowance filters
     if rank_status == 'with':
         query = query.filter(Employee.location_allowance > 0)
     elif rank_status == 'without':
@@ -1686,13 +1722,18 @@ def ranks():
 @login_required
 def promotions():
     branch_id_filter = request.args.get('branch_id')
-    status_filter = request.args.get('status', 'Pending') 
+    status_filter = request.args.get('status', 'All') 
     rank_id_filter = request.args.get('rank_id')
     
     all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
     
-    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+    query = Transfer.query.outerjoin(Employee, Transfer.employee_id == Employee.id).filter(
+        db.or_(
+            Transfer.reason.ilike('%Gaaffii Gonfoo%'),
+            Transfer.reason.ilike('%Gonfoo%')
+        )
+    )
     
     if status_filter and status_filter != 'All':
         query = query.filter(Transfer.status == status_filter)
@@ -1836,10 +1877,15 @@ def export_employees_excel():
 @login_required
 def export_promotions_excel():
     branch_id = request.args.get('branch_id')
-    status_filter = request.args.get('status', 'Pending')
+    status_filter = request.args.get('status', 'All')
     rank_id_filter = request.args.get('rank_id')
 
-    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
+    query = Transfer.query.outerjoin(Employee, Transfer.employee_id == Employee.id).filter(
+        db.or_(
+            Transfer.reason.ilike('%Gaaffii Gonfoo%'),
+            Transfer.reason.ilike('%Gonfoo%')
+        )
+    )
 
     if status_filter and status_filter != 'All':
         query = query.filter(Transfer.status == status_filter)
@@ -1987,7 +2033,6 @@ def users():
 @admin_required
 def add_user():
     try:
-        create_local_backup()
         username = request.form.get('username')
         password = request.form.get('password')
         role = request.form.get('role', 'branch_user')
@@ -2026,7 +2071,6 @@ def add_user():
 def edit_user(id):
     user = User.query.get_or_404(id)
     try:
-        create_local_backup()
         user.username = request.form.get('username', user.username)
         user.role = request.form.get('role', user.role)
         branch_id = request.form.get('branch_id')
@@ -2052,7 +2096,6 @@ def delete_user(id):
         return redirect(url_for('users'))
     user = User.query.get_or_404(id)
     try:
-        create_local_backup()
         db.session.delete(user)
         db.session.commit()
         flash("Fayyadamaan milkaa'inaan haqameera!", 'success')
