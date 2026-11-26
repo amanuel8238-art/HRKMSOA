@@ -444,6 +444,13 @@ with app.app_context():
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
+
+    # Dameewwan tarree 39 keessa hin jirre database keessaa haquu
+    extra_branches = Branch.query.filter(Branch.name.notin_(branches_list)).all()
+    for eb in extra_branches:
+        # Hojjettoota damee kana jalatti ramadaman yoo jiraatan branch_id None gochuu (foreign key error ittisuuf)
+        Employee.query.filter_by(branch_id=eb.id).update({Employee.branch_id: None})
+        db.session.delete(eb)
             
     db.session.commit()
 
@@ -1547,7 +1554,7 @@ def branches():
 @app.route('/branch-comparison')
 @login_required
 def branch_comparison():
-    metric = request.args.get('metric', 'total')  # total, rank, education, discipline
+    metric = request.args.get('metric', 'total')
     export_type = request.args.get('export', '')
 
     if current_user.role == 'admin':
@@ -1557,14 +1564,12 @@ def branch_comparison():
         b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
         branches_query = Branch.query.filter_by(id=b_val).all() if b_val else []
 
-    # 1. Active employees count per branch
     emp_counts_rows = db.session.query(
         Employee.branch_id,
         db.func.count(Employee.id)
     ).filter(Employee.status == 'Active').group_by(Employee.branch_id).all()
     emp_counts = {b_id: cnt for b_id, cnt in emp_counts_rows if b_id is not None}
 
-    # 2. Male & Female counts per branch
     male_rows = db.session.query(
         Employee.branch_id,
         db.func.count(Employee.id)
@@ -1583,7 +1588,6 @@ def branch_comparison():
     ).group_by(Employee.branch_id).all()
     female_counts = {b_id: cnt for b_id, cnt in female_rows if b_id is not None}
 
-    # 3. Rank breakdown per branch
     rank_rows = db.session.query(
         Employee.branch_id,
         Rank.name,
@@ -1599,7 +1603,6 @@ def branch_comparison():
         all_rank_names.add(r_label)
         branch_ranks.setdefault(b_id, {})[r_label] = cnt
 
-    # 4. Education level breakdown per branch
     edu_rows = db.session.query(
         Employee.branch_id,
         Employee.education_level,
@@ -1615,7 +1618,6 @@ def branch_comparison():
         all_edu_names.add(e_label)
         branch_edus.setdefault(b_id, {})[e_label] = cnt
 
-    # 5. Discipline count per branch
     disc_rows = db.session.query(
         Employee.branch_id,
         db.func.count(DisciplineRecord.id)
