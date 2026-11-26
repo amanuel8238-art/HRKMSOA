@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restore Backup - HRKMSO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full p-6 rounded-xl shadow-md border border-slate-200 space-y-4">
+        <div class="border-b pb-3 flex justify-between items-center">
+            <h1 class="text-base font-bold text-indigo-950">Ragaalee Backup Irraa Deebisuu (Restore)</h1>
+            <a href="{{ url_for('dashboard') }}" class="text-xs text-indigo-600 hover:underline font-semibold">&larr; Dashboordii</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-3 rounded-lg text-white text-xs {% if category == 'danger' %}bg-red-600{% else %}bg-emerald-600{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endwith %}
+
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Supabase Storage ykn PC keessan irraa faayilii backup (<b>.db</b> ykn <b>.xlsx</b>) buufattan asitti filachuun deebisuu ni dandeessu.
+        </p>
+
+        <form action="{{ url_for('restore_backup') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Faayilii Backup Filadhaa (.db ykn .xlsx):</label>
+                <input type="file" name="backup_file" accept=".db,.xlsx" required class="w-full border border-slate-300 rounded-lg p-2 bg-slate-50">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <a href="{{ url_for('dashboard') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-lg font-semibold">Haqi</a>
+                <button type="submit" class="bg-indigo-900 hover:bg-indigo-950 text-white px-4 py-2 rounded-lg font-semibold">Deebisi (Restore)</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

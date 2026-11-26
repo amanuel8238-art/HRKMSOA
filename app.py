@@ -316,6 +316,164 @@ def trigger_backup():
         
     return redirect(url_for('dashboard'))
 
+@app.route('/admin/restore-backup', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def restore_backup():
+    if request.method == 'POST':
+        try:
+            file = request.files.get('backup_file')
+            if not file or not file.filename:
+                flash("Mee faayilii backup (.db ykn .xlsx) filadhaa!", "danger")
+                return redirect(url_for('restore_backup'))
+
+            filename = secure_filename(file.filename).lower()
+
+            # 1. Yoo faayilli .db (SQLite) ta'e
+            if filename.endswith('.db'):
+                db_path = os.path.join(instance_dir, 'hrkmso.db')
+                backup_dir = 'backups'
+                if not os.path.exists(backup_dir):
+                    os.makedirs(backup_dir)
+
+                # Faayila ammaa duraan akka eegamuuf copy gochuu
+                if os.path.exists(db_path):
+                    pre_restore_name = f"pre_restore_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db"
+                    shutil.copy(db_path, os.path.join(backup_dir, pre_restore_name))
+
+                file.save(db_path)
+
+                log_entry = AuditLog(
+                    user_id=current_user.id,
+                    action="Database Restore (.db)",
+                    details=f"Admin {current_user.username} faayila {filename} irraa database deebiseera."
+                )
+                db.session.add(log_entry)
+                db.session.commit()
+
+                flash("Database (.db) milkaa'inaan bakka buufameera (restored)!", "success")
+                return redirect(url_for('dashboard'))
+
+            # 2. Yoo faayilli .xlsx (Excel backup) ta'e
+            elif filename.endswith('.xlsx'):
+                df = pd.read_excel(file)
+                restored_count = 0
+                updated_count = 0
+
+                for _, row in df.iterrows():
+                    full_name = str(row.get('Maqaa Guutuu', '')).strip()
+                    if not full_name or full_name.lower() == 'nan':
+                        continue
+
+                    unique_id_raw = row.get('ID Addaa', '')
+                    unique_id = None if pd.isna(unique_id_raw) or str(unique_id_raw).strip() in ['', '-'] else str(unique_id_raw).strip()
+
+                    branch_name_raw = row.get('Damee (Branch)', '')
+                    branch_obj = None
+                    if not pd.isna(branch_name_raw) and str(branch_name_raw).strip() not in ['', '-', 'N/A']:
+                        branch_obj = Branch.query.filter_by(name=str(branch_name_raw).strip()).first()
+
+                    rank_name_raw = row.get('Gulantaa / Rank', '')
+                    rank_obj = None
+                    if not pd.isna(rank_name_raw) and str(rank_name_raw).strip() not in ['', '-', 'N/A']:
+                        rank_obj = Rank.query.filter_by(name=str(rank_name_raw).strip()).first()
+
+                    gender_raw = row.get('Saala', '')
+                    gender_val = None if pd.isna(gender_raw) or str(gender_raw).strip() in ['', '-'] else str(gender_raw).strip()
+
+                    job_pos_raw = row.get('Gita Hojii', '')
+                    job_pos_val = None if pd.isna(job_pos_raw) or str(job_pos_raw).strip() in ['', '-'] else str(job_pos_raw).strip()
+
+                    edu_lvl_raw = row.get('Sadarkaa Barumsaa', '')
+                    edu_lvl_val = None if pd.isna(edu_lvl_raw) or str(edu_lvl_raw).strip() in ['', '-'] else str(edu_lvl_raw).strip()
+
+                    field_raw = row.get('Gosa Barumsaa', '')
+                    field_val = None if pd.isna(field_raw) or str(field_raw).strip() in ['', '-'] else str(field_raw).strip()
+
+                    pension_raw = row.get('Lakk. Sooromaa', '')
+                    pension_val = None if pd.isna(pension_raw) or str(pension_raw).strip() in ['', '-'] else str(pension_raw).strip()
+
+                    phone_raw = row.get('Lakk. Bilbilaa', '')
+                    phone_val = None if pd.isna(phone_raw) or str(phone_raw).strip() in ['', '-'] else str(phone_raw).strip()
+
+                    status_raw = row.get('Status', 'Active')
+                    status_val = 'Active' if pd.isna(status_raw) or str(status_raw).strip() in ['', '-'] else str(status_raw).strip()
+
+                    def to_float_safe(val):
+                        try:
+                            if pd.isna(val) or str(val).strip() in ['', '-']:
+                                return 0.0
+                            return float(val)
+                        except Exception:
+                            return 0.0
+
+                    salary_val = to_float_safe(row.get('Mindaa Gulantaa', 0.0))
+                    loc_allow_val = to_float_safe(row.get('Kaffaltii Iddoo', 0.0))
+                    food_allow_val = to_float_safe(row.get('Durgoo Nyaataa', 0.0))
+
+                    existing_emp = None
+                    if unique_id:
+                        existing_emp = Employee.query.filter_by(unique_id=unique_id).first()
+
+                    if existing_emp:
+                        existing_emp.full_name = full_name
+                        existing_emp.pension_number = pension_val
+                        existing_emp.phone_number = phone_val
+                        existing_emp.gender = gender_val
+                        if branch_obj:
+                            existing_emp.branch_id = branch_obj.id
+                        if rank_obj:
+                            existing_emp.rank_id = rank_obj.id
+                        existing_emp.job_position = job_pos_val
+                        existing_emp.education_level = edu_lvl_val
+                        existing_emp.field_of_study = field_val
+                        existing_emp.rank_salary = salary_val
+                        existing_emp.location_allowance = loc_allow_val
+                        existing_emp.food_allowance = food_allow_val
+                        existing_emp.status = status_val
+                        updated_count += 1
+                    else:
+                        new_emp = Employee(
+                            full_name=full_name,
+                            unique_id=unique_id,
+                            pension_number=pension_val,
+                            phone_number=phone_val,
+                            gender=gender_val,
+                            branch_id=branch_obj.id if branch_obj else None,
+                            rank_id=rank_obj.id if rank_obj else None,
+                            job_position=job_pos_val,
+                            education_level=edu_lvl_val,
+                            field_of_study=field_val,
+                            rank_salary=salary_val,
+                            location_allowance=loc_allow_val,
+                            food_allowance=food_allow_val,
+                            status=status_val
+                        )
+                        db.session.add(new_emp)
+                        restored_count += 1
+
+                log_entry = AuditLog(
+                    user_id=current_user.id,
+                    action="Excel Restore",
+                    details=f"Admin {current_user.username} Excel irraa haaraa {restored_count} galchee, {updated_count} haaromseera."
+                )
+                db.session.add(log_entry)
+                db.session.commit()
+
+                flash(f"Excel restore milkaa'eera! Haaraa: {restored_count}, Haaromfame: {updated_count}.", "success")
+                return redirect(url_for('employees'))
+
+            else:
+                flash("Faayilii .db ykn .xlsx qofa filadhaa!", "danger")
+                return redirect(url_for('restore_backup'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Restore gochuu irratti dogoggorri uumameera: {str(e)}", "danger")
+            return redirect(url_for('restore_backup'))
+
+    return render_template('restore_backup.html')
+
 with app.app_context():
     db.create_all()
     create_local_backup()
@@ -399,6 +557,7 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
+    # Dameewwan 39 qofa kanneen isin ibsitan
     branches_list = [
         "Head Office (Finfinnee)",
         "Jimmaa",
@@ -445,12 +604,21 @@ with app.app_context():
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
 
-    # Dameewwan tarree 39 keessa hin jirre database keessaa haquu
-    extra_branches = Branch.query.filter(Branch.name.notin_(branches_list)).all()
-    for eb in extra_branches:
-        # Hojjettoota damee kana jalatti ramadaman yoo jiraatan branch_id None gochuu (foreign key error ittisuuf)
-        Employee.query.filter_by(branch_id=eb.id).update({Employee.branch_id: None})
-        db.session.delete(eb)
+    # Dameewwan kanneen 39 keessa hin jirre (yoo hojjetaa/fayyadamaa/jijjiirraa hin qabaanne) haquu
+    for existing_b in Branch.query.all():
+        if existing_b.name not in branches_list:
+            has_emp = Employee.query.filter_by(branch_id=existing_b.id).first() is not None
+            has_user = User.query.filter_by(branch_id=existing_b.id).first() is not None
+            has_transfer = Transfer.query.filter(
+                db.or_(
+                    Transfer.from_branch_id == existing_b.id,
+                    Transfer.to_branch_id == existing_b.id
+                )
+            ).first() is not None
+            if not (has_emp or has_user or has_transfer):
+                db.session.delete(existing_b)
+            else:
+                print(f"[WARN] Dameen '{existing_b.name}' ragaa qaba waan ta'eef hin haqamne.")
             
     db.session.commit()
 
@@ -1550,147 +1718,6 @@ def delete_employee(id):
 def branches():
     all_branches = Branch.query.all()
     return render_template('branches.html', branches=all_branches)
-
-@app.route('/branch-comparison')
-@login_required
-def branch_comparison():
-    metric = request.args.get('metric', 'total')
-    export_type = request.args.get('export', '')
-
-    if current_user.role == 'admin':
-        branches_query = Branch.query.order_by(Branch.name.asc()).all()
-    else:
-        user_b = current_user.branch_id
-        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        branches_query = Branch.query.filter_by(id=b_val).all() if b_val else []
-
-    emp_counts_rows = db.session.query(
-        Employee.branch_id,
-        db.func.count(Employee.id)
-    ).filter(Employee.status == 'Active').group_by(Employee.branch_id).all()
-    emp_counts = {b_id: cnt for b_id, cnt in emp_counts_rows if b_id is not None}
-
-    male_rows = db.session.query(
-        Employee.branch_id,
-        db.func.count(Employee.id)
-    ).filter(
-        Employee.status == 'Active',
-        db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')
-    ).group_by(Employee.branch_id).all()
-    male_counts = {b_id: cnt for b_id, cnt in male_rows if b_id is not None}
-
-    female_rows = db.session.query(
-        Employee.branch_id,
-        db.func.count(Employee.id)
-    ).filter(
-        Employee.status == 'Active',
-        db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')
-    ).group_by(Employee.branch_id).all()
-    female_counts = {b_id: cnt for b_id, cnt in female_rows if b_id is not None}
-
-    rank_rows = db.session.query(
-        Employee.branch_id,
-        Rank.name,
-        db.func.count(Employee.id)
-    ).outerjoin(Rank, Employee.rank_id == Rank.id).filter(
-        Employee.status == 'Active'
-    ).group_by(Employee.branch_id, Rank.name).all()
-
-    branch_ranks = {}
-    all_rank_names = set()
-    for b_id, r_name, cnt in rank_rows:
-        r_label = r_name or 'Hin ibsamne'
-        all_rank_names.add(r_label)
-        branch_ranks.setdefault(b_id, {})[r_label] = cnt
-
-    edu_rows = db.session.query(
-        Employee.branch_id,
-        Employee.education_level,
-        db.func.count(Employee.id)
-    ).filter(Employee.status == 'Active').group_by(
-        Employee.branch_id, Employee.education_level
-    ).all()
-
-    branch_edus = {}
-    all_edu_names = set()
-    for b_id, e_lvl, cnt in edu_rows:
-        e_label = (e_lvl or '').strip() or 'Hin ibsamne'
-        all_edu_names.add(e_label)
-        branch_edus.setdefault(b_id, {})[e_label] = cnt
-
-    disc_rows = db.session.query(
-        Employee.branch_id,
-        db.func.count(DisciplineRecord.id)
-    ).join(Employee, DisciplineRecord.employee_id == Employee.id).group_by(
-        Employee.branch_id
-    ).all()
-    disc_counts = {b_id: cnt for b_id, cnt in disc_rows if b_id is not None}
-
-    grand_total = sum(emp_counts.get(b.id, 0) for b in branches_query)
-    rank_columns = sorted(all_rank_names)
-    edu_columns = sorted(all_edu_names)
-
-    comparison_data = []
-    for b in branches_query:
-        total_b = emp_counts.get(b.id, 0)
-        male_b = male_counts.get(b.id, 0)
-        female_b = female_counts.get(b.id, 0)
-        disc_b = disc_counts.get(b.id, 0)
-        pct_b = round((total_b / grand_total) * 100, 1) if grand_total > 0 else 0.0
-        comparison_data.append({
-            "id": b.id,
-            "name": b.name,
-            "total": total_b,
-            "pct": pct_b,
-            "male": male_b,
-            "female": female_b,
-            "discipline": disc_b,
-            "ranks": branch_ranks.get(b.id, {}),
-            "education": branch_edus.get(b.id, {})
-        })
-
-    comparison_data.sort(key=lambda x: x["total"], reverse=True)
-
-    if export_type == 'excel':
-        export_rows = []
-        for idx, row in enumerate(comparison_data, start=1):
-            item = {
-                "Lakk.": idx,
-                "Damee (Branch)": row["name"],
-                "Ida'ama (Active)": row["total"],
-                "Dhibbeentaa (%)": row["pct"],
-                "Dhiira": row["male"],
-                "Dhalaa": row["female"],
-                "Galmee Naamusaa": row["discipline"]
-            }
-            if metric == 'rank':
-                for r_col in rank_columns:
-                    item[f"Gulantaa: {r_col}"] = row["ranks"].get(r_col, 0)
-            elif metric == 'education':
-                for e_col in edu_columns:
-                    item[f"Barnoota: {e_col}"] = row["education"].get(e_col, 0)
-            export_rows.append(item)
-
-        df = pd.DataFrame(export_rows)
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Wal-bira Qabaa Damee')
-        output.seek(0)
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=f'Branch_Comparison_{metric}.xlsx'
-        )
-
-    return render_template(
-        'branch_comparison.html',
-        comparison_data=comparison_data,
-        metric=metric,
-        grand_total=grand_total,
-        rank_columns=rank_columns,
-        edu_columns=edu_columns
-    )
 
 @app.route('/transfers')
 @login_required
