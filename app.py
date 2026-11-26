@@ -1,10 +1,11 @@
 import os
 import io
+import json
 import shutil
 import socket
 import resend
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -315,6 +316,90 @@ def trigger_backup():
         flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
         
     return redirect(url_for('dashboard'))
+
+@app.route('/admin/export-json-backup', methods=['GET'])
+@login_required
+@admin_required
+def export_json_backup():
+    try:
+        emps = Employee.query.all()
+        branches_all = Branch.query.all()
+        ranks_all = Rank.query.all()
+        transfers_all = Transfer.query.all()
+        disciplines_all = DisciplineRecord.query.all()
+
+        payload = {
+            "exported_at": datetime.now().isoformat(),
+            "branches": [
+                {"id": b.id, "name": b.name, "location": getattr(b, "location", None)}
+                for b in branches_all
+            ],
+            "ranks": [
+                {"id": r.id, "name": r.name, "description": getattr(r, "description", None)}
+                for r in ranks_all
+            ],
+            "employees": [
+                {
+                    "id": e.id,
+                    "full_name": e.full_name,
+                    "unique_id": e.unique_id,
+                    "pension_number": getattr(e, "pension_number", None),
+                    "phone_number": getattr(e, "phone_number", None),
+                    "gender": e.gender,
+                    "branch_id": e.branch_id,
+                    "rank_id": e.rank_id,
+                    "job_position": e.job_position,
+                    "education_level": e.education_level,
+                    "field_of_study": e.field_of_study,
+                    "rank_salary": e.rank_salary,
+                    "location_allowance": e.location_allowance,
+                    "food_allowance": getattr(e, "food_allowance", 0.0),
+                    "hire_date": str(e.hire_date) if e.hire_date else None,
+                    "birth_place": getattr(e, "birth_place", None),
+                    "birth_date": str(e.birth_date) if e.birth_date else None,
+                    "rank_date": str(e.rank_date) if e.rank_date else None,
+                    "status": e.status,
+                }
+                for e in emps
+            ],
+            "transfers": [
+                {
+                    "id": t.id,
+                    "employee_id": t.employee_id,
+                    "from_branch_id": getattr(t, "from_branch_id", None),
+                    "to_branch_id": getattr(t, "to_branch_id", None),
+                    "reason": t.reason,
+                    "transfer_date": str(t.transfer_date) if t.transfer_date else None,
+                    "status": t.status,
+                }
+                for t in transfers_all
+            ],
+            "discipline_records": [
+                {
+                    "id": d.id,
+                    "employee_id": d.employee_id,
+                    "penalty_type": d.penalty_type,
+                    "offense_type": getattr(d, "offense_type", None),
+                    "reason": d.reason,
+                    "offense_date": str(d.offense_date) if d.offense_date else None,
+                    "decision_date": str(d.decision_date) if d.decision_date else None,
+                    "discipline_status": getattr(d, "discipline_status", None),
+                    "final_decision": getattr(d, "final_decision", None),
+                }
+                for d in disciplines_all
+            ],
+        }
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        json_str = json.dumps(payload, ensure_ascii=False, indent=2)
+        return Response(
+            json_str,
+            mimetype='application/json',
+            headers={"Content-Disposition": f"attachment;filename=hrkmso_backup_{timestamp}.json"}
+        )
+    except Exception as e:
+        flash(f"JSON backup buufuu irratti dogoggorri uumameera: {str(e)}", "danger")
+        return redirect(url_for('dashboard'))
 
 with app.app_context():
     db.create_all()
@@ -1879,7 +1964,7 @@ def export_ranks_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(output, index=False, sheet_name='Gulantaalee')
+        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
     output.seek(0)
     return send_file(
         output, 
