@@ -1,11 +1,10 @@
 import os
 import io
-import json
 import shutil
 import socket
 import resend
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session, Response
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -66,7 +65,7 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["20000 per day", "2000 per hour"]
+    default_limits=["200 per day", "50 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -250,157 +249,76 @@ def resolve_rank_id(rank_input):
             r_obj = Rank.query.filter(Rank.name.ilike(rank_input.strip())).first()
         return r_obj.id if r_obj else None
 
-def _serialize_val(val):
-    if isinstance(val, (datetime, date)):
-        return val.isoformat()
-    return val
-
-def _model_to_dict(obj):
-    if not obj:
-        return None
-    data = {}
-    for col in obj.__table__.columns:
-        if col.name == 'password':
-            continue
-        data[col.name] = _serialize_val(getattr(obj, col.name))
-    return data
-
-def sync_and_clean_39_branches():
-    branches_39 = [
-        "Head Office (Finfinnee)",
-        "Jimmaa",
-        "Bunoo Beddellee",
-        "Baalee",
-        "Arsii",
-        "GGLTO",
-        "Dadar",
-        "Baatuu",
-        "Aggaroo",
-        "Mayyaa",
-        "Dodolaa",
-        "Shanoo",
-        "Jimmaa Arjoo",
-        "Eejeree",
-        "Gursum",
-        "Girawaa",
-        "Habroo",
-        "Dalloo Mannaa",
-        "Martii",
-        "Mattuu",
-        "Naqamtee",
-        "Gimbii",
-        "Shaambuu",
-        "Dambii Doolloo",
-        "Adaamaa",
-        "Amboo",
-        "Walisoo",
-        "Fichee",
-        "Gindhiir",
-        "Haraar",
-        "Ciroo",
-        "Adoolaa",
-        "Bulee Horaa",
-        "Yaabelloo",
-        "Nageellee",
-        "Shaashamannee",
-        "Shaggar",
-        "Aallee",
-        "Arsii Roobee"
-    ]
-
-    for b_name in branches_39:
-        if not Branch.query.filter_by(name=b_name).first():
-            db.session.add(Branch(name=b_name, location='Oromia'))
-
-    db.session.flush()
-
-    removed_count = 0
-    all_branches = Branch.query.all()
-    for b in all_branches:
-        if b.name not in branches_39:
-            emp_total = Employee.query.filter_by(branch_id=b.id).count()
-            user_total = User.query.filter_by(branch_id=b.id).count()
-            if emp_total == 0 and user_total == 0:
-                Transfer.query.filter(
-                    db.or_(Transfer.from_branch_id == b.id, Transfer.to_branch_id == b.id)
-                ).delete(synchronize_session=False)
-                db.session.delete(b)
-                removed_count += 1
-
-    db.session.commit()
-    return removed_count
-
-@app.route('/admin/export-json-backup', methods=['GET'])
-@login_required
-@admin_required
-def export_json_backup():
+def send_backup_notification(filename):
     try:
-        snapshot = {
-            "exported_at": datetime.utcnow().isoformat() + "Z",
-            "system": "HRKMSO - Komishinii Manneen Sirreessaa Oromiyaa",
-            "counts": {
-                "branches": Branch.query.count(),
-                "ranks": Rank.query.count(),
-                "employees": Employee.query.count(),
-                "transfers": Transfer.query.count(),
-                "discipline_records": DisciplineRecord.query.count(),
-                "employee_documents": EmployeeDocument.query.count(),
-                "users": User.query.count(),
-                "audit_logs": AuditLog.query.count(),
-            },
-            "branches": [_model_to_dict(b) for b in Branch.query.order_by(Branch.id.asc()).all()],
-            "ranks": [_model_to_dict(r) for r in Rank.query.order_by(Rank.id.asc()).all()],
-            "employees": [_model_to_dict(e) for e in Employee.query.order_by(Employee.id.asc()).all()],
-            "transfers": [_model_to_dict(t) for t in Transfer.query.order_by(Transfer.id.asc()).all()],
-            "discipline_records": [_model_to_dict(d) for d in DisciplineRecord.query.order_by(DisciplineRecord.id.asc()).all()],
-            "employee_documents": [_model_to_dict(doc) for doc in EmployeeDocument.query.order_by(EmployeeDocument.id.asc()).all()],
-            "users": [_model_to_dict(u) for u in User.query.order_by(User.id.asc()).all()],
-        }
-
-        try:
-            log_entry = AuditLog(
-                user_id=current_user.id,
-                action="Backup JSON Buufate",
-                details="Admin guutummaa database PostgreSQL gara JSON backup tti buufateera."
-            )
-            db.session.add(log_entry)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-
-        payload = json.dumps(snapshot, ensure_ascii=False, indent=2).encode('utf-8')
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        return Response(
-            payload,
-            mimetype='application/json; charset=utf-8',
-            headers={
-                'Content-Disposition': f'attachment; filename=hrkmso_postgres_backup_{timestamp}.json'
-            }
-        )
+        socket.setdefaulttimeout(5)
+        admin_email = os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')
+        msg = Message("HRKMSO Backup Milkaa'eera",
+                      sender=app.config['MAIL_USERNAME'],
+                      recipients=[admin_email])
+        msg.body = f"Galmeen backup {filename} milkaa'inaan uumamee Supabase storage fi local irratti kuufameera."
+        mail.send(msg)
+        print(f"[INFO] Backup email notification sent for {filename}")
     except Exception as e:
-        flash(f"Backup JSON uumuu irratti dogoggorri uumameera: {str(e)}", "danger")
-        return redirect(url_for('dashboard'))
+        print(f"[ERR] Email erguu irratti dogoggorri uumame (Ignored): {e}")
+
+def create_local_backup():
+    try:
+        db_path = os.path.join(instance_dir, 'hrkmso.db')
+        backup_dir = 'backups'
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'hrkmso_backup_{timestamp}.db'
+        backup_file_path = os.path.join(backup_dir, backup_filename)
+        
+        if os.path.exists(db_path):
+            shutil.copy(db_path, backup_file_path)
+            print(f"[INFO] Local Backup successful: {backup_file_path}")
+            
+            if supabase:
+                try:
+                    with open(backup_file_path, 'rb') as f:
+                        res = supabase.storage.from_('hrkmso-backups').upload(
+                            path=backup_filename,
+                            file=f,
+                            file_options={"content-type": "application/x-sqlite3"}
+                        )
+                    print(f"[INFO] Supabase Storage upload successful: {backup_filename}")
+                except Exception as ex:
+                    print(f"[ERR] Supabase Storage upload error: {ex}")
+            else:
+                print("[WARN] Supabase client is not initialized (Check URL/KEY).")
+            
+            send_backup_notification(backup_filename)
+    except Exception as e:
+        print(f"[ERR] Backup error: {e}")
 
 @app.route('/admin/trigger-backup', methods=['POST', 'GET'])
 @login_required
 @admin_required
 def trigger_backup():
-    return redirect(url_for('export_json_backup'))
-
-@app.route('/admin/clean-branches', methods=['POST', 'GET'])
-@login_required
-@admin_required
-def clean_branches():
     try:
-        removed = sync_and_clean_39_branches()
-        flash(f"Dameewwan duwwaa/hin barbaachifne {removed} haqamaniiru. Amma dameewwan 39 irratti qindaa'eera!", "success")
+        create_local_backup()
+        db_path = os.path.join(instance_dir, 'hrkmso.db')
+        
+        if os.path.exists(db_path):
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            return send_file(
+                db_path,
+                as_attachment=True,
+                download_name=f'hrkmso_backup_{timestamp}.db'
+            )
+        
+        flash("Database backup milkaa'inaan uumameera!", "success")
     except Exception as e:
-        db.session.rollback()
-        flash(f"Dameewwan qulqulleessuu irratti dogoggorri uumame: {str(e)}", "danger")
-    return redirect(url_for('branches'))
+        flash(f"Backup uumuu irratti dogoggorri uumameera: {e}", "danger")
+        
+    return redirect(url_for('dashboard'))
 
 with app.app_context():
     db.create_all()
+    create_local_backup()
     
     import sqlalchemy as sa
     engine = db.engine
@@ -409,6 +327,8 @@ with app.app_context():
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
+            if 'birth_place' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
             if 'pension_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
@@ -481,11 +401,23 @@ with app.app_context():
         default_rank = Rank(name='Standard Rank', description='Default system rank')
         db.session.add(default_rank)
 
-    try:
-        sync_and_clean_39_branches()
-    except Exception as e:
-        db.session.rollback()
-        print(f"[ERR] Branch sync error: {e}")
+    branches_list = [
+        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
+        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
+        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
+        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
+        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
+        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
+        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+    ]
+    
+    for b_name in branches_list:
+        if not Branch.query.filter_by(name=b_name).first():
+            db.session.add(Branch(name=b_name, location='Oromia'))
+            
+    db.session.commit()
 
 def get_retired_employees_list(active_employees):
     retired_list = []
@@ -602,21 +534,15 @@ def uploaded_document(filename):
     file_path = os.path.join(app.config['DOCUMENTS_FOLDER'], filename)
     if os.path.exists(file_path):
         return send_file(file_path)
-
+    
     if supabase:
         try:
-            signed = supabase.storage.from_('hrkmso-documents').create_signed_url(filename, 300)
-            if isinstance(signed, dict) and signed.get('signedURL'):
-                return redirect(signed['signedURL'])
-            if isinstance(signed, dict) and signed.get('signed_url'):
-                return redirect(signed['signed_url'])
+            res = supabase.storage.from_('hrkmso-documents').get_public_url(filename)
+            if res:
+                return redirect(res)
         except Exception as e:
-            print(f"[WARN] Signed URL fallback error: {e}")
-
-    if SUPABASE_URL:
-        public_url = f"{SUPABASE_URL.rstrip('/')}/storage/v1/object/public/hrkmso-documents/{filename}"
-        return redirect(public_url)
-
+            print(f"[ERR] Supabase file fetch error: {e}")
+            
     abort(404)
 
 @app.route('/delete_document/<int:id>', methods=['POST'])
@@ -697,6 +623,7 @@ def forgot_password():
                 token = get_reset_token(user)
                 reset_url = url_for('reset_token', token=token, _external=True)
                 
+                # Resend API fayyadamuun email erguu (Port 443 - HTTPS)
                 params = {
                     "from": "HRKMSO <onboarding@resend.dev>",
                     "to": [os.environ.get('ADMIN_EMAIL', 'amanuel8238@gmail.com')],
@@ -734,6 +661,7 @@ def reset_token(token):
     
     if request.method == 'POST':
         try:
+            create_local_backup()
             password = request.form.get('password')
             if not password or len(password.strip()) < 4:
                 flash("Jechi iccitii guutamuu qaba (yoo xiqqaate tahuu qaba).", "danger")
@@ -768,9 +696,7 @@ def dashboard():
     if current_user.role == 'admin':
         emp_count = Employee.query.filter_by(status='Active').count()
         branch_count = Branch.query.count()
-        transfer_count = Transfer.query.filter(
-            db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
-        ).count()
+        transfer_count = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).count()
         male_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')).count()
         female_count = Employee.query.filter_by(status='Active').filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')).count()
         inactive_statuses = ['Resigned', 'Terminated', "Du'aan", 'Fedhiitiin', 'Dhukkubaan', 'Dismissed']
@@ -778,32 +704,21 @@ def dashboard():
         all_emps = Employee.query.filter_by(status='Active').all()
         
         local_committee_count = DisciplineRecord.query.filter(
-            db.or_(
-                db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
-                DisciplineRecord.discipline_status.ilike('%koree%m%')
-            )
+            DisciplineRecord.local_committee_date != None,
+            DisciplineRecord.local_committee_date != ''
         ).count()
         
         zone_committee_count = DisciplineRecord.query.filter(
-            db.or_(
-                db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
-                DisciplineRecord.discipline_status.ilike('%godina%')
-            )
+            DisciplineRecord.zone_committee_date != None,
+            DisciplineRecord.zone_committee_date != ''
         ).count()
         
         commission_pending_count = DisciplineRecord.query.filter(
-            db.or_(
-                db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
-                DisciplineRecord.discipline_status.ilike('%komishin%')
-            )
+            DisciplineRecord.commission_sent_date != None,
+            DisciplineRecord.commission_sent_date != ''
         ).count()
         
-        final_decided_count = DisciplineRecord.query.filter(
-            db.or_(
-                DisciplineRecord.discipline_status == 'murtaae',
-                db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
-            )
-        ).count()
+        final_decided_count = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
     else:
         user_b = current_user.branch_id
         branch_id_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
@@ -830,34 +745,25 @@ def dashboard():
             
             local_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(
-                    db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
-                    DisciplineRecord.discipline_status.ilike('%koree%m%')
-                )
+                DisciplineRecord.local_committee_date != None,
+                DisciplineRecord.local_committee_date != ''
             ).count()
 
             zone_committee_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(
-                    db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
-                    DisciplineRecord.discipline_status.ilike('%godina%')
-                )
+                DisciplineRecord.zone_committee_date != None,
+                DisciplineRecord.zone_committee_date != ''
             ).count()
 
             commission_pending_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(
-                    db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
-                    DisciplineRecord.discipline_status.ilike('%komishin%')
-                )
+                DisciplineRecord.commission_sent_date != None,
+                DisciplineRecord.commission_sent_date != ''
             ).count()
 
             final_decided_count = DisciplineRecord.query.join(Employee).filter(
                 Employee.branch_id == branch_id_val,
-                db.or_(
-                    DisciplineRecord.discipline_status == 'murtaae',
-                    db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
-                )
+                DisciplineRecord.discipline_status == 'murtaae'
             ).count()
         else:
             transfer_count = 0
@@ -867,7 +773,7 @@ def dashboard():
     
     if current_user.role == 'admin':
         warning_count = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')).count()
-        penalty_count = DisciplineRecord.query.filter(db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))).count()
+        penalty_count = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))).count()
         promotion_count = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%')).count()
     else:
         warning_count = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
@@ -877,7 +783,7 @@ def dashboard():
         
         penalty_count = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
             Employee.branch_id == branch_id_val,
-            db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
+            db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         ).count() if user_b else 0
 
         promotion_count = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(
@@ -917,34 +823,20 @@ def get_branch_stats(branch_id):
         emp_query = Employee.query.filter_by(status='Active')
         all_active_for_retired = emp_query.all()
         promo_query = Transfer.query.filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
-        trans_query = Transfer.query.filter(db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))))
+        trans_query = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
         warning_query = DisciplineRecord.query.filter(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
-        penalty_query = DisciplineRecord.query.filter(db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))))
+        penalty_query = DisciplineRecord.query.filter(db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
         
         local_committee = DisciplineRecord.query.filter(
-            db.or_(
-                db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
-                DisciplineRecord.discipline_status.ilike('%koree%m%')
-            )
+            DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''
         ).count()
         zone_committee = DisciplineRecord.query.filter(
-            db.or_(
-                db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
-                DisciplineRecord.discipline_status.ilike('%godina%')
-            )
+            DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''
         ).count()
         commission_pending = DisciplineRecord.query.filter(
-            db.or_(
-                db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
-                DisciplineRecord.discipline_status.ilike('%komishin%')
-            )
+            DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''
         ).count()
-        final_decided = DisciplineRecord.query.filter(
-            db.or_(
-                DisciplineRecord.discipline_status == 'murtaae',
-                db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
-            )
-        ).count()
+        final_decided = DisciplineRecord.query.filter_by(discipline_status='murtaae').count()
     else:
         b_id_str = str(branch_id)
         
@@ -961,7 +853,7 @@ def get_branch_stats(branch_id):
                 db.cast(Transfer.from_branch_id, db.String) == b_id_str,
                 db.cast(Transfer.to_branch_id, db.String) == b_id_str
             ),
-            db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
+            db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
         )
         
         warning_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
@@ -971,39 +863,27 @@ def get_branch_stats(branch_id):
         
         penalty_query = DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(DisciplineRecord.penalty_type == None, db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%')))
+            db.not_(DisciplineRecord.penalty_type.ilike('%akeekkachiisa%'))
         )
         
         local_committee = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(
-                db.and_(DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''),
-                DisciplineRecord.discipline_status.ilike('%koree%m%')
-            )
+            DisciplineRecord.local_committee_date != None, DisciplineRecord.local_committee_date != ''
         ).count()
         
         zone_committee = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(
-                db.and_(DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''),
-                DisciplineRecord.discipline_status.ilike('%godina%')
-            )
+            DisciplineRecord.zone_committee_date != None, DisciplineRecord.zone_committee_date != ''
         ).count()
         
         commission_pending = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(
-                db.and_(DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''),
-                DisciplineRecord.discipline_status.ilike('%komishin%')
-            )
+            DisciplineRecord.commission_sent_date != None, DisciplineRecord.commission_sent_date != ''
         ).count()
         
         final_decided = DisciplineRecord.query.join(Employee).filter(
             db.cast(Employee.branch_id, db.String) == b_id_str,
-            db.or_(
-                DisciplineRecord.discipline_status == 'murtaae',
-                db.and_(DisciplineRecord.final_decision != None, DisciplineRecord.final_decision != '')
-            )
+            DisciplineRecord.discipline_status == 'murtaae'
         ).count()
 
     retired_count = len(get_retired_employees_list(all_active_for_retired))
@@ -1106,6 +986,7 @@ def delete_discipline(id):
         abort(403)
         
     try:
+        create_local_backup()
         db.session.delete(record)
         db.session.commit()
         flash("Galmeen naamusaa milkaa'inaan tarree irraa haqameera!", 'success')
@@ -1121,6 +1002,7 @@ def delete_discipline(id):
 def update_discipline_decision(id):
     record = DisciplineRecord.query.get_or_404(id)
     try:
+        create_local_backup()
         final_decision = request.form.get('final_decision')
         discipline_status = request.form.get('discipline_status')
         
@@ -1146,6 +1028,7 @@ def add_discipline(employee_id):
 
     if request.method == 'POST':
         try:
+            create_local_backup()
             penalty_type = request.form.get('penalty_type')
             offense_type = request.form.get('offense_type')
             reason = request.form.get('reason')
@@ -1202,6 +1085,7 @@ def add_discipline(employee_id):
 def update_transfer_status(id):
     transfer = Transfer.query.get_or_404(id)
     try:
+        create_local_backup()
         status = request.form.get('status')
         approval_reason = request.form.get('approval_reason')
         
@@ -1233,6 +1117,7 @@ def update_transfer_status(id):
 def delete_transfer(id):
     transfer = Transfer.query.get_or_404(id)
     try:
+        create_local_backup()
         db.session.delete(transfer)
         db.session.commit()
         flash("Galmeen jijjiirraa milkaa'inaan haqameera!", 'success')
@@ -1246,6 +1131,7 @@ def delete_transfer(id):
 @admin_required
 def admin_direct_transfer():
     try:
+        create_local_backup()
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
@@ -1295,6 +1181,7 @@ def approve_promotion(id):
         abort(403)
         
     try:
+        create_local_backup()
         transfer.status = 'Approved'
         
         log_entry = AuditLog(
@@ -1321,6 +1208,7 @@ def reject_promotion(id):
         abort(403)
         
     try:
+        create_local_backup()
         transfer.status = 'Rejected'
         
         log_entry = AuditLog(
@@ -1347,6 +1235,7 @@ def delete_promotion(id):
         abort(403)
         
     try:
+        create_local_backup()
         db.session.delete(transfer)
         db.session.commit()
         flash("Gaaffiin Gonfoo tarree irraa haqameera!", 'success')
@@ -1360,6 +1249,7 @@ def delete_promotion(id):
 @login_required
 def add_transfer():
     try:
+        create_local_backup()
         employee_id = request.form.get('employee_id')
         to_branch_id = request.form.get('to_branch_id')
         reason = request.form.get('reason')
@@ -1401,6 +1291,7 @@ def add_transfer():
 @login_required
 def add_rank():
     try:
+        create_local_backup()
         name = request.form.get('name')
         description = request.form.get('description', '')
         if name:
@@ -1418,6 +1309,7 @@ def add_rank():
 def update_rank_status(id):
     rank = Rank.query.get_or_404(id)
     try:
+        create_local_backup()
         name = request.form.get('name')
         description = request.form.get('description')
         if name:
@@ -1436,6 +1328,7 @@ def update_rank_status(id):
 def delete_rank(id):
     rank = Rank.query.get_or_404(id)
     try:
+        create_local_backup()
         db.session.delete(rank)
         db.session.commit()
         flash("Gulantaan milkaa'inaan haqameera!", 'success')
@@ -1448,6 +1341,7 @@ def delete_rank(id):
 @login_required
 def add_employee():
     try:
+        create_local_backup()
         full_name = request.form.get('full_name')
         unique_id = request.form.get('unique_id')
         pension_number = request.form.get('pension_number')
@@ -1467,6 +1361,7 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
+        birth_place = request.form.get('birth_place')
         birth_date = request.form.get('birth_date')
         rank_date = request.form.get('rank_date')
 
@@ -1485,6 +1380,7 @@ def add_employee():
             location_allowance=location_allowance,
             food_allowance=food_allowance,
             hire_date=hire_date,
+            birth_place=birth_place,
             birth_date=birth_date,
             rank_date=rank_date,
             status='Active'
@@ -1516,6 +1412,7 @@ def evaluate_employee(id):
 
     if request.method == 'POST':
         try:
+            create_local_backup()
             emp.perf_score = float(request.form.get('performance_score', 0) or 0)
             emp.edu_score = float(request.form.get('education_score', 0) or 0)
             emp.discipline_score = float(request.form.get('discipline_score', 0) or 0)
@@ -1559,6 +1456,7 @@ def edit_employee(id):
 
     if request.method == 'POST':
         try:
+            create_local_backup()
             emp.full_name = request.form.get('full_name', emp.full_name)
             emp.unique_id = request.form.get('unique_id', emp.unique_id)
             emp.pension_number = request.form.get('pension_number', emp.pension_number)
@@ -1580,6 +1478,7 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
@@ -1604,6 +1503,7 @@ def delete_employee(id):
         abort(403)
         
     try:
+        create_local_backup()
         db.session.delete(emp)
         db.session.commit()
         flash("Hojjetaan milkaa'inaan haqameera!", 'success')
@@ -1623,9 +1523,7 @@ def branches():
 @login_required
 def transfers():
     if current_user.role == 'admin':
-        transfers_list = Transfer.query.filter(
-            db.or_(Transfer.reason == None, db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%')))
-        ).all()
+        transfers_list = Transfer.query.filter(db.not_(Transfer.reason.ilike('%Gaaffii Gonfoo%'))).all()
         employees = Employee.query.filter_by(status='Active').all()
     else:
         user_b = current_user.branch_id
@@ -1676,6 +1574,7 @@ def employees():
     elif branch_id:
         query = query.filter_by(branch_id=int(branch_id) if branch_id.isdigit() else branch_id)
 
+    # --- FILTER SAALAA (GENDER) ---
     if gender:
         if gender in ['Dhalaa', 'Dubartii']:
             query = query.filter(db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii'))
@@ -1684,6 +1583,7 @@ def employees():
         else:
             query = query.filter_by(gender=gender)
 
+    # Ramaddii / Allowance filters
     if rank_status == 'with':
         query = query.filter(Employee.location_allowance > 0)
     elif rank_status == 'without':
@@ -1726,18 +1626,13 @@ def ranks():
 @login_required
 def promotions():
     branch_id_filter = request.args.get('branch_id')
-    status_filter = request.args.get('status', 'All') 
+    status_filter = request.args.get('status', 'Pending') 
     rank_id_filter = request.args.get('rank_id')
     
     all_branches = Branch.query.all()
     all_ranks = Rank.query.all()
     
-    query = Transfer.query.outerjoin(Employee, Transfer.employee_id == Employee.id).filter(
-        db.or_(
-            Transfer.reason.ilike('%Gaaffii Gonfoo%'),
-            Transfer.reason.ilike('%Gonfoo%')
-        )
-    )
+    query = Transfer.query.join(Employee, Transfer.employee_id == Employee.id).filter(Transfer.reason.ilike('%Gaaffii Gonfoo%'))
     
     if status_filter and status_filter != 'All':
         query = query.filter(Transfer.status == status_filter)
@@ -1984,7 +1879,7 @@ def export_ranks_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
+        df.to_excel(output, index=False, sheet_name='Gulantaalee')
     output.seek(0)
     return send_file(
         output, 
@@ -2032,6 +1927,7 @@ def users():
 @admin_required
 def add_user():
     try:
+        create_local_backup()
         username = request.form.get('username')
         password = request.form.get('password')
         role = request.form.get('role', 'branch_user')
@@ -2070,6 +1966,7 @@ def add_user():
 def edit_user(id):
     user = User.query.get_or_404(id)
     try:
+        create_local_backup()
         user.username = request.form.get('username', user.username)
         user.role = request.form.get('role', user.role)
         branch_id = request.form.get('branch_id')
@@ -2095,6 +1992,7 @@ def delete_user(id):
         return redirect(url_for('users'))
     user = User.query.get_or_404(id)
     try:
+        create_local_backup()
         db.session.delete(user)
         db.session.commit()
         flash("Fayyadamaan milkaa'inaan haqameera!", 'success')
