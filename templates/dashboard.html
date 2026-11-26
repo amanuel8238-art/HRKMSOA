@@ -63,6 +63,25 @@
                 <a href="{{ url_for('promotions') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Gaaffii Gonfoo (Promotions)</a>
                 <a href="{{ url_for('ranks') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
                 <a href="#genderReportCard" onclick="focusFullDashboardReport()" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Gabaasa Saalaa & Pensiyoonaa</a>
+
+                <!-- Backup / Download Menu Link -->
+                {% if endpoint_exists('download_backup') %}
+                <a href="{{ url_for('download_backup') }}" class="pb-1 text-emerald-700 hover:text-emerald-900 transition flex items-center gap-1">
+                    <i class="fas fa-download"></i>
+                    <span>Backup / Download</span>
+                </a>
+                {% elif endpoint_exists('backup_db') %}
+                <a href="{{ url_for('backup_db') }}" class="pb-1 text-emerald-700 hover:text-emerald-900 transition flex items-center gap-1">
+                    <i class="fas fa-download"></i>
+                    <span>Backup / Download</span>
+                </a>
+                {% elif endpoint_exists('export_employees_excel') %}
+                <a href="{{ url_for('export_employees_excel') }}" class="pb-1 text-emerald-700 hover:text-emerald-900 transition flex items-center gap-1">
+                    <i class="fas fa-download"></i>
+                    <span>Backup / Download</span>
+                </a>
+                {% endif %}
+
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
                 <a href="{{ url_for('users') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Bulchiinsa Fayyadamoowwan</a>
                 {% endif %}
