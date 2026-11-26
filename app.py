@@ -1,11 +1,10 @@
 import os
 import io
-import json
 import shutil
 import socket
 import resend
 from datetime import datetime, date, timedelta
-from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session, Response
+from flask import Flask, render_template, redirect, url_for, request, flash, abort, send_file, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -317,90 +316,6 @@ def trigger_backup():
         
     return redirect(url_for('dashboard'))
 
-@app.route('/admin/export-json-backup', methods=['GET'])
-@login_required
-@admin_required
-def export_json_backup():
-    try:
-        emps = Employee.query.all()
-        branches_all = Branch.query.all()
-        ranks_all = Rank.query.all()
-        transfers_all = Transfer.query.all()
-        disciplines_all = DisciplineRecord.query.all()
-
-        payload = {
-            "exported_at": datetime.now().isoformat(),
-            "branches": [
-                {"id": b.id, "name": b.name, "location": getattr(b, "location", None)}
-                for b in branches_all
-            ],
-            "ranks": [
-                {"id": r.id, "name": r.name, "description": getattr(r, "description", None)}
-                for r in ranks_all
-            ],
-            "employees": [
-                {
-                    "id": e.id,
-                    "full_name": e.full_name,
-                    "unique_id": e.unique_id,
-                    "pension_number": getattr(e, "pension_number", None),
-                    "phone_number": getattr(e, "phone_number", None),
-                    "gender": e.gender,
-                    "branch_id": e.branch_id,
-                    "rank_id": e.rank_id,
-                    "job_position": e.job_position,
-                    "education_level": e.education_level,
-                    "field_of_study": e.field_of_study,
-                    "rank_salary": e.rank_salary,
-                    "location_allowance": e.location_allowance,
-                    "food_allowance": getattr(e, "food_allowance", 0.0),
-                    "hire_date": str(e.hire_date) if e.hire_date else None,
-                    "birth_place": getattr(e, "birth_place", None),
-                    "birth_date": str(e.birth_date) if e.birth_date else None,
-                    "rank_date": str(e.rank_date) if e.rank_date else None,
-                    "status": e.status,
-                }
-                for e in emps
-            ],
-            "transfers": [
-                {
-                    "id": t.id,
-                    "employee_id": t.employee_id,
-                    "from_branch_id": getattr(t, "from_branch_id", None),
-                    "to_branch_id": getattr(t, "to_branch_id", None),
-                    "reason": t.reason,
-                    "transfer_date": str(t.transfer_date) if t.transfer_date else None,
-                    "status": t.status,
-                }
-                for t in transfers_all
-            ],
-            "discipline_records": [
-                {
-                    "id": d.id,
-                    "employee_id": d.employee_id,
-                    "penalty_type": d.penalty_type,
-                    "offense_type": getattr(d, "offense_type", None),
-                    "reason": d.reason,
-                    "offense_date": str(d.offense_date) if d.offense_date else None,
-                    "decision_date": str(d.decision_date) if d.decision_date else None,
-                    "discipline_status": getattr(d, "discipline_status", None),
-                    "final_decision": getattr(d, "final_decision", None),
-                }
-                for d in disciplines_all
-            ],
-        }
-
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        json_str = json.dumps(payload, ensure_ascii=False, indent=2)
-        return Response(
-            json_str,
-            mimetype='application/json',
-            headers={"Content-Disposition": f"attachment;filename=hrkmso_backup_{timestamp}.json"}
-        )
-    except Exception as e:
-        flash(f"JSON backup buufuu irratti dogoggorri uumameera: {str(e)}", "danger")
-        return redirect(url_for('dashboard'))
-
 with app.app_context():
     db.create_all()
     create_local_backup()
@@ -412,8 +327,6 @@ with app.app_context():
     if 'employee' in inspector.get_table_names():
         columns = [col['name'] for col in inspector.get_columns('employee')]
         with engine.begin() as conn:
-            if 'birth_place' not in columns:
-                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
             if 'pension_number' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN pension_number VARCHAR(100)"))
             if 'phone_number' not in columns:
@@ -487,15 +400,45 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Iluu Abaabor", "Jimmaa", "Bunoo Beddellee", 
-        "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa", "Qellem Wallaggaa",
-        "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa", "Shawaa Kaabaa",
-        "Baalee", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
-        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
-        "Arsii", "Arsii Lixaa", "GGLTO", "Dadar", "Magaalaa Shagar",
-        "Baatuu", "Aggaroo", "Mayyaa", "Dodolaa", "Shanoo",
-        "Aanaa Aallee", "Jimmaa Arjoo", "Eejeree", "Gursum", "Girawaa",
-        "Habroo", "Dalloo Mannaa", "Martii", "Roobee"
+        "Head Office (Finfinnee)",
+        "Jimmaa",
+        "Bunoo Beddellee",
+        "Baalee",
+        "Arsii",
+        "GGLTO",
+        "Dadar",
+        "Baatuu",
+        "Aggaroo",
+        "Mayyaa",
+        "Dodolaa",
+        "Shanoo",
+        "Jimmaa Arjoo",
+        "Eejeree",
+        "Gursum",
+        "Girawaa",
+        "Habroo",
+        "Dalloo Mannaa",
+        "Martii",
+        "Mattuu",
+        "Naqamtee",
+        "Gimbii",
+        "Shaambuu",
+        "Dambii Doolloo",
+        "Adaamaa",
+        "Amboo",
+        "Walisoo",
+        "Fichee",
+        "Gindhiir",
+        "Haraar",
+        "Ciroo",
+        "Adoolaa",
+        "Bulee Horaa",
+        "Yaabelloo",
+        "Nageellee",
+        "Shaashamannee",
+        "Shaggar",
+        "Aallee",
+        "Arsii Roobee"
     ]
     
     for b_name in branches_list:
@@ -1446,7 +1389,6 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
-        birth_place = request.form.get('birth_place')
         birth_date = request.form.get('birth_date')
         rank_date = request.form.get('rank_date')
 
@@ -1465,7 +1407,6 @@ def add_employee():
             location_allowance=location_allowance,
             food_allowance=food_allowance,
             hire_date=hire_date,
-            birth_place=birth_place,
             birth_date=birth_date,
             rank_date=rank_date,
             status='Active'
@@ -1563,7 +1504,6 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
@@ -1603,6 +1543,152 @@ def delete_employee(id):
 def branches():
     all_branches = Branch.query.all()
     return render_template('branches.html', branches=all_branches)
+
+@app.route('/branch-comparison')
+@login_required
+def branch_comparison():
+    metric = request.args.get('metric', 'total')  # total, rank, education, discipline
+    export_type = request.args.get('export', '')
+
+    if current_user.role == 'admin':
+        branches_query = Branch.query.order_by(Branch.name.asc()).all()
+    else:
+        user_b = current_user.branch_id
+        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        branches_query = Branch.query.filter_by(id=b_val).all() if b_val else []
+
+    # 1. Active employees count per branch
+    emp_counts_rows = db.session.query(
+        Employee.branch_id,
+        db.func.count(Employee.id)
+    ).filter(Employee.status == 'Active').group_by(Employee.branch_id).all()
+    emp_counts = {b_id: cnt for b_id, cnt in emp_counts_rows if b_id is not None}
+
+    # 2. Male & Female counts per branch
+    male_rows = db.session.query(
+        Employee.branch_id,
+        db.func.count(Employee.id)
+    ).filter(
+        Employee.status == 'Active',
+        db.or_(Employee.gender == 'Dhiira', Employee.gender == 'Dhiirra')
+    ).group_by(Employee.branch_id).all()
+    male_counts = {b_id: cnt for b_id, cnt in male_rows if b_id is not None}
+
+    female_rows = db.session.query(
+        Employee.branch_id,
+        db.func.count(Employee.id)
+    ).filter(
+        Employee.status == 'Active',
+        db.or_(Employee.gender == 'Dhalaa', Employee.gender == 'Dubartii')
+    ).group_by(Employee.branch_id).all()
+    female_counts = {b_id: cnt for b_id, cnt in female_rows if b_id is not None}
+
+    # 3. Rank breakdown per branch
+    rank_rows = db.session.query(
+        Employee.branch_id,
+        Rank.name,
+        db.func.count(Employee.id)
+    ).outerjoin(Rank, Employee.rank_id == Rank.id).filter(
+        Employee.status == 'Active'
+    ).group_by(Employee.branch_id, Rank.name).all()
+
+    branch_ranks = {}
+    all_rank_names = set()
+    for b_id, r_name, cnt in rank_rows:
+        r_label = r_name or 'Hin ibsamne'
+        all_rank_names.add(r_label)
+        branch_ranks.setdefault(b_id, {})[r_label] = cnt
+
+    # 4. Education level breakdown per branch
+    edu_rows = db.session.query(
+        Employee.branch_id,
+        Employee.education_level,
+        db.func.count(Employee.id)
+    ).filter(Employee.status == 'Active').group_by(
+        Employee.branch_id, Employee.education_level
+    ).all()
+
+    branch_edus = {}
+    all_edu_names = set()
+    for b_id, e_lvl, cnt in edu_rows:
+        e_label = (e_lvl or '').strip() or 'Hin ibsamne'
+        all_edu_names.add(e_label)
+        branch_edus.setdefault(b_id, {})[e_label] = cnt
+
+    # 5. Discipline count per branch
+    disc_rows = db.session.query(
+        Employee.branch_id,
+        db.func.count(DisciplineRecord.id)
+    ).join(Employee, DisciplineRecord.employee_id == Employee.id).group_by(
+        Employee.branch_id
+    ).all()
+    disc_counts = {b_id: cnt for b_id, cnt in disc_rows if b_id is not None}
+
+    grand_total = sum(emp_counts.get(b.id, 0) for b in branches_query)
+    rank_columns = sorted(all_rank_names)
+    edu_columns = sorted(all_edu_names)
+
+    comparison_data = []
+    for b in branches_query:
+        total_b = emp_counts.get(b.id, 0)
+        male_b = male_counts.get(b.id, 0)
+        female_b = female_counts.get(b.id, 0)
+        disc_b = disc_counts.get(b.id, 0)
+        pct_b = round((total_b / grand_total) * 100, 1) if grand_total > 0 else 0.0
+        comparison_data.append({
+            "id": b.id,
+            "name": b.name,
+            "total": total_b,
+            "pct": pct_b,
+            "male": male_b,
+            "female": female_b,
+            "discipline": disc_b,
+            "ranks": branch_ranks.get(b.id, {}),
+            "education": branch_edus.get(b.id, {})
+        })
+
+    comparison_data.sort(key=lambda x: x["total"], reverse=True)
+
+    if export_type == 'excel':
+        export_rows = []
+        for idx, row in enumerate(comparison_data, start=1):
+            item = {
+                "Lakk.": idx,
+                "Damee (Branch)": row["name"],
+                "Ida'ama (Active)": row["total"],
+                "Dhibbeentaa (%)": row["pct"],
+                "Dhiira": row["male"],
+                "Dhalaa": row["female"],
+                "Galmee Naamusaa": row["discipline"]
+            }
+            if metric == 'rank':
+                for r_col in rank_columns:
+                    item[f"Gulantaa: {r_col}"] = row["ranks"].get(r_col, 0)
+            elif metric == 'education':
+                for e_col in edu_columns:
+                    item[f"Barnoota: {e_col}"] = row["education"].get(e_col, 0)
+            export_rows.append(item)
+
+        df = pd.DataFrame(export_rows)
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Wal-bira Qabaa Damee')
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'Branch_Comparison_{metric}.xlsx'
+        )
+
+    return render_template(
+        'branch_comparison.html',
+        comparison_data=comparison_data,
+        metric=metric,
+        grand_total=grand_total,
+        rank_columns=rank_columns,
+        edu_columns=edu_columns
+    )
 
 @app.route('/transfers')
 @login_required

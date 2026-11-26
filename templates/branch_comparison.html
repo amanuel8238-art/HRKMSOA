@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabaasa Waliigalaa Dameewwanii - HRKMSO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <!-- Header -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-lg font-bold text-indigo-950">
+                    <i class="fas fa-chart-bar text-indigo-600 mr-2"></i>
+                    Gabaasa Waliigalaa Dameewwanii (Branch Comparison)
+                </h1>
+                <p class="text-xs text-slate-500 mt-1">
+                    Dameewwan ({{ comparison_data|length }}) baay'ina miseensaa, saala, gulantaa, barnootaa fi naamusaan wal bira qabee ilaaluu.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ url_for('dashboard') }}" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold px-3 py-2 rounded-lg">
+                    &larr; Dashboordii
+                </a>
+                <button onclick="window.print()" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-semibold px-3 py-2 rounded-lg">
+                    <i class="fas fa-print mr-1"></i> Maxxansi (Print)
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric Selector -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-2 text-xs font-semibold">
+            <span class="text-slate-600 mr-2">Gosa Wal-bira Qabaa:</span>
+            <a href="{{ url_for('branch_comparison', metric='total') }}" class="px-3 py-1.5 rounded-lg {% if metric == 'total' %}bg-indigo-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                Waliigala & Saala
+            </a>
+            <a href="{{ url_for('branch_comparison', metric='rank') }}" class="px-3 py-1.5 rounded-lg {% if metric == 'rank' %}bg-indigo-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                Gulantaa (Rank)
+            </a>
+            <a href="{{ url_for('branch_comparison', metric='education') }}" class="px-3 py-1.5 rounded-lg {% if metric == 'education' %}bg-indigo-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                Sadarkaa Barnootaa
+            </a>
+            <a href="{{ url_for('branch_comparison', metric='discipline') }}" class="px-3 py-1.5 rounded-lg {% if metric == 'discipline' %}bg-indigo-900 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                Galmee Naamusaa
+            </a>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-sm font-bold text-slate-700 mb-3">Chaartii Wal-bira Qabaa Dameewwanii (Top 15)</h2>
+            <div class="h-72">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-800 text-white">
+                    <tr>
+                        <th class="p-3">Lakk.</th>
+                        <th class="p-3">Damee (Branch)</th>
+                        {% if metric == 'total' %}
+                            <th class="p-3 text-right">Ida'ama (Active)</th>
+                            <th class="p-3 text-right">Dhiira</th>
+                            <th class="p-3 text-right">Dhalaa</th>
+                            <th class="p-3 text-right">Naamusa</th>
+                        {% elif metric == 'rank' %}
+                            <th class="p-3 text-right">Ida'ama</th>
+                            {% for r_col in rank_columns %}
+                                <th class="p-3 text-right">{{ r_col }}</th>
+                            {% endfor %}
+                        {% elif metric == 'education' %}
+                            <th class="p-3 text-right">Ida'ama</th>
+                            {% for e_col in edu_columns %}
+                                <th class="p-3 text-right">{{ e_col }}</th>
+                            {% endfor %}
+                        {% elif metric == 'discipline' %}
+                            <th class="p-3 text-right">Ida'ama Miseensaa</th>
+                            <th class="p-3 text-right">Galmee Naamusaa</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    {% for row in comparison_data %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3">{{ loop.index }}</td>
+                        <td class="p-3 font-semibold text-slate-800">{{ row.name }}</td>
+                        {% if metric == 'total' %}
+                            <td class="p-3 text-right font-bold text-indigo-900">{{ row.total }}</td>
+                            <td class="p-3 text-right text-blue-700">{{ row.male }}</td>
+                            <td class="p-3 text-right text-pink-700">{{ row.female }}</td>
+                            <td class="p-3 text-right text-amber-700">{{ row.discipline }}</td>
+                        {% elif metric == 'rank' %}
+                            <td class="p-3 text-right font-bold text-indigo-900">{{ row.total }}</td>
+                            {% for r_col in rank_columns %}
+                                <td class="p-3 text-right">{{ row.ranks.get(r_col, 0) }}</td>
+                            {% endfor %}
+                        {% elif metric == 'education' %}
+                            <td class="p-3 text-right font-bold text-indigo-900">{{ row.total }}</td>
+                            {% for e_col in edu_columns %}
+                                <td class="p-3 text-right">{{ row.education.get(e_col, 0) }}</td>
+                            {% endfor %}
+                        {% elif metric == 'discipline' %}
+                            <td class="p-3 text-right font-bold text-indigo-900">{{ row.total }}</td>
+                            <td class="p-3 text-right font-bold text-rose-700">{{ row.discipline }}</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const rawData = {{ comparison_data[:15] | tojson }};
+        const activeMetric = "{{ metric }}";
+
+        const labels = rawData.map(d => d.name);
+        let datasets = [];
+
+        if (activeMetric === 'total') {
+            datasets = [
+                {
+                    label: 'Dhiira',
+                    data: rawData.map(d => d.male),
+                    backgroundColor: '#3b82f6'
+                },
+                {
+                    label: 'Dhalaa',
+                    data: rawData.map(d => d.female),
+                    backgroundColor: '#ec4899'
+                }
+            ];
+        } else if (activeMetric === 'discipline') {
+            datasets = [
+                {
+                    label: 'Galmee Naamusaa',
+                    data: rawData.map(d => d.discipline),
+                    backgroundColor: '#e11d48'
+                }
+            ];
+        } else {
+            datasets = [
+                {
+                    label: 'Ida\'ama Miseensotaa',
+                    data: rawData.map(d => d.total),
+                    backgroundColor: '#4f46e5'
+                }
+            ];
+        }
+
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { font: { size: 10 } } },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
