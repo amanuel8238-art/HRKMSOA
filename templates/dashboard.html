@@ -20,51 +20,51 @@
     <!-- MAIN APP CONTAINER -->
     <div id="mainApp" class="min-h-screen flex flex-col">
         <!-- Header -->
-        <header class="bg-indigo-900 text-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center gap-3">
+        <header class="bg-indigo-900 text-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-2.5 flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
                     <!-- Logo Komishinii Manneen Sirreessaa Oromiyaa -->
                     <img src="{{ url_for('static', filename='images/logo.png') }}" 
                          alt="HRKMSO Logo" 
-                         style="width: 45px; height: 45px; object-fit: contain; background: white; padding: 2px; border-radius: 50%;">
+                         style="width: 38px; height: 38px; object-fit: contain; background: white; padding: 2px; border-radius: 50%;">
                     <div>
-                        <h1 class="text-lg font-bold">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
-                        <p id="headerSubtitle" class="text-xs text-indigo-200">Head Office & Dameewwan (Total {{ branch_count }})</p>
+                        <h1 class="text-base font-bold leading-tight">HRKMSO - Sirna Hooggansa Humna Namaa Eegumsa Qabu</h1>
+                        <p id="headerSubtitle" class="text-[11px] text-indigo-200">Head Office & Dameewwan (Total {{ branch_count }})</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 text-sm">
-                    <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs">User: <b>{{ current_user.username }}</b></span>
-                    <a href="{{ url_for('logout') }}" class="text-xs bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition text-white">Bahi (Logout)</a>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="bg-indigo-800 px-2.5 py-1 rounded-full">User: <b>{{ current_user.username }}</b></span>
+                    <a href="{{ url_for('logout') }}" class="bg-red-600 hover:bg-red-700 px-2.5 py-1 rounded transition text-white">Bahi (Logout)</a>
                 </div>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+        <main class="max-w-7xl mx-auto px-4 py-4 flex-grow w-full space-y-4">
             
             <!-- Navigation Tabs (Menu) -->
-            <div class="flex flex-wrap border-b border-slate-300 gap-6 text-sm font-semibold bg-white px-4 py-3 rounded-xl shadow-sm border border-slate-200">
-                <a href="{{ url_for('dashboard') }}" class="pb-2 border-b-2 border-indigo-600 text-indigo-600 transition">Dashboordii</a>
-                <a href="{{ url_for('employees') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Miseensota (Data)</a>
+            <div class="flex flex-wrap items-center border-b border-slate-200 gap-4 text-xs font-semibold bg-white px-3.5 py-2 rounded-xl shadow-sm">
+                <a href="{{ url_for('dashboard') }}" class="pb-1 border-b-2 border-indigo-600 text-indigo-600 transition">Dashboordii</a>
+                <a href="{{ url_for('employees') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Miseensota (Data)</a>
                 
                 <!-- Dameewwan meenuu (Admin Qofaaf akka mul'atu godhame) -->
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                <a href="{{ url_for('branches') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Dameewwan</a>
+                <a href="{{ url_for('branches') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Dameewwan</a>
                 {% endif %}
 
                 {% if endpoint_exists('branch_comparison') %}
-                <a href="{{ url_for('branch_comparison') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition flex items-center gap-1.5">
+                <a href="{{ url_for('branch_comparison') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition flex items-center gap-1">
                     <i class="fas fa-chart-bar"></i>
                     <span>Wal-bira Qabaa Dameewwanii (Comparison Report)</span>
                 </a>
                 {% endif %}
 
-                <a href="{{ url_for('transfers') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
-                <a href="{{ url_for('promotions') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gaaffii Gonfoo (Promotions)</a>
-                <a href="{{ url_for('ranks') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
-                <a href="#genderReportCard" onclick="focusFullDashboardReport()" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Gabaasa Saalaa & Pensiyoonaa</a>
+                <a href="{{ url_for('transfers') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Galmee Jijjiirraa</a>
+                <a href="{{ url_for('promotions') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Gaaffii Gonfoo (Promotions)</a>
+                <a href="{{ url_for('ranks') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Gulaataa Gonfoo</a>
+                <a href="#genderReportCard" onclick="focusFullDashboardReport()" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Gabaasa Saalaa & Pensiyoonaa</a>
                 {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                <a href="{{ url_for('users') }}" class="pb-2 text-slate-500 hover:text-indigo-600 transition">Bulchiinsa Fayyadamoowwan</a>
+                <a href="{{ url_for('users') }}" class="pb-1 text-slate-600 hover:text-indigo-600 transition">Bulchiinsa Fayyadamoowwan</a>
                 {% endif %}
             </div>
 
@@ -72,7 +72,7 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="p-3 rounded-lg text-white text-xs {% if category == 'danger' %}bg-red-500{% else %}bg-emerald-600{% endif %} shadow">
+                        <div class="p-2.5 rounded-lg text-white text-xs {% if category == 'danger' %}bg-red-500{% else %}bg-emerald-600{% endif %} shadow-sm">
                             {{ message }}
                         </div>
                     {% endfor %}
@@ -80,16 +80,16 @@
             {% endwith %}
 
             <!-- DASHBOARD CONTENT -->
-            <div id="tabDashboard" class="space-y-6">
+            <div id="tabDashboard" class="space-y-4">
 
                 <!-- Branch Filter Section -->
                 {% if current_user.is_authenticated and current_user.role == 'admin' and branches %}
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-                    <div class="w-full md:w-1/3">
-                        <label for="branchFilter" class="block text-xs font-bold text-slate-700 mb-1">
+                <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div class="w-full md:w-1/3 flex items-center gap-2">
+                        <label for="branchFilter" class="text-xs font-bold text-slate-700 whitespace-nowrap">
                             <i class="fas fa-filter text-indigo-600 mr-1"></i> Dameedhaan Filter Godhi:
                         </label>
-                        <select id="branchFilter" onchange="filterDashboardByBranch()" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <select id="branchFilter" onchange="filterDashboardByBranch()" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="all">-- Dameewwan Hunda (Waliigala) --</option>
                             {% for branch in branches %}
                                 <option value="{{ branch.id }}">{{ branch.name }}</option>
@@ -99,237 +99,240 @@
                 </div>
                 {% endif %}
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-slate-500 font-medium">Ida'ama Miseensotaa (Total)</p>
-                        <h3 id="statEmpCount" class="text-2xl font-bold text-indigo-900 mt-1">{{ emp_count if emp_count is defined else 0 }}</h3>
+                <!-- Stats Grid (Compact) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-[11px] text-slate-500 font-medium">Ida'ama Miseensotaa (Total)</p>
+                        <h3 id="statEmpCount" class="text-lg font-bold text-indigo-900 mt-0.5">{{ emp_count if emp_count is defined else 0 }}</h3>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-slate-500 font-medium">Miseensota Hojii Irra Jiran (Active)</p>
-                        <h3 id="statActiveEmp" class="text-2xl font-bold text-emerald-600 mt-1">{{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-[11px] text-slate-500 font-medium">Miseensota Hojii Irra Jiran (Active)</p>
+                        <h3 id="statActiveEmp" class="text-lg font-bold text-emerald-600 mt-0.5">{{ active_emp_count if active_emp_count is defined else (emp_count if emp_count is defined else 0) }}</h3>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-slate-500 font-medium">Baay'ina Dameewwanii</p>
-                        <h3 id="statBranchCount" class="text-2xl font-bold text-slate-800 mt-1">{{ branch_count if branch_count is defined else 0 }}</h3>
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-[11px] text-slate-500 font-medium">Baay'ina Dameewwanii</p>
+                        <h3 id="statBranchCount" class="text-lg font-bold text-slate-800 mt-0.5">{{ branch_count if branch_count is defined else 0 }}</h3>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-slate-500 font-medium">Galmee Jijjiirraa (Transfers)</p>
-                        <h3 id="statTransferCount" class="text-2xl font-bold text-amber-600 mt-1">{{ transfer_count if transfer_count is defined else 0 }}</h3>
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200">
+                        <p class="text-[11px] text-slate-500 font-medium">Galmee Jijjiirraa (Transfers)</p>
+                        <h3 id="statTransferCount" class="text-lg font-bold text-amber-600 mt-0.5">{{ transfer_count if transfer_count is defined else 0 }}</h3>
                     </div>
                 </div>
 
-                <!-- Gender, Retirement & Resigned Stats Row -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <!-- Gender, Retirement & Resigned Stats Row (Compact) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhiira</p>
-                            <h3 id="statMale" class="text-xl font-bold text-blue-600 mt-1">{{ male_count if male_count is defined else 0 }}</h3>
+                            <p class="text-[11px] text-slate-500 font-medium">Hojjettoota Dhiira</p>
+                            <h3 id="statMale" class="text-base font-bold text-blue-600 mt-0.5">{{ male_count if male_count is defined else 0 }}</h3>
                         </div>
-                        <span class="p-3 bg-blue-50 text-blue-600 rounded-lg text-lg">👨</span>
+                        <span class="p-2 bg-blue-50 text-blue-600 rounded-lg text-sm">👨</span>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-500 font-medium">Hojjettoota Dhalaa</p>
-                            <h3 id="statFemale" class="text-xl font-bold text-pink-600 mt-1">{{ female_count if female_count is defined else 0 }}</h3>
+                            <p class="text-[11px] text-slate-500 font-medium">Hojjettoota Dhalaa</p>
+                            <h3 id="statFemale" class="text-base font-bold text-pink-600 mt-0.5">{{ female_count if female_count is defined else 0 }}</h3>
                         </div>
-                        <span class="p-3 bg-pink-50 text-pink-600 rounded-lg text-lg">👩</span>
+                        <span class="p-2 bg-pink-50 text-pink-600 rounded-lg text-sm">👩</span>
                     </div>
                     
                     <!-- Kaardii Sooramaa (Retired) -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-500 font-medium">Umrii 55+ (Soorama)</p>
-                            <h3 id="statRetired" class="text-xl font-bold text-amber-600 mt-1">{{ retired_count if retired_count is defined else 0 }}</h3>
-                            <a href="{{ url_for('retired_employees') }}" class="text-xs text-indigo-600 hover:underline mt-1 inline-block font-semibold">📋 Eenyufa'i Ilaali &rarr;</a>
+                            <p class="text-[11px] text-slate-500 font-medium">Umrii 55+ (Soorama)</p>
+                            <h3 id="statRetired" class="text-base font-bold text-amber-600 mt-0.5">{{ retired_count if retired_count is defined else 0 }}</h3>
+                            <a href="{{ url_for('retired_employees') }}" class="text-[11px] text-indigo-600 hover:underline inline-block font-semibold">📋 Eenyufa'i Ilaali &rarr;</a>
                         </div>
-                        <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">📋</span>
+                        <span class="p-2 bg-amber-50 text-amber-600 rounded-lg text-sm">📋</span>
                     </div>
 
                     <!-- Kaardii Hojii Gadhiisani (Resigned) -->
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
-                            <h3 id="statResigned" class="text-xl font-bold text-red-600 mt-1">{{ resigned_count if resigned_count is defined else 0 }}</h3>
-                            <a href="{{ url_for('resigned_employees') }}" class="text-xs text-red-600 hover:underline mt-1 inline-block font-semibold">📋 Eenyufa'i Ilaali &rarr;</a>
+                            <p class="text-[11px] text-slate-500 font-medium">Hojii Gadhiisan (Resigned)</p>
+                            <h3 id="statResigned" class="text-base font-bold text-red-600 mt-0.5">{{ resigned_count if resigned_count is defined else 0 }}</h3>
+                            <a href="{{ url_for('resigned_employees') }}" class="text-[11px] text-red-600 hover:underline inline-block font-semibold">📋 Eenyufa'i Ilaali &rarr;</a>
                         </div>
-                        <span class="p-3 bg-red-50 text-red-600 rounded-lg text-lg">🚪</span>
+                        <span class="p-2 bg-red-50 text-red-600 rounded-lg text-sm">🚪</span>
                     </div>
                 </div>
 
-                <!-- GOSA NAMUSAA CARDS SECTION -->
+                <!-- GOSA NAMUSAA CARDS SECTION (Compact) -->
                 <div>
-                    <h3 class="text-sm font-bold text-slate-700 mb-3">Gosa Namusaa & Galmee Hojjettootaa (Ethics & Discipline Records)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                    <h3 class="text-xs font-bold text-slate-700 mb-2">Gosa Namusaa & Galmee Hojjettootaa (Ethics & Discipline Records)</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Of-eeggannoo (Warning)</p>
-                                    <h3 id="statWarning" class="text-xl font-bold text-orange-600 mt-1">{{ warning_count if warning_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Of-eeggannoo (Warning)</p>
+                                    <h3 id="statWarning" class="text-base font-bold text-orange-600 mt-0.5">{{ warning_count if warning_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-orange-50 text-orange-600 rounded-lg text-lg">⚠</span>
+                                <span class="p-2 bg-orange-50 text-orange-600 rounded-lg text-sm">⚠</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('warnings') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('warnings') }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Adabbii (Penalties)</p>
-                                    <h3 id="statPenalty" class="text-xl font-bold text-rose-600 mt-1">{{ penalty_count if penalty_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Adabbii (Penalties)</p>
+                                    <h3 id="statPenalty" class="text-base font-bold text-rose-600 mt-0.5">{{ penalty_count if penalty_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-rose-50 text-rose-600 rounded-lg text-lg">⚖️</span>
+                                <span class="p-2 bg-rose-50 text-rose-600 rounded-lg text-sm">⚖️</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('penalties') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('penalties') }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Gaaffii Gonfoo (Promotions)</p>
-                                    <h3 id="statReward" class="text-xl font-bold text-emerald-600 mt-1">{{ reward_count if reward_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Gaaffii Gonfoo (Promotions)</p>
+                                    <h3 id="statReward" class="text-base font-bold text-emerald-600 mt-0.5">{{ reward_count if reward_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">🏆</span>
+                                <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm">🏆</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
                                 {% if endpoint_exists('promotions') %}
-                                <a href="{{ url_for('promotions') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Gaaffii Gonfoo Ilaali &rarr;</a>
+                                <a href="{{ url_for('promotions') }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Gaaffii Gonfoo Ilaali &rarr;</a>
                                 {% else %}
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
+                                <a href="{{ url_for('employees') }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Ilaali / Galmeessi &rarr;</a>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Galmee Qulqulluu (Clean)</p>
-                                    <h3 id="statClean" class="text-xl font-bold text-sky-600 mt-1">{{ clean_count if clean_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Galmee Qulqulluu (Clean)</p>
+                                    <h3 id="statClean" class="text-base font-bold text-sky-600 mt-0.5">{{ clean_count if clean_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-sky-50 text-sky-600 rounded-lg text-lg">✨</span>
+                                <span class="p-2 bg-sky-50 text-sky-600 rounded-lg text-sm">✨</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('employees') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Gabaasa Ilaali &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('employees') }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">Gabaasa Ilaali &rarr;</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- GOSA NAMUSAA & ADEEMSA MURTEE CARDS SECTION (HORDOFFII HAARAA) -->
-                <div class="mt-4">
-                    <h3 class="text-sm font-bold text-slate-700 mb-3">Hordoffii Adeemsa Naamusaa (Discipline Tracking Flow)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <!-- GOSA NAMUSAA & ADEEMSA MURTEE CARDS SECTION (Compact) -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-700 mb-2">Hordoffii Adeemsa Naamusaa (Discipline Tracking Flow)</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Koree M/Sirreessaa</p>
-                                    <h3 id="statLocalCommittee" class="text-xl font-bold text-amber-600 mt-1">{{ local_committee_count if local_committee_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Koree M/Sirreessaa</p>
+                                    <h3 id="statLocalCommittee" class="text-base font-bold text-amber-600 mt-0.5">{{ local_committee_count if local_committee_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-amber-50 text-amber-600 rounded-lg text-lg">🏢</span>
+                                <span class="p-2 bg-amber-50 text-amber-600 rounded-lg text-sm">🏢</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('warnings', status='pending') }}" class="text-xs text-indigo-600 font-semibold">Ilaali &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('warnings', status='pending') }}" class="text-[11px] text-indigo-600 font-semibold">Ilaali &rarr;</a>
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Koree Godinaa</p>
-                                    <h3 id="statZoneCommittee" class="text-xl font-bold text-blue-600 mt-1">{{ zone_committee_count if zone_committee_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Koree Godinaa</p>
+                                    <h3 id="statZoneCommittee" class="text-base font-bold text-blue-600 mt-0.5">{{ zone_committee_count if zone_committee_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-blue-50 text-blue-600 rounded-lg text-lg">📍</span>
+                                <span class="p-2 bg-blue-50 text-blue-600 rounded-lg text-sm">📍</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('warnings', status='pending') }}" class="text-xs text-indigo-600 font-semibold">Ilaali &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('warnings', status='pending') }}" class="text-[11px] text-indigo-600 font-semibold">Ilaali &rarr;</a>
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Komishiniitti Ergame</p>
-                                    <h3 id="statCommissionPending" class="text-xl font-bold text-purple-600 mt-1">{{ commission_pending_count if commission_pending_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Komishiniitti Ergame</p>
+                                    <h3 id="statCommissionPending" class="text-base font-bold text-purple-600 mt-0.5">{{ commission_pending_count if commission_pending_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-purple-50 text-purple-600 rounded-lg text-lg">📤</span>
+                                <span class="p-2 bg-purple-50 text-purple-600 rounded-lg text-sm">📤</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('warnings', status='pending') }}" class="text-xs text-indigo-600 font-semibold">Adeemsa Ilaali &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('warnings', status='pending') }}" class="text-[11px] text-indigo-600 font-semibold">Adeemsa Ilaali &rarr;</a>
                             </div>
                         </div>
 
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div class="bg-white px-3.5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-xs text-slate-500 font-medium">Murtee Argate</p>
-                                    <h3 id="statFinalDecided" class="text-xl font-bold text-emerald-600 mt-1">{{ final_decided_count if final_decided_count is defined else 0 }}</h3>
+                                    <p class="text-[11px] text-slate-500 font-medium">Murtee Argate</p>
+                                    <h3 id="statFinalDecided" class="text-base font-bold text-emerald-600 mt-0.5">{{ final_decided_count if final_decided_count is defined else 0 }}</h3>
                                 </div>
-                                <span class="p-3 bg-emerald-50 text-emerald-600 rounded-lg text-lg">⚖️</span>
+                                <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm">⚖️</span>
                             </div>
-                            <div class="mt-4 pt-2 border-t border-slate-100">
-                                <a href="{{ url_for('warnings', status='murtaae') }}" class="text-xs text-indigo-600 font-semibold">Gabaasa Ilaali &rarr;</a>
+                            <div class="mt-2 pt-1.5 border-t border-slate-100">
+                                <a href="{{ url_for('warnings', status='murtaae') }}" class="text-[11px] text-indigo-600 font-semibold">Gabaasa Ilaali &rarr;</a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions & Full Dashboard Report Chart Card -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 lg:col-span-2 flex flex-col justify-between">
+                <!-- Compact Quick Actions + Large Full Report Chart Card -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                    <!-- Quick Actions (Compact 4 cols) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3 lg:col-span-4 flex flex-col justify-between">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-800">Baga nagaan dhufte, {{ current_user.username if current_user and current_user.username is defined else 'Admin' }}!</h2>
-                            <p class="text-xs text-slate-600 mt-2">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa fayyadamuun hojjettoota galmeessuu, dameewwan bulchuu, madaallii raawwii gaggeessuu, akkasumas xalayaalee ogeessaa qopheessuu ni dandeessa.</p>
+                            <h2 class="text-sm font-bold text-slate-800">Baga nagaan dhufte, {{ current_user.username if current_user and current_user.username is defined else 'Admin' }}!</h2>
+                            <p class="text-[11px] text-slate-600 mt-1 leading-relaxed">Sirni Hooggansa Humna Namaa Komishinii Manneen Sirreessaa Oromiyaa (HRKMSO) milkaa'inaan hojjechaa jira. Fuula kana irraa hojjettoota galmeessuu, dameewwan bulchuu fi xalayaalee ogeessaa qopheessuu ni dandeessa.</p>
                         </div>
                         
                         <!-- Buttoonota Quick Actions & Xalayaalee Qopheessuu -->
-                        <div class="flex flex-wrap gap-3 pt-2">
-                            <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-users mr-1"></i> Miseensota Ilaali</a>
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <a href="{{ url_for('employees') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition"><i class="fas fa-users mr-1"></i> Miseensota Ilaali</a>
                             
-                            <!-- Button Dameewwan Ilaali (Admin Qofaaf) -->
                             {% if current_user.is_authenticated and current_user.role == 'admin' %}
-                            <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-building mr-1"></i> Dameewwan Ilaali</a>
+                            <a href="{{ url_for('branches') }}" class="bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition"><i class="fas fa-building mr-1"></i> Dameewwan Ilaali</a>
                             {% endif %}
 
                             {% if endpoint_exists('branch_comparison') %}
-                            <a href="{{ url_for('branch_comparison') }}" class="bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <a href="{{ url_for('branch_comparison') }}" class="bg-cyan-700 hover:bg-cyan-800 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
                                 <i class="fas fa-chart-bar"></i>
-                                <span>Wal-bira Qabaa Dameewwanii (Comparison Report)</span>
+                                <span>Wal-bira Qabaa Dameewwanii</span>
                             </a>
                             {% endif %}
                             
-                            <!-- Trigger Modal Xalayaa Jijjiirraa -->
-                            <button onclick="openLetterModal('jijjiirraa')" class="bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                            <button onclick="openLetterModal('jijjiirraa')" class="bg-amber-700 hover:bg-amber-800 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition">
                                 <i class="fas fa-exchange-alt mr-1"></i> Xalayaa Jijjiirraa
                             </button>
                             
-                            <!-- Trigger Modal Xalayaa Ramaddii -->
-                            <button onclick="openLetterModal('ramaddii')" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                            <button onclick="openLetterModal('ramaddii')" class="bg-blue-700 hover:bg-blue-800 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition">
                                 <i class="fas fa-file-alt mr-1"></i> Xalayaa Ramaddii
                             </button>
 
-                            <!-- Trigger Modal Xalayaa Guddina Gonfoo -->
-                            <button onclick="openLetterModal('gonfoo')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                            <button onclick="openLetterModal('gonfoo')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition">
                                 <i class="fas fa-award mr-1"></i> Xalayaa Gonfoo
                             </button>
 
                             {% if endpoint_exists('promotions') %}
-                            <a href="{{ url_for('promotions') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gaaffii Gonfoo</a>
+                            <a href="{{ url_for('promotions') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition"><i class="fas fa-award mr-1"></i> Gaaffii Gonfoo</a>
                             {% endif %}
 
                             {% if endpoint_exists('export_employees_excel') %}
-                            <a href="{{ url_for('export_employees_excel') }}" class="bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-4 py-2 rounded-lg transition"><i class="fas fa-file-excel mr-1"></i> Excel-tti Buufadhu</a>
+                            <a href="{{ url_for('export_employees_excel') }}" class="bg-green-700 hover:bg-green-800 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg transition"><i class="fas fa-file-excel mr-1"></i> Excel-tti Buufadhu</a>
                             {% endif %}
                         </div>
                     </div>
 
-                    <!-- Full Dashboard Metrics Chart Card -->
-                    <div id="genderReportCard" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between transition">
-                        <p class="text-xs font-bold text-slate-700 mb-2 text-center">Gabaasa Saalaa & Pensiyoonaa (Waliigala)</p>
-                        <div class="relative w-full h-52 flex justify-center">
+                    <!-- Large Full Dashboard Report Chart Card (Expanded 8 cols) -->
+                    <div id="genderReportCard" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 lg:col-span-8 flex flex-col justify-between transition">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-sm font-bold text-indigo-950">Gabaasa Saalaa & Pensiyoonaa (Waliigala)</h3>
+                                <p class="text-[11px] text-slate-500">Cuunfaa baay'ina saalaa, sooramaa, jijjiirraa fi adeemsa naamusaa hunda</p>
+                            </div>
+                            <span class="text-[11px] bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full">Gabaasa Guutuu</span>
+                        </div>
+                        <div class="relative w-full h-72">
                             <canvas id="genderChart"></canvas>
                         </div>
                     </div>
@@ -649,7 +652,8 @@ Goree</textarea>
                                 label: 'Baay\'ina',
                                 data: chartValues,
                                 backgroundColor: chartColors,
-                                borderRadius: 4
+                                borderRadius: 6,
+                                maxBarThickness: 36
                             }]
                         },
                         options: {
@@ -658,10 +662,12 @@ Goree</textarea>
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    ticks: { precision: 0, font: { size: 9 } }
+                                    ticks: { precision: 0, font: { size: 11 } },
+                                    grid: { color: '#f1f5f9' }
                                 },
                                 x: {
-                                    ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 30 }
+                                    ticks: { font: { size: 10 }, maxRotation: 35, minRotation: 25 },
+                                    grid: { display: false }
                                 }
                             },
                             plugins: {
