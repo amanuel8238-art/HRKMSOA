@@ -419,24 +419,6 @@ with app.app_context():
         "Habroo",
         "Dalloo Mannaa",
         "Martii",
-        "Iluu Abaabor",
-        "Wallaggaa Bahaa",
-        "Wallaggaa Lixaa",
-        "Horo Guduruu Wallaggaa",
-        "Qellem Wallaggaa",
-        "Shawaa Bahaa",
-        "Shawaa Lixaa",
-        "Shawaa Kibba Lixaa",
-        "Shawaa Kaabaa",
-        "Baalee Bahaa",
-        "Harargee Bahaa",
-        "Harargee Lixaa",
-        "Gujii Bahaa",
-        "Gujii Lixaa",
-        "Booranaa",
-        "Booranaa Bahaa",
-        "Arsii Lixaa",
-        "Magaalaa Shagar",
         "Mattuu",
         "Naqamtee",
         "Gimbii",
@@ -456,11 +438,26 @@ with app.app_context():
         "Shaashamannee",
         "Shaggar",
         "Aallee",
-        "Arsii Roobee",
-        "Aanaa Aallee",
-        "Roobee"
+        "Arsii Roobee"
     ]
-    
+
+    zero_branches = [
+        "Iluu Abaabor", "Wallaggaa Bahaa", "Wallaggaa Lixaa", "Horo Guduruu Wallaggaa",
+        "Qellem Wallaggaa", "Shawaa Bahaa", "Shawaa Lixaa", "Shawaa Kibba Lixaa",
+        "Shawaa Kaabaa", "Baalee Bahaa", "Harargee Bahaa", "Harargee Lixaa",
+        "Gujii Bahaa", "Gujii Lixaa", "Booranaa", "Booranaa Bahaa",
+        "Arsii Lixaa", "Magaalaa Shagar", "Aanaa Aallee", "Roobee"
+    ]
+
+    for z_name in zero_branches:
+        z_branch = Branch.query.filter_by(name=z_name).first()
+        if z_branch and Employee.query.filter_by(branch_id=z_branch.id).count() == 0:
+            User.query.filter_by(branch_id=z_branch.id).update({'branch_id': None})
+            Transfer.query.filter(
+                db.or_(Transfer.from_branch_id == z_branch.id, Transfer.to_branch_id == z_branch.id)
+            ).delete(synchronize_session=False)
+            db.session.delete(z_branch)
+
     for b_name in branches_list:
         if not Branch.query.filter_by(name=b_name).first():
             db.session.add(Branch(name=b_name, location='Oromia'))
