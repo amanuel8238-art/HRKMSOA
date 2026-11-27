@@ -946,6 +946,81 @@ def get_branch_stats(branch_id):
     }
     return jsonify(data)
 
+@app.route('/branch_comparison')
+@login_required
+def branch_comparison():
+    metric = request.args.get('metric', 'total')
+    if metric not in ['total', 'rank', 'education', 'discipline']:
+        metric = 'total'
+
+    if current_user.role == 'admin':
+        branches_list = Branch.query.all()
+    else:
+        user_b = current_user.branch_id
+        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
+        branches_list = Branch.query.filter_by(id=b_val).all() if b_val else []
+
+    active_emps = Employee.query.filter_by(status='Active').all()
+    all_ranks = Rank.query.all()
+    rank_columns = [r.name for r in all_ranks if r.name]
+
+    edu_set = set()
+    for emp in active_emps:
+        if emp.education_level and str(emp.education_level).strip():
+            edu_set.add(str(emp.education_level).strip())
+    edu_columns = sorted(edu_set)
+
+    emps_by_branch = {}
+    for emp in active_emps:
+        if emp.branch_id is not None:
+            emps_by_branch.setdefault(emp.branch_id, []).append(emp)
+
+    disc_by_branch = {}
+    for rec in DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).all():
+        if rec.employee and rec.employee.branch_id is not None:
+            disc_by_branch[rec.employee.branch_id] = disc_by_branch.get(rec.employee.branch_id, 0) + 1
+
+    comparison_data = []
+    for br in branches_list:
+        b_emps = emps_by_branch.get(br.id, [])
+        male = sum(1 for e in b_emps if e.gender in ['Dhiira', 'Dhiirra'])
+        female = sum(1 for e in b_emps if e.gender in ['Dhalaa', 'Dubartii'])
+
+        ranks_count = {r_name: 0 for r_name in rank_columns}
+        edu_count = {e_name: 0 for e_name in edu_columns}
+
+        for e in b_emps:
+            if e.rank and e.rank.name in ranks_count:
+                ranks_count[e.rank.name] += 1
+            if e.education_level:
+                e_lvl = str(e.education_level).strip()
+                if e_lvl in edu_count:
+                    edu_count[e_lvl] += 1
+
+        comparison_data.append({
+            'id': br.id,
+            'name': br.name,
+            'total': len(b_emps),
+            'male': male,
+            'female': female,
+            'discipline': disc_by_branch.get(br.id, 0),
+            'ranks': ranks_count,
+            'education': edu_count
+        })
+
+    if metric == 'discipline':
+        comparison_data.sort(key=lambda x: (-x['discipline'], -x['total'], x['name']))
+    else:
+        comparison_data.sort(key=lambda x: (-x['total'], x['name']))
+
+    return render_template(
+        'branch_comparison.html',
+        comparison_data=comparison_data,
+        metric=metric,
+        rank_columns=rank_columns,
+        edu_columns=edu_columns
+    )
+
 # --- AUDIT LOGS ROUTE FOR ADMIN ---
 @app.route('/admin/audit-logs')
 @login_required
