@@ -65,7 +65,7 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["20000 per day", "2000 per hour"]
+    default_limits=["20000 per day", "2000per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -357,6 +357,8 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_date VARCHAR(50)"))
             if 'last_promotion_date' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN last_promotion_date VARCHAR(50)"))
+            if 'birth_place' not in columns:
+                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
 
     if 'discipline_record' in inspector.get_table_names():
         disc_columns = [col['name'] for col in inspector.get_columns('discipline_record')]
@@ -400,14 +402,45 @@ with app.app_context():
         db.session.add(default_rank)
 
     branches_list = [
-        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee",
-        "Arsii", "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa",
-        "Dodolaa", "Shanoo", "Jimmaa Arjoo", "Eejeree", "Gursum",
-        "Girawaa", "Habroo", "Dalloo Mannaa", "Martii", "Mattuu",
-        "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo", "Adaamaa",
-        "Amboo", "Walisoo", "Fichee", "Gindhiir", "Haraar",
-        "Ciroo", "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee",
-        "Shaashamannee", "Shaggar", "Aallee", "Arsii Roobee"
+        "Head Office (Finfinnee)",
+        "Jimmaa",
+        "Bunoo Beddellee",
+        "Baalee",
+        "Arsii",
+        "GGLTO",
+        "Dadar",
+        "Baatuu",
+        "Aggaroo",
+        "Mayyaa",
+        "Dodolaa",
+        "Shanoo",
+        "Jimmaa Arjoo",
+        "Eejeree",
+        "Gursum",
+        "Girawaa",
+        "Habroo",
+        "Dalloo Mannaa",
+        "Martii",
+        "Mattuu",
+        "Naqamtee",
+        "Gimbii",
+        "Shaambuu",
+        "Dambii Doolloo",
+        "Adaamaa",
+        "Amboo",
+        "Walisoo",
+        "Fichee",
+        "Gindhiir",
+        "Haraar",
+        "Ciroo",
+        "Adoolaa",
+        "Bulee Horaa",
+        "Yaabelloo",
+        "Nageellee",
+        "Shaashamannee",
+        "Shaggar",
+        "Aallee",
+        "Arsii Roobee"
     ]
     
     for b_name in branches_list:
@@ -809,94 +842,6 @@ def dashboard():
                            commission_pending_count=commission_pending_count,
                            final_decided_count=final_decided_count,
                            ethiopian_today=ethiopian_today)
-
-# --- BRANCH COMPARISON ROUTE ---
-@app.route('/branch-comparison')
-@app.route('/branch_comparison')
-@login_required
-def branch_comparison():
-    metric = request.args.get('metric', 'total')
-    if metric not in ['total', 'rank', 'education', 'discipline']:
-        metric = 'total'
-
-    official_branches = [
-        "Head Office (Finfinnee)", "Jimmaa", "Bunoo Beddellee", "Baalee",
-        "Arsii", "GGLTO", "Dadar", "Baatuu", "Aggaroo", "Mayyaa",
-        "Dodolaa", "Shanoo", "Jimmaa Arjoo", "Eejeree", "Gursum",
-        "Girawaa", "Habroo", "Dalloo Mannaa", "Martii", "Mattuu",
-        "Naqamtee", "Gimbii", "Shaambuu", "Dambii Doolloo", "Adaamaa",
-        "Amboo", "Walisoo", "Fichee", "Gindhiir", "Haraar",
-        "Ciroo", "Adoolaa", "Bulee Horaa", "Yaabelloo", "Nageellee",
-        "Shaashamannee", "Shaggar", "Aallee", "Arsii Roobee"
-    ]
-    order_map = {name: idx for idx, name in enumerate(official_branches)}
-
-    if current_user.role == 'admin':
-        branches_query = Branch.query.filter(Branch.name.in_(official_branches)).all()
-        branches_query.sort(key=lambda b: order_map.get(b.name, 999))
-    else:
-        user_b = current_user.branch_id
-        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        branches_query = Branch.query.filter_by(id=b_val).all() if b_val else []
-
-    all_ranks = Rank.query.order_by(Rank.id.asc()).all()
-    rank_columns = [r.name for r in all_ranks if r.name]
-
-    active_emps = Employee.query.filter_by(status='Active').all()
-    edu_set = set()
-    for emp in active_emps:
-        if emp.education_level and str(emp.education_level).strip():
-            edu_set.add(str(emp.education_level).strip())
-    edu_columns = sorted(list(edu_set))
-
-    disc_records = DisciplineRecord.query.all()
-    emp_disc_counts = {}
-    for d in disc_records:
-        if d.employee_id:
-            emp_disc_counts[d.employee_id] = emp_disc_counts.get(d.employee_id, 0) + 1
-
-    emps_by_branch = {}
-    for emp in active_emps:
-        emps_by_branch.setdefault(emp.branch_id, []).append(emp)
-
-    comparison_data = []
-    for b in branches_query:
-        b_emps = emps_by_branch.get(b.id, [])
-        total_cnt = len(b_emps)
-        male_cnt = sum(1 for e in b_emps if e.gender in ['Dhiira', 'Dhiirra'])
-        female_cnt = sum(1 for e in b_emps if e.gender in ['Dhalaa', 'Dubartii'])
-        disc_cnt = sum(emp_disc_counts.get(e.id, 0) for e in b_emps)
-
-        rank_counts = {r_name: 0 for r_name in rank_columns}
-        edu_counts = {e_name: 0 for e_name in edu_columns}
-
-        for e in b_emps:
-            r_name = e.rank.name if e.rank and e.rank.name else None
-            if r_name and r_name in rank_counts:
-                rank_counts[r_name] += 1
-
-            edu_val = str(e.education_level).strip() if e.education_level else None
-            if edu_val and edu_val in edu_counts:
-                edu_counts[edu_val] += 1
-
-        comparison_data.append({
-            'id': b.id,
-            'name': b.name,
-            'total': total_cnt,
-            'male': male_cnt,
-            'female': female_cnt,
-            'discipline': disc_cnt,
-            'ranks': rank_counts,
-            'education': edu_counts
-        })
-
-    return render_template(
-        'branch_comparison.html',
-        comparison_data=comparison_data,
-        metric=metric,
-        rank_columns=rank_columns,
-        edu_columns=edu_columns
-    )
 
 @app.route('/api/dashboard-stats/<branch_id>')
 @login_required
@@ -1446,6 +1391,7 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
+        birth_place = request.form.get('birth_place')
         birth_date = request.form.get('birth_date')
         rank_date = request.form.get('rank_date')
 
@@ -1464,6 +1410,7 @@ def add_employee():
             location_allowance=location_allowance,
             food_allowance=food_allowance,
             hire_date=hire_date,
+            birth_place=birth_place,
             birth_date=birth_date,
             rank_date=rank_date,
             status='Active'
@@ -1561,6 +1508,7 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
+            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
