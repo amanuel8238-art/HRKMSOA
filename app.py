@@ -65,7 +65,7 @@ migrate = Migrate(app, db)
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["20000 per day", "2000per hour"]
+    default_limits=["20000 per day", "2000 per hour"]
 )
 
 # Flask-Mail Qindeessuu (Backup Notificationaf)
@@ -357,8 +357,6 @@ with app.app_context():
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN next_promotion_date VARCHAR(50)"))
             if 'last_promotion_date' not in columns:
                 conn.execute(sa.text("ALTER TABLE employee ADD COLUMN last_promotion_date VARCHAR(50)"))
-            if 'birth_place' not in columns:
-                conn.execute(sa.text("ALTER TABLE employee ADD COLUMN birth_place VARCHAR(150)"))
 
     if 'discipline_record' in inspector.get_table_names():
         disc_columns = [col['name'] for col in inspector.get_columns('discipline_record')]
@@ -599,7 +597,7 @@ def delete_document(id):
     return redirect(request.referrer or url_for('employees'))
 
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("30 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -945,81 +943,6 @@ def get_branch_stats(branch_id):
         "final_decided": final_decided
     }
     return jsonify(data)
-
-@app.route('/branch_comparison')
-@login_required
-def branch_comparison():
-    metric = request.args.get('metric', 'total')
-    if metric not in ['total', 'rank', 'education', 'discipline']:
-        metric = 'total'
-
-    if current_user.role == 'admin':
-        branches_list = Branch.query.all()
-    else:
-        user_b = current_user.branch_id
-        b_val = int(user_b) if user_b and str(user_b).isdigit() else user_b
-        branches_list = Branch.query.filter_by(id=b_val).all() if b_val else []
-
-    active_emps = Employee.query.filter_by(status='Active').all()
-    all_ranks = Rank.query.all()
-    rank_columns = [r.name for r in all_ranks if r.name]
-
-    edu_set = set()
-    for emp in active_emps:
-        if emp.education_level and str(emp.education_level).strip():
-            edu_set.add(str(emp.education_level).strip())
-    edu_columns = sorted(edu_set)
-
-    emps_by_branch = {}
-    for emp in active_emps:
-        if emp.branch_id is not None:
-            emps_by_branch.setdefault(emp.branch_id, []).append(emp)
-
-    disc_by_branch = {}
-    for rec in DisciplineRecord.query.join(Employee, DisciplineRecord.employee_id == Employee.id).all():
-        if rec.employee and rec.employee.branch_id is not None:
-            disc_by_branch[rec.employee.branch_id] = disc_by_branch.get(rec.employee.branch_id, 0) + 1
-
-    comparison_data = []
-    for br in branches_list:
-        b_emps = emps_by_branch.get(br.id, [])
-        male = sum(1 for e in b_emps if e.gender in ['Dhiira', 'Dhiirra'])
-        female = sum(1 for e in b_emps if e.gender in ['Dhalaa', 'Dubartii'])
-
-        ranks_count = {r_name: 0 for r_name in rank_columns}
-        edu_count = {e_name: 0 for e_name in edu_columns}
-
-        for e in b_emps:
-            if e.rank and e.rank.name in ranks_count:
-                ranks_count[e.rank.name] += 1
-            if e.education_level:
-                e_lvl = str(e.education_level).strip()
-                if e_lvl in edu_count:
-                    edu_count[e_lvl] += 1
-
-        comparison_data.append({
-            'id': br.id,
-            'name': br.name,
-            'total': len(b_emps),
-            'male': male,
-            'female': female,
-            'discipline': disc_by_branch.get(br.id, 0),
-            'ranks': ranks_count,
-            'education': edu_count
-        })
-
-    if metric == 'discipline':
-        comparison_data.sort(key=lambda x: (-x['discipline'], -x['total'], x['name']))
-    else:
-        comparison_data.sort(key=lambda x: (-x['total'], x['name']))
-
-    return render_template(
-        'branch_comparison.html',
-        comparison_data=comparison_data,
-        metric=metric,
-        rank_columns=rank_columns,
-        edu_columns=edu_columns
-    )
 
 # --- AUDIT LOGS ROUTE FOR ADMIN ---
 @app.route('/admin/audit-logs')
@@ -1466,7 +1389,6 @@ def add_employee():
         location_allowance = float(request.form.get('location_allowance', 0) or 0)
         food_allowance = float(request.form.get('food_allowance', 0) or 0)
         hire_date = request.form.get('hire_date')
-        birth_place = request.form.get('birth_place')
         birth_date = request.form.get('birth_date')
         rank_date = request.form.get('rank_date')
 
@@ -1485,7 +1407,6 @@ def add_employee():
             location_allowance=location_allowance,
             food_allowance=food_allowance,
             hire_date=hire_date,
-            birth_place=birth_place,
             birth_date=birth_date,
             rank_date=rank_date,
             status='Active'
@@ -1583,7 +1504,6 @@ def edit_employee(id):
             emp.location_allowance = float(request.form.get('location_allowance', 0) or 0)
             emp.food_allowance = float(request.form.get('food_allowance', 0) or 0)
             emp.hire_date = request.form.get('hire_date', emp.hire_date)
-            emp.birth_place = request.form.get('birth_place', emp.birth_place)
             emp.birth_date = request.form.get('birth_date', emp.birth_date)
             emp.rank_date = request.form.get('rank_date', emp.rank_date)
             emp.status = request.form.get('status', emp.status)
@@ -1984,7 +1904,7 @@ def export_ranks_excel():
     df = pd.DataFrame(data)
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Gulantaalee')
+        df.to_excel(output, index=False, sheet_name='Gulantaalee')
     output.seek(0)
     return send_file(
         output, 
